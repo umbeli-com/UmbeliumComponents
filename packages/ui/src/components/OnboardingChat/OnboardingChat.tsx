@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { SendOutline, ArrowForwardOutline } from 'react-ionicons';
+import { Send, ArrowRight } from 'lucide-react';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -221,7 +221,7 @@ export function OnboardingChat({
             onClick={handleSend}
             disabled={!inputValue.trim() || isLoading}
           >
-            <SendOutline color="currentColor" width="20px" height="20px" />
+            <Send size={20} />
           </button>
         </div>
       )}
@@ -230,7 +230,7 @@ export function OnboardingChat({
         <div className="onboarding-chat__complete-container">
           <button className="onboarding-chat__continue" onClick={onContinue}>
             <span>{t.continue}</span>
-            <ArrowForwardOutline color="currentColor" width="20px" height="20px" />
+            <ArrowRight size={20} />
           </button>
         </div>
       )}

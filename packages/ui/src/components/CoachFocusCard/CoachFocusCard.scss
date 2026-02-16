@@ -1,8 +1,8 @@
 // CoachFocusCard Component Styles
 
 .coach-focus-card {
-  background-color: #ffffff;
-  border: 1px solid #E8EBE7;
+  background-color: var(--theme-color-neutral-surface-alt);
+  border: 1px solid var(--theme-color-neutral-border);
   border-radius: 16px;
   padding: 1.5rem;
   display: flex;
@@ -10,15 +10,15 @@
   gap: 1rem;
 
   &--high {
-    border-left: 3px solid #030174;
+    border-left: 3px solid var(--theme-color-brand-primary, #030174);
   }
 
   &--medium {
-    border-left: 3px solid #3B82F6;
+    border-left: 3px solid var(--theme-color-info, #3B82F6);
   }
 
   &--low {
-    border-left: 3px solid #D0D3CF;
+    border-left: 3px solid var(--theme-color-neutral-border);
   }
 }
 
@@ -31,7 +31,7 @@
 .coach-focus-card__avatar {
   width: 44px;
   height: 44px;
-  background-color: #F0F1FF;
+  background-color: var(--theme-color-brand-primary-soft, #F0F1FF);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -49,7 +49,7 @@
 .coach-focus-card__title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #030174;
+  color: var(--theme-color-brand-primary, #030174);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -57,12 +57,12 @@
 .coach-focus-card__subtitle {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text);
 }
 
 .coach-focus-card__message {
   font-size: 1rem;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
   line-height: 1.6;
   margin: 0;
 }

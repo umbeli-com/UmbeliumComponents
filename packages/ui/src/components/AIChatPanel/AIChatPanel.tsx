@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { CloseOutline, SendOutline, FlashOutline, TrashOutline } from 'react-ionicons';
+import { X, Send, Zap, Trash2 } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -24,6 +24,16 @@ interface AIChatPanelProps {
   isLoading?: boolean;
   workspaceContext?: WorkspaceContext | null;
   suggestions?: string[];
+  locale?: string;
+  translations?: {
+    title: string;
+    clearHistory: string;
+    close: string;
+    emptyTitle: string;
+    emptyMessage: string;
+    inputPlaceholder: string;
+    keyboardHint: string;
+  };
 }
 
 const defaultSuggestions = [
@@ -42,6 +52,8 @@ export function AIChatPanel({
   isLoading = false,
   workspaceContext,
   suggestions = defaultSuggestions,
+  locale = 'fr-FR',
+  translations,
 }: AIChatPanelProps) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -80,7 +92,17 @@ export function AIChatPanel({
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const labels = {
+    title: translations?.title || 'Coach IA',
+    clearHistory: translations?.clearHistory || 'Effacer l\'historique',
+    close: translations?.close || 'Fermer (Esc)',
+    emptyTitle: translations?.emptyTitle || 'Comment puis-je t\'aider ?',
+    emptyMessage: translations?.emptyMessage || 'Pose-moi des questions sur ta stratégie, tes performances ou tes KPIs.',
+    inputPlaceholder: translations?.inputPlaceholder || 'Pose ta question...',
+    keyboardHint: translations?.keyboardHint || '⌘K pour ouvrir/fermer',
   };
 
   return (
@@ -94,30 +116,30 @@ export function AIChatPanel({
         <div className="ai-chat-panel__header">
           <div className="ai-chat-panel__header-left">
             <div className="ai-chat-panel__avatar">
-              <FlashOutline color="currentColor" width="20px" height="20px" />
+              <Zap size={20} />
             </div>
             <div className="ai-chat-panel__header-info">
-              <h3 className="ai-chat-panel__title">Coach IA</h3>
+              <h3 className="ai-chat-panel__title">{labels.title}</h3>
               {workspaceContext && (
                 <span className="ai-chat-panel__subtitle">{workspaceContext.name}</span>
               )}
             </div>
           </div>
           <div className="ai-chat-panel__header-actions">
-            <button 
-              className="ai-chat-panel__icon-btn"
-              onClick={onClearHistory}
-              title="Effacer l'historique"
-            >
-              <TrashOutline color="currentColor" width="18px" height="18px" />
-            </button>
-            <button 
-              className="ai-chat-panel__icon-btn"
-              onClick={onClose}
-              title="Fermer (Esc)"
-            >
-              <CloseOutline color="currentColor" width="20px" height="20px" />
-            </button>
+              <button 
+                className="ai-chat-panel__icon-btn"
+                onClick={onClearHistory}
+                title={labels.clearHistory}
+              >
+                <Trash2 size={18} />
+              </button>
+              <button 
+                className="ai-chat-panel__icon-btn"
+                onClick={onClose}
+                title={labels.close}
+              >
+                <X size={20} />
+              </button>
           </div>
         </div>
 
@@ -125,10 +147,10 @@ export function AIChatPanel({
           {messages.length === 0 ? (
             <div className="ai-chat-panel__empty">
               <div className="ai-chat-panel__empty-icon">
-                <FlashOutline color="currentColor" width="48px" height="48px" />
+                <Zap size={48} />
               </div>
-              <h4>Comment puis-je t'aider ?</h4>
-              <p>Pose-moi des questions sur ta stratégie, tes performances ou tes KPIs.</p>
+              <h4>{labels.emptyTitle}</h4>
+              <p>{labels.emptyMessage}</p>
               
               <div className="ai-chat-panel__suggestions">
                 {suggestions.map((suggestion: string, index: number) => (
@@ -151,7 +173,7 @@ export function AIChatPanel({
                 >
                   {msg.role === 'assistant' && (
                     <div className="ai-chat-panel__message-avatar">
-                      <FlashOutline color="currentColor" width="16px" height="16px" />
+                      <Zap size={16} />
                     </div>
                   )}
                   <div className="ai-chat-panel__message-content">
@@ -166,7 +188,7 @@ export function AIChatPanel({
               {isLoading && (
                 <div className="ai-chat-panel__message ai-chat-panel__message--assistant">
                   <div className="ai-chat-panel__message-avatar">
-                    <FlashOutline color="currentColor" width="16px" height="16px" />
+                    <Zap size={16} />
                   </div>
                   <div className="ai-chat-panel__message-content ai-chat-panel__message-content--typing">
                     <span className="ai-chat-panel__dot"></span>
@@ -189,7 +211,7 @@ export function AIChatPanel({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Pose ta question..."
+            placeholder={labels.inputPlaceholder}
             disabled={isLoading}
           />
           <button
@@ -197,12 +219,12 @@ export function AIChatPanel({
             onClick={handleSend}
             disabled={!inputValue.trim() || isLoading}
           >
-            <SendOutline color="currentColor" width="20px" height="20px" />
+            <Send size={20} />
           </button>
         </div>
 
         <div className="ai-chat-panel__footer">
-          <span>⌘K pour ouvrir/fermer</span>
+          <span>{labels.keyboardHint}</span>
         </div>
       </div>
     </>

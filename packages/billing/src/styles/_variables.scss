@@ -1,0 +1,78 @@
+// ==========================================================================
+// Umbeli Billing - Design System Variables
+// Based on Socialum Soft-Flat No-Shadow Art Direction
+// ==========================================================================
+
+// Brand Colors - Using CSS variables for theme support
+$brand-primary: var(--theme-color-brand-primary);
+$brand-primary-hover: var(--theme-color-brand-primary-hover);
+$brand-primary-active: var(--theme-color-brand-primary-active);
+$brand-primary-soft: var(--theme-color-brand-primary-soft);
+$brand-on-primary: var(--theme-color-brand-on-primary);
+
+// Neutral Colors - Using CSS variables for theme support
+$neutral-bg: var(--theme-color-neutral-bg);
+$neutral-surface: var(--theme-color-neutral-surface);
+$neutral-surface-alt: var(--theme-color-neutral-surface-alt);
+$neutral-surface-muted: var(--theme-color-neutral-surface-muted);
+$neutral-border: var(--theme-color-neutral-border);
+$neutral-border-strong: var(--theme-color-neutral-border-strong);
+$neutral-text: var(--theme-color-neutral-text);
+$neutral-text-muted: var(--theme-color-neutral-text-muted);
+$neutral-text-subtle: var(--theme-color-neutral-text-subtle);
+
+// Semantic Colors - Using CSS variables for theme support
+$semantic-success: var(--theme-color-success);
+$semantic-success-soft: var(--theme-color-success-soft);
+$semantic-warning: var(--theme-color-warning);
+$semantic-warning-soft: var(--theme-color-warning-soft);
+$semantic-danger: var(--theme-color-danger);
+$semantic-danger-soft: var(--theme-color-danger-soft);
+$semantic-info: var(--theme-color-info);
+$semantic-info-soft: var(--theme-color-info-soft);
+
+// Typography
+$font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+$font-size-xs: 12px;
+$font-size-sm: 13px;
+$font-size-md: 14px;
+$font-size-lg: 16px;
+$font-size-xl: 18px;
+$font-size-2xl: 22px;
+$font-size-3xl: 28px;
+
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Spacing
+$spacing-0: 0px;
+$spacing-1: 4px;
+$spacing-2: 8px;
+$spacing-3: 12px;
+$spacing-4: 16px;
+$spacing-5: 20px;
+$spacing-6: 24px;
+$spacing-8: 32px;
+$spacing-10: 40px;
+$spacing-12: 48px;
+
+// Border Radius
+$radius-sm: 12px;
+$radius-md: 16px;
+$radius-lg: 20px;
+$radius-xl: 24px;
+$radius-pill: 999px;
+
+// Shadows (No shadows per AD)
+$shadow-none: none;
+
+// Transitions
+$transition-fast: 0.15s ease;
+$transition-base: 0.2s ease;
+$transition-slow: 0.3s ease;
+
+// Focus
+$focus-ring: rgba(3, 1, 116, 0.35);
+$focus-ring-strong: rgba(3, 1, 116, 0.55);

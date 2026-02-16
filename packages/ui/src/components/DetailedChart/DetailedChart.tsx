@@ -58,8 +58,8 @@ export function DetailedChart({
           <YAxis tick={{ fontSize: 12 }} stroke="#7E8594" />
           <Tooltip 
             contentStyle={{ 
-              backgroundColor: '#fff', 
-              border: '1px solid #E8EBE7',
+              backgroundColor: 'var(--theme-color-neutral-surface-alt)', 
+              border: '1px solid var(--theme-color-neutral-border)',
               borderRadius: '8px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
             }} 
@@ -89,8 +89,8 @@ export function DetailedChart({
           <YAxis tick={{ fontSize: 12 }} stroke="#7E8594" />
           <Tooltip 
             contentStyle={{ 
-              backgroundColor: '#fff', 
-              border: '1px solid #E8EBE7',
+              backgroundColor: 'var(--theme-color-neutral-surface-alt)', 
+              border: '1px solid var(--theme-color-neutral-border)',
               borderRadius: '8px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
             }} 
@@ -116,8 +116,8 @@ export function DetailedChart({
         <YAxis tick={{ fontSize: 12 }} stroke="#7E8594" />
         <Tooltip 
           contentStyle={{ 
-            backgroundColor: '#fff', 
-            border: '1px solid #E8EBE7',
+            backgroundColor: 'var(--theme-color-neutral-surface-alt)', 
+            border: '1px solid var(--theme-color-neutral-border)',
             borderRadius: '8px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
           }} 

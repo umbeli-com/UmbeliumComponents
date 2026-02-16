@@ -15,14 +15,17 @@ importers:
   packages/billing:
     dependencies:
       '@stripe/react-stripe-js':
-        specifier: ^3.1.1
-        version: 3.10.0(@stripe/stripe-js@5.10.0)(react-dom@18.3.1)(react@18.3.1)
+        specifier: ^5.4.1
+        version: 5.6.0(@stripe/stripe-js@8.7.0)(react-dom@18.3.1)(react@18.3.1)
       '@stripe/stripe-js':
-        specifier: ^5.5.0
-        version: 5.10.0
+        specifier: ^8.6.0
+        version: 8.7.0
       '@umbeli/ui':
-        specifier: workspace:*
-        version: link:../ui
+        specifier: file:../ui
+        version: file:packages/ui(browserify-css@0.12.0)(react-dom@18.3.1)(react@18.3.1)(styled-components@6.1.19)
+      lucide-react:
+        specifier: ^0.315.0
+        version: 0.315.0(react@18.3.1)
       react:
         specifier: ^18.0.0
         version: 18.3.1
@@ -49,8 +52,11 @@ importers:
   packages/layout:
     dependencies:
       '@umbeli/ui':
-        specifier: workspace:*
-        version: link:../ui
+        specifier: file:../ui
+        version: file:packages/ui(browserify-css@0.12.0)(react-dom@18.3.1)(react@18.3.1)(styled-components@6.1.19)
+      lucide-react:
+        specifier: ^0.315.0
+        version: 0.315.0(react@18.3.1)
       react:
         specifier: ^18.0.0
         version: 18.3.1
@@ -76,6 +82,15 @@ importers:
 
   packages/ui:
     dependencies:
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      lucide-react:
+        specifier: ^0.315.0
+        version: 0.315.0(react@18.3.1)
       react:
         specifier: ^18.0.0
         version: 18.3.1
@@ -85,9 +100,15 @@ importers:
       react-ionicons:
         specifier: ^4.2.1
         version: 4.2.1(browserify-css@0.12.0)(styled-components@6.1.19)
+      react-smooth:
+        specifier: ^4.0.4
+        version: 4.0.4(react-dom@18.3.1)(react@18.3.1)
       recharts:
         specifier: ^2.12.0
         version: 2.15.4(react-dom@18.3.1)(react@18.3.1)
+      recharts-scale:
+        specifier: ^0.4.5
+        version: 0.4.5
     devDependencies:
       '@types/react':
         specifier: ^18.2.48
@@ -266,21 +287,21 @@ packages:
     dev: true
     optional: true
 
-  /@stripe/react-stripe-js@3.10.0(@stripe/stripe-js@5.10.0)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-UPqHZwMwDzGSax0ZI7XlxR3tZSpgIiZdk3CiwjbTK978phwR/fFXeAXQcN/h8wTAjR4ZIAzdlI9DbOqJhuJdeg==}
+  /@stripe/react-stripe-js@5.6.0(@stripe/stripe-js@8.7.0)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-tucu/vTGc+5NXbo2pUiaVjA4ENdRBET8qGS00BM4BAU8J4Pi3eY6BHollsP2+VSuzzlvXwMg0it3ZLhbCj2fPg==}
     peerDependencies:
-      '@stripe/stripe-js': '>=1.44.1 <8.0.0'
+      '@stripe/stripe-js': '>=8.0.0 <9.0.0'
       react: '>=16.8.0 <20.0.0'
       react-dom: '>=16.8.0 <20.0.0'
     dependencies:
-      '@stripe/stripe-js': 5.10.0
+      '@stripe/stripe-js': 8.7.0
       prop-types: 15.8.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     dev: false
 
-  /@stripe/stripe-js@5.10.0:
-    resolution: {integrity: sha512-PTigkxMdMUP6B5ISS7jMqJAKhgrhZwjprDqR1eATtFfh0OpKVNp110xiH+goeVdrJ29/4LeZJR4FaHHWstsu0A==}
+  /@stripe/stripe-js@8.7.0:
+    resolution: {integrity: sha512-tNUerSstwNC1KuHgX4CASGO0Md3CB26IJzSXmVlSuFvhsBP4ZaEPpY4jxWOn9tfdDscuVT4Kqb8cZ2o9nLCgRQ==}
     engines: {node: '>=12.16'}
     dev: false
 
@@ -897,6 +918,14 @@ packages:
       js-tokens: 4.0.0
     dev: false
 
+  /lucide-react@0.315.0(react@18.3.1):
+    resolution: {integrity: sha512-HHPhBRuubJLTERwI3czCgHCrYEtQSuUnniBwR/YHH4rNZXeqtOxyEX05lxpyTxlDr/ugKE+MM9/pWy+iju7xpw==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0
+    dependencies:
+      react: 18.3.1
+    dev: false
+
   /math-random@1.0.4:
     resolution: {integrity: sha512-rUxjysqif/BZQH2yhd5Aaq7vXMSx9NdEsQcyA07uEzIvxgI7zIr33gGsh+RU0/XjmQpCW7RsVof1vlkvQVCK5A==}
     dev: false
@@ -1399,4 +1428,26 @@ packages:
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
+    dev: false
+
+  file:packages/ui(browserify-css@0.12.0)(react-dom@18.3.1)(react@18.3.1)(styled-components@6.1.19):
+    resolution: {directory: packages/ui, type: directory}
+    id: file:packages/ui
+    name: '@umbeli/ui'
+    peerDependencies:
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    dependencies:
+      clsx: 2.1.1
+      lodash: 4.17.21
+      lucide-react: 0.315.0(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-ionicons: 4.2.1(browserify-css@0.12.0)(styled-components@6.1.19)
+      react-smooth: 4.0.4(react-dom@18.3.1)(react@18.3.1)
+      recharts: 2.15.4(react-dom@18.3.1)(react@18.3.1)
+      recharts-scale: 0.4.5
+    transitivePeerDependencies:
+      - browserify-css
+      - styled-components
     dev: false

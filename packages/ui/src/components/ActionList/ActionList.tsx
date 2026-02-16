@@ -1,5 +1,5 @@
 import { Icon } from '@umbeli/ui';
-import { CheckmarkOutline, EllipseOutline, RadioButtonOffOutline } from 'react-ionicons';
+import { Check, Circle, CircleDot } from 'lucide-react';
 
 interface ActionItem {
   id: string | number;
@@ -31,10 +31,9 @@ export function ActionList({ items, onItemClick, emptyMessage = 'Aucune action' 
   };
 
   const renderStatusIcon = (status?: string) => {
-    const props = { color: 'currentColor', width: '16px', height: '16px' };
-    if (status === 'completed') return <CheckmarkOutline {...props} />;
-    if (status === 'in-progress') return <EllipseOutline {...props} />;
-    return <RadioButtonOffOutline {...props} />;
+    if (status === 'completed') return <Check size={16} />;
+    if (status === 'in-progress') return <CircleDot size={16} />;
+    return <Circle size={16} />;
   };
 
   return (

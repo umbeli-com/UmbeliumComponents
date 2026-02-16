@@ -1,10 +1,14 @@
 // CoachPanel Component Styles
 
 .coach-panel {
-  background-color: #ffffff;
-  border: 1px solid #E8EBE7;
+  background-color: var(--theme-color-neutral-surface-alt);
+  border: 1px solid var(--theme-color-neutral-surface);
   border-radius: 16px;
   overflow: hidden;
+
+  @media (max-width: 767px) {
+    border-radius: 12px;
+  }
 }
 
 .coach-panel__header {
@@ -12,14 +16,14 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  background-color: #F0F1FF;
-  border-bottom: 1px solid #E8EBE7;
+  background-color: var(--theme-color-brand-primary-soft, #F0F1FF);
+  border-bottom: 1px solid var(--theme-color-neutral-surface);
 }
 
 .coach-panel__avatar {
   width: 36px;
   height: 36px;
-  background-color: #030174;
+  background-color: var(--theme-color-brand-primary, #030174);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -30,7 +34,7 @@
 .coach-panel__label {
   font-size: 1rem;
   font-weight: 600;
-  color: #030174;
+  color: var(--theme-color-brand-primary, #030174);
 }
 
 .coach-panel__content {
@@ -38,12 +42,17 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+
+  @media (max-width: 767px) {
+    padding: 1rem;
+    gap: 1rem;
+  }
 }
 
 .coach-panel__section-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
@@ -52,7 +61,7 @@
 .coach-panel__message,
 .coach-panel__why {
   font-size: 1rem;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text, #1a1a2e);
   line-height: 1.6;
   margin: 0;
 }
@@ -73,21 +82,26 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: #ffffff;
-  border: 1px solid #E8EBE7;
+  background-color: var(--theme-color-neutral-surface-alt);
+  border: 1px solid var(--theme-color-neutral-surface);
   border-radius: 8px;
   font-size: 1rem;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text, #1a1a2e);
   cursor: pointer;
   transition: background-color 0.15s ease;
 
   &:hover {
-    background-color: #F0F1FF;
-    color: #030174;
+    background-color: var(--theme-color-brand-primary-soft, #F0F1FF);
+    color: var(--theme-color-brand-primary, #030174);
+  }
+
+  @media (max-width: 767px) {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
   }
 }
 
 .coach-panel__action-icon {
-  color: #030174;
+  color: var(--theme-color-brand-primary, #030174);
   font-weight: 700;
 }

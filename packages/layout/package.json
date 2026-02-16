@@ -8,7 +8,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
+      "import": "./src/index.ts",
       "types": "./dist/index.d.ts"
     },
     "./styles": "./dist/styles/index.css",
@@ -23,7 +23,6 @@
   "scripts": {
     "build": "tsc && npm run build:styles",
     "build:styles": "sass src/styles:dist/styles --style=compressed",
-    "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "lint": "eslint src --ext .ts,.tsx"
   },
@@ -32,7 +31,8 @@
     "react-dom": "^18.0.0"
   },
   "dependencies": {
-    "@umbeli/ui": "workspace:*",
+    "@umbeli/ui": "file:../ui",
+    "lucide-react": "^0.315.0",
     "react-ionicons": "^4.2.1"
   },
   "devDependencies": {

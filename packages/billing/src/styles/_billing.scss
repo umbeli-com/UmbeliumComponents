@@ -1,29 +1,36 @@
+@use './variables' as *;
+
 .umbeli-billing {
   &__tabs {
-    display: flex;
-    gap: 0.25rem;
-    border-bottom: 1px solid #e5e7eb;
-    margin-bottom: 1.5rem;
+    display: inline-flex;
+    gap: 4px;
+    background-color: var(--theme-color-neutral-surface-alt);
+    border: 1px solid var(--theme-color-neutral-border);
+    padding: 4px;
+    border-radius: 999px;
+    margin-bottom: 24px;
   }
 
   &__tab {
-    padding: 0.75rem 1rem;
+    padding: 10px 20px;
     border: none;
-    background: none;
-    color: #6b7280;
-    font-size: 0.875rem;
+    background: transparent;
+    color: var(--theme-color-neutral-text-muted);
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    border-radius: 999px;
+    transition: all 0.15s ease;
 
-    &:hover {
-      color: #030174;
+    &:hover:not(&--active) {
+      background-color: var(--theme-color-neutral-surface);
+      color: var(--theme-color-neutral-text);
     }
 
     &--active {
-      color: #030174;
-      border-bottom-color: #030174;
+      background-color: var(--theme-color-brand-primary);
+      color: var(--theme-color-brand-on-primary);
+      font-weight: 500;
     }
   }
 
@@ -31,11 +38,17 @@
     min-height: 300px;
   }
 
+  &__empty-hint {
+    font-size: 13px;
+    color: var(--theme-color-neutral-text-subtle);
+    margin-top: 8px;
+  }
+
   &__current-plan {
     h4 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #1f2937;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-semibold;
+      color: $neutral-text;
       margin: 0;
     }
   }
@@ -44,51 +57,51 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: $spacing-4;
   }
 
   &__price {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #030174;
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-bold;
+    color: $brand-primary;
   }
 
   &__status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    padding: $spacing-1 $spacing-3;
+    border-radius: $radius-pill;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
 
     &--active {
-      background: #dcfce7;
-      color: #16a34a;
+      background: $semantic-success-soft;
+      color: $semantic-success;
     }
 
     &--past_due {
-      background: #fef3c7;
-      color: #d97706;
+      background: $semantic-warning-soft;
+      color: $semantic-warning;
     }
 
     &--canceled {
-      background: #fee2e2;
-      color: #dc2626;
+      background: $semantic-danger-soft;
+      color: $semantic-danger;
     }
   }
 
   &__renewal {
-    color: #6b7280;
-    font-size: 0.875rem;
-    margin-bottom: 1.5rem;
+    color: $neutral-text-muted;
+    font-size: $font-size-md;
+    margin-bottom: $spacing-6;
   }
 
   &__features {
-    margin-bottom: 1.5rem;
+    margin-bottom: $spacing-6;
 
     h5 {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 0.75rem;
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $neutral-text;
+      margin-bottom: $spacing-3;
     }
 
     ul {
@@ -97,36 +110,36 @@
       margin: 0;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
+      gap: $spacing-2;
     }
 
     li {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      color: #4b5563;
+      gap: $spacing-2;
+      font-size: $font-size-md;
+      color: $neutral-text-muted;
     }
   }
 
   &__limits {
-    background: #f9fafb;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
+    background: $neutral-surface;
+    border-radius: $radius-sm;
+    padding: $spacing-4;
+    margin-bottom: $spacing-6;
 
     h5 {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 0.75rem;
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $neutral-text;
+      margin-bottom: $spacing-3;
     }
   }
 
   &__limits-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: $spacing-4;
   }
 
   &__limit {
@@ -134,275 +147,275 @@
 
     span {
       display: block;
-      font-size: 0.75rem;
-      color: #6b7280;
-      margin-bottom: 0.25rem;
+      font-size: $font-size-xs;
+      color: $neutral-text-muted;
+      margin-bottom: $spacing-1;
     }
 
     strong {
-      font-size: 1rem;
-      color: #1f2937;
+      font-size: $font-size-lg;
+      color: $neutral-text;
     }
   }
 
   &__actions {
     display: flex;
-    gap: 0.75rem;
-    padding-top: 1rem;
-    border-top: 1px solid #e5e7eb;
+    gap: $spacing-3;
+    padding-top: $spacing-4;
+    border-top: 1px solid $neutral-border;
   }
 
   &__section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: $spacing-4;
 
     h4 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #1f2937;
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $neutral-text;
       margin: 0;
     }
   }
 
   &__empty {
     text-align: center;
-    padding: 3rem 1rem;
-    color: #6b7280;
+    padding: $spacing-12 $spacing-4;
+    color: $neutral-text-muted;
 
     p {
-      margin: 1rem 0;
+      margin: $spacing-4 0;
     }
   }
 
   &__cards-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: $spacing-3;
   }
 
   &__card-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem;
-    background: #f9fafb;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    padding: $spacing-4;
+    background: $neutral-surface;
+    border-radius: $radius-sm;
+    border: 1px solid $neutral-border;
   }
 
   &__card-info {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: $spacing-4;
 
     > div {
       display: flex;
       flex-direction: column;
-      gap: 0.125rem;
+      gap: 2px;
     }
   }
 
   &__card-brand {
-    font-weight: 600;
-    color: #1f2937;
-    font-size: 0.875rem;
+    font-weight: $font-weight-semibold;
+    color: $neutral-text;
+    font-size: $font-size-md;
   }
 
   &__card-number {
-    color: #6b7280;
-    font-size: 0.875rem;
+    color: $neutral-text-muted;
+    font-size: $font-size-md;
   }
 
   &__card-expiry {
-    color: #9ca3af;
-    font-size: 0.75rem;
+    color: $neutral-text-subtle;
+    font-size: $font-size-xs;
   }
 
   &__default-badge {
-    background: #030174;
-    color: white;
-    font-size: 0.625rem;
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-    font-weight: 500;
-    margin-left: 0.5rem;
+    background: $brand-primary;
+    color: $brand-on-primary;
+    font-size: 10px;
+    padding: 2px $spacing-2;
+    border-radius: $radius-pill;
+    font-weight: $font-weight-medium;
+    margin-left: $spacing-2;
   }
 
   &__card-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: $spacing-2;
   }
 
   &__invoices {
     h4 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 1rem;
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $neutral-text;
+      margin-bottom: $spacing-4;
     }
   }
 
   &__loading {
     text-align: center;
-    padding: 2rem;
-    color: #6b7280;
+    padding: $spacing-8;
+    color: $neutral-text-muted;
   }
 
   &__invoices-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: $spacing-2;
   }
 
   &__invoice-item {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 1rem;
-    background: #f9fafb;
-    border-radius: 8px;
+    gap: $spacing-4;
+    padding: $spacing-3 $spacing-4;
+    background: $neutral-surface;
+    border-radius: $radius-sm;
   }
 
   &__invoice-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.125rem;
+    gap: 2px;
   }
 
   &__invoice-number {
-    font-weight: 500;
-    color: #1f2937;
-    font-size: 0.875rem;
+    font-weight: $font-weight-medium;
+    color: $neutral-text;
+    font-size: $font-size-md;
   }
 
   &__invoice-date {
-    color: #6b7280;
-    font-size: 0.75rem;
+    color: $neutral-text-muted;
+    font-size: $font-size-xs;
   }
 
   &__invoice-amount {
-    font-weight: 600;
-    color: #1f2937;
-    font-size: 0.875rem;
+    font-weight: $font-weight-semibold;
+    color: $neutral-text;
+    font-size: $font-size-md;
     min-width: 80px;
     text-align: right;
   }
 
   &__invoice-status {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-weight: 500;
+    font-size: $font-size-xs;
+    padding: $spacing-1 $spacing-2;
+    border-radius: $spacing-1;
+    font-weight: $font-weight-medium;
     min-width: 70px;
     text-align: center;
 
     &--paid {
-      background: #dcfce7;
-      color: #16a34a;
+      background: $semantic-success-soft;
+      color: $semantic-success;
     }
 
     &--open {
-      background: #fef3c7;
-      color: #d97706;
+      background: $semantic-warning-soft;
+      color: $semantic-warning;
     }
   }
 
   &__invoice-download {
-    padding: 0.5rem;
-    border-radius: 4px;
-    transition: background 0.2s;
+    padding: $spacing-2;
+    border-radius: $spacing-1;
+    transition: background $transition-base;
 
     &:hover {
-      background: #e5e7eb;
+      background: $neutral-surface-muted;
     }
   }
 
   &__upgrade {
     h4 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 1.5rem;
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $neutral-text;
+      margin-bottom: $spacing-6;
     }
   }
 
   &__plans-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
+    gap: $spacing-4;
   }
 
   &__plan-card {
-    padding: 1.5rem;
+    padding: $spacing-6;
     position: relative;
-    border: 2px solid #e5e7eb;
-    transition: border-color 0.2s;
+    border: 2px solid $neutral-border;
+    transition: border-color $transition-base;
 
     &:hover {
-      border-color: #030174;
+      border-color: $brand-primary;
     }
 
     &--popular {
-      border-color: #030174;
+      border-color: $brand-primary;
     }
 
     &--current {
-      background: #f0f9ff;
-      border-color: #030174;
+      background: $brand-primary-soft;
+      border-color: $brand-primary;
     }
 
     h5 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 0.5rem;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-semibold;
+      color: $neutral-text;
+      margin-bottom: $spacing-2;
     }
   }
 
   &__popular-badge {
     position: absolute;
     top: -10px;
-    right: 1rem;
-    background: #030174;
-    color: white;
-    font-size: 0.625rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-weight: 600;
+    right: $spacing-4;
+    background: $brand-primary;
+    color: $brand-on-primary;
+    font-size: 10px;
+    padding: $spacing-1 $spacing-3;
+    border-radius: $radius-pill;
+    font-weight: $font-weight-semibold;
     text-transform: uppercase;
   }
 
   &__plan-price {
-    margin-bottom: 1rem;
+    margin-bottom: $spacing-4;
   }
 
   &__price-amount {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #030174;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+    color: $brand-primary;
   }
 
   &__price-period {
-    color: #6b7280;
-    font-size: 0.875rem;
+    color: $neutral-text-muted;
+    font-size: $font-size-md;
   }
 
   &__plan-features {
     list-style: none;
     padding: 0;
-    margin: 0 0 1.5rem;
+    margin: 0 0 $spacing-6;
 
     li {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      color: #4b5563;
-      padding: 0.25rem 0;
+      gap: $spacing-2;
+      font-size: $font-size-md;
+      color: $neutral-text-muted;
+      padding: $spacing-1 0;
     }
   }
 
@@ -414,7 +427,7 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    padding: 1rem;
+    padding: $spacing-4;
   }
 
   &__modal {
@@ -422,19 +435,19 @@
     max-width: 480px;
     max-height: 90vh;
     overflow-y: auto;
-    padding: 1.5rem;
+    padding: $spacing-6;
   }
 
   &__modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: $spacing-6;
 
     h4 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #1f2937;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-semibold;
+      color: $neutral-text;
       margin: 0;
     }
   }
@@ -442,13 +455,142 @@
   &__modal-close {
     background: none;
     border: none;
-    padding: 0.25rem;
+    padding: $spacing-1;
     cursor: pointer;
-    color: #6b7280;
-    transition: color 0.2s;
+    color: $neutral-text-muted;
+    transition: color $transition-base;
 
     &:hover {
-      color: #1f2937;
+      color: $neutral-text;
     }
+  }
+
+  &__payment-selection {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__payment-selection-hint {
+    color: $neutral-text-muted;
+    font-size: $font-size-md;
+    margin: 0;
+  }
+
+  &__payment-selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+  }
+
+  &__payment-selection-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-4;
+    background: $neutral-surface;
+    border-radius: $radius-sm;
+    border: 1px solid $neutral-border;
+    cursor: pointer;
+    transition: all $transition-base;
+    text-align: left;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+
+    /* Complete button reset */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    outline: none;
+    border: none;
+    background: none;
+    margin: 0;
+    padding: $spacing-4;
+    background: $neutral-surface;
+    border-radius: $radius-sm;
+    border: 1px solid $neutral-border;
+
+    &:hover {
+      border-color: $brand-primary;
+      background: rgba($brand-primary, 0.05);
+    }
+
+    &.is-default {
+      border-color: $brand-primary;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &:focus {
+      outline: 2px solid $brand-primary;
+      outline-offset: 2px;
+    }
+  }
+
+  &__payment-selection-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  &__payment-selection-brand {
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-md;
+    color: $neutral-text;
+  }
+
+  &__payment-selection-number {
+    font-size: $font-size-sm;
+    color: $neutral-text-muted;
+  }
+
+  &__payment-selection-badge {
+    font-size: $font-size-xs;
+    padding: $spacing-1 $spacing-2;
+    background: $semantic-success-soft;
+    color: $semantic-success;
+    border-radius: $radius-sm;
+  }
+
+  &__payment-selection-divider {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+    color: $neutral-text-muted;
+    font-size: $font-size-sm;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: $neutral-border;
+    }
+  }
+
+  &__payment-selection-new {
+    width: 100%;
+    justify-content: center;
+  }
+
+  &__trial {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
   }
 }

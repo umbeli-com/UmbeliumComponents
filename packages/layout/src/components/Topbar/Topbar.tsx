@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { MenuOutline, NotificationsOutline, FlashOutline } from 'react-ionicons';
+import { Menu, Bell, Zap } from 'lucide-react';
 
 interface TopbarProps {
   onMenuClick?: () => void;
@@ -26,7 +26,7 @@ export function Topbar({
           onClick={onMenuClick}
           aria-label="Toggle menu"
         >
-          <MenuOutline color="currentColor" width="24px" height="24px" />
+          <Menu size={24} />
         </button>
       </div>
 
@@ -37,7 +37,7 @@ export function Topbar({
             onClick={onAICoachClick}
           >
             <span className="topbar__ai-cta-icon">
-              <FlashOutline color="currentColor" width="20px" height="20px" />
+              <Zap size={20} />
             </span>
             <span className="topbar__ai-cta-text">
               {isAICoachOpen ? aiCoachOpenLabel : aiCoachLabel}
@@ -50,7 +50,7 @@ export function Topbar({
       <div className="topbar__right">
         {rightContent || (
           <button className="topbar__action-btn" aria-label="Notifications">
-            <NotificationsOutline color="currentColor" width="22px" height="22px" />
+            <Bell size={22} />
           </button>
         )}
       </div>

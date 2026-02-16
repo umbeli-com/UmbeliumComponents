@@ -1,8 +1,8 @@
 // CalendarBoard Component Styles
 
 .calendar-board {
-  background-color: #ffffff;
-  border: 1px solid #E8EBE7;
+  background-color: var(--theme-color-neutral-surface-alt);
+  border: 1px solid var(--theme-color-neutral-border);
   border-radius: 16px;
   padding: 0.75rem;
   width: 100%;
@@ -20,24 +20,24 @@
   height: 36px;
   border-radius: 8px;
   background: none;
-  border: 1px solid #E8EBE7;
+  border: 1px solid var(--theme-color-neutral-border);
   cursor: pointer;
   font-size: 1rem;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background-color 0.15s ease;
 
   &:hover {
-    background-color: #F8F9FA;
+    background-color: var(--theme-color-neutral-surface);
   }
 }
 
 .calendar-board__title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text);
 }
 
 .calendar-board__weekdays {
@@ -51,7 +51,7 @@
   text-align: center;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
   padding: 0.25rem;
 }
 
@@ -64,13 +64,13 @@
 .calendar-board__day {
   min-height: 64px;
   padding: 0.5rem;
-  background-color: #ffffff;
+  background-color: var(--theme-color-neutral-surface-alt);
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.15s ease;
 
   &:hover {
-    background-color: #F8F9FA;
+    background-color: var(--theme-color-neutral-surface);
   }
 
   &--empty {
@@ -84,14 +84,14 @@
 
   &--today {
     .calendar-board__day-number {
-      background-color: #030174;
-      color: #ffffff;
+      background-color: var(--theme-color-brand-primary, #030174);
+      color: var(--theme-color-brand-on-primary, #ffffff);
     }
   }
 
   &--has-events {
-    background-color: #ffffff;
-    border: 1px solid #E8EBE7;
+    background-color: var(--theme-color-neutral-surface-alt);
+    border: 1px solid var(--theme-color-neutral-border);
   }
 }
 
@@ -103,7 +103,7 @@
   height: 24px;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text);
   border-radius: 100px;
 }
 
@@ -123,18 +123,18 @@
   white-space: nowrap;
 
   &--scheduled {
-    background-color: #F0F1FF;
-    color: #030174;
+    background-color: var(--theme-color-brand-primary-soft, #F0F1FF);
+    color: var(--theme-color-brand-primary, #030174);
   }
 
   &--draft {
-    background-color: #FEF3C7;
-    color: #D97706;
+    background-color: var(--theme-color-warning-soft, #FEF3C7);
+    color: var(--theme-color-warning, #D97706);
   }
 
   &--published {
-    background-color: #ECFDF5;
-    color: #059669;
+    background-color: var(--theme-color-success-soft, #ECFDF5);
+    color: var(--theme-color-success, #059669);
   }
 }
 
@@ -144,6 +144,6 @@
 
 .calendar-board__more {
   font-size: 0.75rem;
-  color: #A0A5B1;
+  color: var(--theme-color-neutral-text-subtle, #A0A5B1);
   padding: 0.25rem;
 }

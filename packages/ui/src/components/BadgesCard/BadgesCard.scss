@@ -1,10 +1,10 @@
 // BadgesCard Component Styles
 
 .badges-card {
-  background: #ffffff;
+  background: var(--theme-color-neutral-surface-alt);
   border-radius: 16px;
   padding: 1.25rem;
-  border: 1px solid #D0D3CF;
+  border: 1px solid var(--theme-color-neutral-border);
 }
 
 .badges-card__header {
@@ -17,14 +17,14 @@
 .badges-card__title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text);
   margin: 0;
 }
 
 .badges-card__count {
   font-size: 0.875rem;
-  color: #7E8594;
-  background: #F8F9FA;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
+  background: var(--theme-color-neutral-surface);
   padding: 0.25rem 0.75rem;
   border-radius: 100px;
 }
@@ -45,7 +45,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem;
-  background: #F8F9FA;
+  background: var(--theme-color-neutral-surface);
   border-radius: 12px;
   opacity: 0.5;
   transition: all 0.2s ease;
@@ -67,7 +67,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--theme-color-neutral-surface-alt);
   border-radius: 8px;
 
   .badges-card__badge--unlocked & {
@@ -78,11 +78,11 @@
 .badges-card__badge-name {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
   text-align: center;
 
   .badges-card__badge--unlocked & {
-    color: #1a1a2e;
+    color: var(--theme-color-neutral-text);
   }
 }
 
@@ -96,7 +96,7 @@
 
 .badges-card__badge-progress-fill {
   height: 100%;
-  background: #030174;
+  background: var(--theme-color-brand-primary, #030174);
   border-radius: 2px;
   transition: width 0.3s ease;
 }

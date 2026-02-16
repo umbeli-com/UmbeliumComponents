@@ -10,8 +10,8 @@
 .icon--missing {
   width: 20px;
   height: 20px;
-  background-color: #F8F9FA;
+  background-color: var(--theme-color-neutral-surface-alt, #F8F9FA);
   border-radius: 4px;
   font-size: 0.75rem;
-  color: #A0A5B1;
+  color: var(--theme-color-neutral-text-subtle, #A0A5B1);
 }

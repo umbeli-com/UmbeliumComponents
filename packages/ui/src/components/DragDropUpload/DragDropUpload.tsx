@@ -1,5 +1,5 @@
 import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
-import { CloudUploadOutline } from 'react-ionicons';
+import { Upload } from 'lucide-react';
 import { Button } from '@umbeli/ui';
 
 interface DragDropUploadProps {
@@ -8,14 +8,37 @@ interface DragDropUploadProps {
   maxSizeMB?: number;
   className?: string;
   isLoading?: boolean;
+  uploadSuccess?: boolean;
+  uploadProgress?: number; // 0-100
+  uploadedBytes?: number;
+  totalBytes?: number;
+  isConverting?: boolean;
+  conversionProgress?: number; // 0-100
+  conversionMessage?: string;
 }
+
+// Helper to format bytes
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
 
 export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   onFileSelect,
   accept = 'video/*,image/*',
-  maxSizeMB = 50,
+  maxSizeMB = 2048, // 2GB default
   className = '',
   isLoading = false,
+  uploadSuccess = false,
+  uploadProgress = 0,
+  uploadedBytes = 0,
+  totalBytes = 0,
+  isConverting = false,
+  conversionProgress = 0,
+  conversionMessage = '',
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,33 +64,25 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
 
   const validateFile = (file: File): boolean => {
     setError(null);
-    
-    // Check file type
-    if (accept) {
-      const acceptedTypes = accept.split(',').map(t => t.trim());
-      const fileType = file.type;
-      const fileName = file.name.toLowerCase();
-      
-      const isValidType = acceptedTypes.some(type => {
-        if (type.endsWith('/*')) {
-          const mainType = type.split('/')[0];
-          return fileType.startsWith(mainType);
-        }
-        if (type.startsWith('.')) {
-          return fileName.endsWith(type.toLowerCase());
-        }
-        return fileType === type;
-      });
 
-      if (!isValidType) {
-        setError('Type de fichier non supporté');
-        return false;
-      }
+    // Check file type - be very permissive for supported extensions
+    const fileName = file.name.toLowerCase();
+    const supportedExtensions = [
+      '.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.3gp', '.mpeg', '.mpg', '.mts', '.ts', '.ogv',
+      '.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.svg'
+    ];
+
+    const hasSupportedExtension = supportedExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!hasSupportedExtension) {
+      setError('Type de fichier non supporté. Formats acceptés: MP4, MOV, AVI, MKV, WMV, FLV, WebM, HEIC, HEIF, JPG, PNG, GIF, WebP');
+      return false;
     }
 
     // Check size
     if (file.size > maxSizeMB * 1024 * 1024) {
-      setError(`Le fichier dépasse la taille maximale de ${maxSizeMB}MB`);
+      const displaySize = maxSizeMB >= 1024 ? `${(maxSizeMB / 1024).toFixed(0)}GB` : `${maxSizeMB}MB`;
+      setError(`Le fichier dépasse la taille maximale de ${displaySize}`);
       return false;
     }
 
@@ -79,7 +94,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
     e.stopPropagation();
     setIsDragOver(false);
 
-    if (isLoading) return;
+    if (isLoading || isConverting) return;
 
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
@@ -91,7 +106,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   };
 
   const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (isLoading) return;
+    if (isLoading || isConverting) return;
 
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -108,9 +123,11 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
     }
   };
 
+  const isProcessing = isLoading || isConverting;
+
   return (
     <div
-      className={`drag-drop-upload ${isDragOver ? 'is-drag-over' : ''} ${isLoading ? 'is-loading' : ''} ${className}`}
+      className={`drag-drop-upload ${isDragOver ? 'is-drag-over' : ''} ${isProcessing ? 'is-loading' : ''} ${className}`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -122,23 +139,50 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
         onChange={handleFileInputChange}
         accept={accept}
         className="drag-drop-upload__input"
-        disabled={isLoading}
+        disabled={isProcessing}
       />
 
       <div className="drag-drop-upload__content">
-        {isLoading ? (
+        {isConverting ? (
+          <div className="drag-drop-upload__loader drag-drop-upload__converting">
+            <div className="drag-drop-upload__progress-container">
+              <div className="drag-drop-upload__progress-bar drag-drop-upload__progress-bar--conversion">
+                <div 
+                  className="drag-drop-upload__progress-fill drag-drop-upload__progress-fill--conversion" 
+                  style={{ width: `${conversionProgress}%` }}
+                />
+              </div>
+              <p className="drag-drop-upload__progress-percentage">{conversionProgress}%</p>
+            </div>
+            <p className="drag-drop-upload__progress-text">{conversionMessage || 'Conversion en cours...'}</p>
+          </div>
+        ) : isLoading ? (
           <div className="drag-drop-upload__loader">
-            <div className="drag-drop-upload__spinner" />
+            <div className="drag-drop-upload__progress-container">
+              <div className="drag-drop-upload__progress-bar">
+                <div 
+                  className="drag-drop-upload__progress-fill" 
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="drag-drop-upload__progress-percentage">{uploadProgress}%</p>
+              {totalBytes > 0 && (
+                <p className="drag-drop-upload__progress-bytes">
+                  {formatBytes(uploadedBytes)} / {formatBytes(totalBytes)}
+                </p>
+              )}
+            </div>
             <p className="drag-drop-upload__progress-text">Téléchargement en cours...</p>
+          </div>
+        ) : uploadSuccess ? (
+          <div className="drag-drop-upload__success">
+            <div className="drag-drop-upload__success-icon">✓</div>
+            <p className="drag-drop-upload__success-text">Fichier téléchargé avec succès !</p>
           </div>
         ) : (
           <>
             <div className="drag-drop-upload__icon-wrapper">
-              <CloudUploadOutline
-                color="currentColor"
-                width="48px"
-                height="48px"
-              />
+              <Upload size={48} />
             </div>
             
             <div className="drag-drop-upload__text-wrapper">
@@ -159,7 +203,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
             </div>
 
             <div className="drag-drop-upload__meta">
-              Supporte: {accept.replace(/\*/g, '')} (Max {maxSizeMB}MB)
+              Formats supportés: MP4, MOV, AVI, MKV, WMV, FLV, WebM, HEIC, HEIF, JPG, PNG, GIF, WebP (Max {maxSizeMB >= 1024 ? `${(maxSizeMB / 1024).toFixed(0)}GB` : `${maxSizeMB}MB`})
             </div>
 
             {error && (

@@ -1,5 +1,5 @@
 import { Icon } from '@umbeli/ui';
-import { TrendingUpOutline, TrendingDownOutline, RemoveOutline } from 'react-ionicons';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface KpiCardProps {
   label: string;
@@ -24,10 +24,9 @@ export function KpiCard({ label, value, icon, trend, className = '' }: KpiCardPr
 
   const renderTrendIcon = () => {
     if (!trend) return null;
-    const props = { color: 'currentColor', width: '14px', height: '14px' };
-    if (trend.direction === 'up') return <TrendingUpOutline {...props} />;
-    if (trend.direction === 'down') return <TrendingDownOutline {...props} />;
-    return <RemoveOutline {...props} />;
+    if (trend.direction === 'up') return <TrendingUp size={14} />;
+    if (trend.direction === 'down') return <TrendingDown size={14} />;
+    return <Minus size={14} />;
   };
 
   return (

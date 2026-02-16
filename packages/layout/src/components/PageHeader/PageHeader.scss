@@ -22,14 +22,14 @@
 .page-header__title {
   font-size: 2rem;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text, var(--theme-color-neutral-text, #1a1a2e));
   line-height: 1.2;
   letter-spacing: -0.025em;
 }
 
 .page-header__subtitle {
   font-size: 1rem;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, var(--theme-color-neutral-text-muted, #7E8594));
   margin: 0;
 }
 
@@ -44,8 +44,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: #ffffff;
-  border: 1px solid #E8EBE7;
+  background-color: var(--theme-color-neutral-surface-alt);
+  border: 1px solid var(--theme-color-neutral-surface, var(--theme-color-neutral-surface));
   border-radius: 100px;
 }
 
@@ -56,7 +56,7 @@
 .page-header__period-text {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text, var(--theme-color-neutral-text, #1a1a2e));
 }
 
 .page-header__actions {

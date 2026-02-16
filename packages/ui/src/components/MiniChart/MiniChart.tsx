@@ -37,9 +37,18 @@ export function MiniChart({
     );
   }
 
-  // Line chart placeholder
+  // Line chart - handle edge cases
+  if (data.length === 0) {
+    return (
+      <div className={`mini-chart mini-chart--line mini-chart--${color}`} style={{ height }}>
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="mini-chart__svg" />
+      </div>
+    );
+  }
+
   const points = data.map((point, index) => {
-    const x = (index / (data.length - 1)) * 100;
+    // Avoid division by zero when data has only 1 point
+    const x = data.length === 1 ? 50 : (index / (data.length - 1)) * 100;
     const y = 100 - (point.value / maxValue) * 100;
     return `${x},${y}`;
   }).join(' ');

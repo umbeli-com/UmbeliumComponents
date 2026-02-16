@@ -1,4 +1,4 @@
-// Tabs Component Styles
+// Tabs Component Styles - Socialum Soft-Flat No-Shadow AD
 
 .tabs {
   display: flex;
@@ -6,83 +6,81 @@
 }
 
 .tabs__list {
-  display: flex;
-  gap: 0.25rem;
-  margin-bottom: 1.5rem;
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding: 4px;
+  background-color: var(--theme-color-neutral-surface-alt);
+  border: 1px solid var(--theme-color-neutral-border);
+  border-radius: 999px;
 
   .tabs--default & {
-    border-bottom: 1px solid #E8EBE7;
-    padding-bottom: 0;
-    gap: 1rem;
+    background-color: var(--theme-color-neutral-surface-alt);
+    border: 1px solid var(--theme-color-neutral-border);
+    padding: 4px;
+    border-radius: 999px;
+    gap: 4px;
   }
 
   .tabs--pills & {
-    background-color: #F8F9FA;
-    padding: 0.25rem;
-    border-radius: 12px;
+    background-color: var(--theme-color-neutral-surface-alt);
+    border: 1px solid var(--theme-color-neutral-border);
+    padding: 4px;
+    border-radius: 999px;
   }
 }
 
 .tabs__tab {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: none;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: 500;
-  color: #7E8594;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  color: var(--theme-color-neutral-text-muted, var(--theme-color-neutral-text-muted, #6B7280));
+  transition: all 0.15s ease;
   position: relative;
+  border-radius: 999px;
 
   .tabs--default & {
-    padding: 0.75rem 0.25rem;
-    margin-bottom: -1px;
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background-color: transparent;
-      transition: background-color 0.15s ease;
-    }
+    padding: 10px 16px;
 
     &--active {
-      color: #030174;
-      box-shadow: 0 2px 8px rgba(3, 1, 116, 0.3);
-
-      &::after {
-        background-color: #030174;
-      }
+      background-color: var(--theme-color-brand-primary, var(--theme-color-brand-primary, #030174));
+      color: var(--theme-color-brand-on-primary, var(--theme-color-neutral-surface-alt));
+      font-weight: 500;
     }
 
     &:hover:not(&--active) {
-      color: #1a1a2e;
+      background-color: var(--theme-color-neutral-bg, var(--theme-color-neutral-bg, #F3F4F6));
+      color: var(--theme-color-neutral-text, #374151);
     }
   }
 
   .tabs--pills & {
-    border-radius: 8px;
+    border-radius: 999px;
 
     &--active {
-      background-color: #ffffff;
-      color: #1a1a2e;
+      background-color: var(--theme-color-brand-primary, var(--theme-color-brand-primary, #030174));
+      color: var(--theme-color-brand-on-primary, var(--theme-color-neutral-surface-alt));
+      font-weight: 500;
     }
 
     &:hover:not(&--active) {
-      background-color: #F0F1F3;
+      background-color: var(--theme-color-neutral-bg, var(--theme-color-neutral-bg, #F3F4F6));
+      color: var(--theme-color-neutral-text, #374151);
     }
   }
 }
 
 .tabs__tab-icon {
-  font-size: 1.125rem;
+  font-size: 18px;
   line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 .tabs__tab-label {

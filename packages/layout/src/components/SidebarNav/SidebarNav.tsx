@@ -1,23 +1,26 @@
-import { useState, useEffect, useRef, ReactNode, ComponentType } from 'react';
-import { 
-  ChevronDownOutline,
-  AddOutline,
-  CheckmarkCircleOutline,
-  CloudOutline,
-  CloseCircleOutline,
-  LogOutOutline
-} from 'react-ionicons';
+import { useState, useEffect, useRef, ReactNode } from 'react';
+import {
+  ChevronDown,
+  Plus,
+  CheckCircle,
+  LogOut,
+  LucideIcon,
+  MessageSquarePlus,
+  Moon,
+  Sun
+} from 'lucide-react';
 
 interface Workspace {
   id: string;
   name: string;
   slug?: string;
+  logo_url?: string | null;
 }
 
 interface NavItem {
   path: string;
   label: string;
-  icon: ComponentType<{ color?: string; width?: string; height?: string }>;
+  icon: LucideIcon;
 }
 
 interface SidebarNavProps {
@@ -31,12 +34,16 @@ interface SidebarNavProps {
   onClose?: () => void;
   isActive: (path: string) => boolean;
   renderLink: (item: NavItem, isActive: boolean, onClick?: () => void) => ReactNode;
-  pingStatus?: 'idle' | 'loading' | 'success' | 'error';
-  onPing?: () => void;
+  onRequestFeature?: () => void;
+  // Theme and language settings
+  theme?: 'dark' | 'light' | 'system';
+  onToggleTheme?: () => void;
+  language?: 'fr' | 'en';
+  onToggleLanguage?: () => void;
   translations?: {
     workspaces?: string;
     newWorkspace?: string;
-    backend?: string;
+    requestFeature?: string;
     loading?: string;
     connected?: string;
     error?: string;
@@ -47,7 +54,7 @@ interface SidebarNavProps {
 const defaultTranslations = {
   workspaces: 'Workspaces',
   newWorkspace: 'Nouveau workspace',
-  backend: 'Backend',
+  requestFeature: 'Suggestion',
   loading: 'Chargement...',
   connected: 'Connecté',
   error: 'Erreur',
@@ -72,8 +79,11 @@ export function SidebarNav({
   onClose,
   isActive,
   renderLink,
-  pingStatus = 'idle',
-  onPing,
+  onRequestFeature,
+  theme,
+  onToggleTheme,
+  language,
+  onToggleLanguage,
   translations = {},
 }: SidebarNavProps) {
   const t = { ...defaultTranslations, ...translations };
@@ -105,28 +115,6 @@ export function SidebarNav({
     }
   };
 
-  const getPingIcon = () => {
-    switch (pingStatus) {
-      case 'loading':
-        return <CloudOutline color="currentColor" width="18px" height="18px" />;
-      case 'success':
-        return <CheckmarkCircleOutline color="#16A34A" width="18px" height="18px" />;
-      case 'error':
-        return <CloseCircleOutline color="#DC2626" width="18px" height="18px" />;
-      default:
-        return <CloudOutline color="currentColor" width="18px" height="18px" />;
-    }
-  };
-
-  const getPingLabel = () => {
-    switch (pingStatus) {
-      case 'loading': return t.loading;
-      case 'success': return t.connected;
-      case 'error': return t.error;
-      default: return t.backend;
-    }
-  };
-
   return (
     <nav className="sidebar-nav">
       <div className="sidebar-nav__header">
@@ -137,16 +125,18 @@ export function SidebarNav({
             disabled={switchingWorkspace}
           >
             <span className="sidebar-nav__workspace-icon">
-              {getInitials(currentWorkspace?.name || 'W')}
+              {currentWorkspace?.logo_url ? (
+                <img src={currentWorkspace.logo_url} alt={currentWorkspace.name} className="sidebar-nav__workspace-logo" />
+              ) : (
+                getInitials(currentWorkspace?.name || 'W')
+              )}
             </span>
             <span className="sidebar-nav__workspace-name">
               {switchingWorkspace ? t.loading : (currentWorkspace?.name || 'Workspace')}
             </span>
-            <ChevronDownOutline
-              color="currentColor"
-              width="14px"
-              height="14px"
-              cssClasses={`sidebar-nav__workspace-chevron ${showWorkspaceMenu ? 'is-open' : ''}`}
+            <ChevronDown
+              size={14}
+              className={`sidebar-nav__workspace-chevron ${showWorkspaceMenu ? 'is-open' : ''}`}
             />
           </button>
 
@@ -163,13 +153,17 @@ export function SidebarNav({
                       onClick={() => handleSwitchWorkspace(workspace)}
                     >
                       <span className="sidebar-nav__workspace-item-icon">
-                        {getInitials(workspace.name)}
+                        {workspace.logo_url ? (
+                          <img src={workspace.logo_url} alt={workspace.name} className="sidebar-nav__workspace-logo" />
+                        ) : (
+                          getInitials(workspace.name)
+                        )}
                       </span>
                       <span className="sidebar-nav__workspace-item-name">
                         {workspace.name}
                       </span>
                       {workspace.id === currentWorkspace?.id && (
-                        <CheckmarkCircleOutline color="#16A34A" width="16px" height="16px" />
+                        <CheckCircle size={16} color="#16A34A" />
                       )}
                     </button>
                   </li>
@@ -184,7 +178,7 @@ export function SidebarNav({
                       onCreateWorkspace();
                     }}
                   >
-                    <AddOutline color="currentColor" width="16px" height="16px" />
+                    <Plus size={16} />
                     <span>{t.newWorkspace}</span>
                   </button>
                 </div>
@@ -205,21 +199,64 @@ export function SidebarNav({
       </div>
 
       <div className="sidebar-nav__footer">
-        <div className="sidebar-nav__divider" />
-        
-        {onPing && (
-          <button 
-            className={`sidebar-nav__ping sidebar-nav__ping--${pingStatus}`}
-            onClick={onPing}
-            disabled={pingStatus === 'loading'}
-            title={t.backend}
-          >
-            <span className="sidebar-nav__ping-icon">{getPingIcon()}</span>
-            <span className="sidebar-nav__ping-label">{getPingLabel()}</span>
-          </button>
+        {/* Theme and Language Settings */}
+        {(onToggleTheme || onToggleLanguage) && (
+          <div className="sidebar-nav__settings">
+            {onToggleTheme && (
+              <div className="sidebar-nav__switch">
+                <button
+                  className={`sidebar-nav__switch-tab ${theme === 'light' ? 'is-active' : ''}`}
+                  onClick={() => theme !== 'light' && onToggleTheme()}
+                  title="Light mode"
+                >
+                  <Sun size={16} />
+                </button>
+                <button
+                  className={`sidebar-nav__switch-tab ${theme === 'dark' ? 'is-active' : ''}`}
+                  onClick={() => theme !== 'dark' && onToggleTheme()}
+                  title="Dark mode"
+                >
+                  <Moon size={16} />
+                </button>
+              </div>
+            )}
+            {onToggleLanguage && (
+              <div className="sidebar-nav__switch">
+                <button
+                  className={`sidebar-nav__switch-tab ${language === 'fr' ? 'is-active' : ''}`}
+                  onClick={() => language !== 'fr' && onToggleLanguage()}
+                  title="Français"
+                >
+                  FR
+                </button>
+                <button
+                  className={`sidebar-nav__switch-tab ${language === 'en' ? 'is-active' : ''}`}
+                  onClick={() => language !== 'en' && onToggleLanguage()}
+                  title="English"
+                >
+                  EN
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
+        <div className="sidebar-nav__divider" />
+
         <ul className="sidebar-nav__list">
+          {onRequestFeature && (
+            <li className="sidebar-nav__item">
+              <button
+                className="sidebar-nav__link sidebar-nav__request-feature"
+                onClick={onRequestFeature}
+              >
+                <span className="sidebar-nav__icon">
+                  <MessageSquarePlus size={22} />
+                </span>
+                <span className="sidebar-nav__label">{t.requestFeature}</span>
+              </button>
+            </li>
+          )}
           {bottomNavItems.map((item) => (
             <li key={item.path} className="sidebar-nav__item">
               {renderLink(item, isActive(item.path), onClose)}
@@ -232,7 +269,7 @@ export function SidebarNav({
                 onClick={onLogout}
               >
                 <span className="sidebar-nav__icon">
-                  <LogOutOutline color="currentColor" width="22px" height="22px" />
+                  <LogOut size={22} />
                 </span>
                 <span className="sidebar-nav__label">{t.logout}</span>
               </button>

@@ -1,4 +1,4 @@
-import { TrophyOutline, FlameOutline, RocketOutline, StarOutline, HeartOutline, RibbonOutline } from 'react-ionicons';
+import { Trophy, Flame, Rocket, Star, Heart, Award } from 'lucide-react';
 
 interface Badge {
   id: string;
@@ -14,14 +14,15 @@ interface BadgesCardProps {
   currentStreak: number;
   totalPosts: number;
   weeklyGoalMet: number;
+  t: (key: string) => string;
 }
 
-const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: number): Badge[] => {
+const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: number, t: (key: string) => string): Badge[] => {
   return [
     {
       id: 'first-post',
-      name: 'Premier Pas',
-      description: 'Publie ton premier post',
+      name: t('badges.firstStep'),
+      description: t('badges.firstStepDesc'),
       icon: 'star',
       unlocked: totalPosts >= 1,
       progress: Math.min(totalPosts, 1),
@@ -29,8 +30,8 @@ const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: num
     },
     {
       id: 'streak-3',
-      name: 'En Route',
-      description: 'Atteins une streak de 3 jours',
+      name: t('badges.onTrack'),
+      description: t('badges.onTrackDesc'),
       icon: 'flame',
       unlocked: currentStreak >= 3,
       progress: Math.min(currentStreak, 3),
@@ -38,8 +39,8 @@ const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: num
     },
     {
       id: 'streak-7',
-      name: 'Semaine Parfaite',
-      description: 'Atteins une streak de 7 jours',
+      name: t('badges.perfectWeek'),
+      description: t('badges.perfectWeekDesc'),
       icon: 'trophy',
       unlocked: currentStreak >= 7,
       progress: Math.min(currentStreak, 7),
@@ -47,8 +48,8 @@ const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: num
     },
     {
       id: 'posts-10',
-      name: 'Productif',
-      description: 'Publie 10 posts',
+      name: t('badges.productive'),
+      description: t('badges.productiveDesc'),
       icon: 'rocket',
       unlocked: totalPosts >= 10,
       progress: Math.min(totalPosts, 10),
@@ -56,8 +57,8 @@ const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: num
     },
     {
       id: 'posts-50',
-      name: 'Créateur',
-      description: 'Publie 50 posts',
+      name: t('badges.creator'),
+      description: t('badges.creatorDesc'),
       icon: 'heart',
       unlocked: totalPosts >= 50,
       progress: Math.min(totalPosts, 50),
@@ -65,8 +66,8 @@ const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: num
     },
     {
       id: 'weekly-4',
-      name: 'Régulier',
-      description: 'Atteins ton objectif hebdo 4 fois',
+      name: t('badges.regular'),
+      description: t('badges.regularDesc'),
       icon: 'ribbon',
       unlocked: weeklyGoalMet >= 4,
       progress: Math.min(weeklyGoalMet, 4),
@@ -77,27 +78,25 @@ const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: num
 
 const BadgeIcon = ({ icon, unlocked }: { icon: Badge['icon']; unlocked: boolean }) => {
   const color = unlocked ? '#eab308' : '#9ca3af';
-  const size = '24px';
-  
   switch (icon) {
-    case 'trophy': return <TrophyOutline color={color} width={size} height={size} />;
-    case 'flame': return <FlameOutline color={color} width={size} height={size} />;
-    case 'rocket': return <RocketOutline color={color} width={size} height={size} />;
-    case 'star': return <StarOutline color={color} width={size} height={size} />;
-    case 'heart': return <HeartOutline color={color} width={size} height={size} />;
-    case 'ribbon': return <RibbonOutline color={color} width={size} height={size} />;
-    default: return <StarOutline color={color} width={size} height={size} />;
+    case 'trophy': return <Trophy size={24} color={color} />;
+    case 'flame': return <Flame size={24} color={color} />;
+    case 'rocket': return <Rocket size={24} color={color} />;
+    case 'star': return <Star size={24} color={color} />;
+    case 'heart': return <Heart size={24} color={color} />;
+    case 'ribbon': return <Award size={24} color={color} />;
+    default: return <Star size={24} color={color} />;
   }
 };
 
-export function BadgesCard({ currentStreak, totalPosts, weeklyGoalMet }: BadgesCardProps) {
-  const badges = getBadges(currentStreak, totalPosts, weeklyGoalMet);
+export function BadgesCard({ currentStreak, totalPosts, weeklyGoalMet, t }: BadgesCardProps) {
+  const badges = getBadges(currentStreak, totalPosts, weeklyGoalMet, t);
   const unlockedCount = badges.filter(b => b.unlocked).length;
 
   return (
     <div className="badges-card">
       <div className="badges-card__header">
-        <h3 className="badges-card__title">🏆 Badges</h3>
+        <h3 className="badges-card__title">{t('badges.title')}</h3>
         <span className="badges-card__count">{unlockedCount}/{badges.length}</span>
       </div>
 

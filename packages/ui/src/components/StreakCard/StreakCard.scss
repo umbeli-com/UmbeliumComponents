@@ -1,15 +1,17 @@
 // StreakCard Component Styles
 
 .streak-card {
-  background: #ffffff;
+  background: var(--theme-color-neutral-surface-alt);
   border-radius: 16px;
   padding: 1.25rem;
-  border: 1px solid #D0D3CF;
+  border: 1px solid var(--theme-color-neutral-border);
   transition: all 0.3s ease;
+  min-width: 0;
+  overflow: hidden;
 
   &--on-fire {
-    border-color: rgba(239, 68, 68, 0.3);
-    background: linear-gradient(135deg, #ffffff, rgba(239, 68, 68, 0.05));
+    border-color: var(--theme-color-danger-soft, rgba(239, 68, 68, 0.3));
+    background: linear-gradient(135deg, var(--theme-color-neutral-surface-alt), var(--theme-color-danger-soft, rgba(239, 68, 68, 0.05)));
   }
 }
 
@@ -24,7 +26,7 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: #F8F9FA;
+  background: var(--theme-color-neutral-surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,13 +49,13 @@
 .streak-card__title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text);
   margin: 0 0 0.25rem;
 }
 
 .streak-card__subtitle {
   font-size: 0.875rem;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
 }
 
 .streak-card__stats {
@@ -68,12 +70,12 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.75rem;
-  background: #F8F9FA;
+  background: var(--theme-color-neutral-surface);
   border-radius: 12px;
   flex: 1;
 
   &--main {
-    background: linear-gradient(135deg, #030174, #4f46e5);
+    background: linear-gradient(135deg, var(--theme-color-brand-primary, #030174), var(--theme-color-brand-primary, #4f46e5));
     
     .streak-card__stat-value,
     .streak-card__stat-label {
@@ -85,12 +87,12 @@
 .streak-card__stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text);
 }
 
 .streak-card__stat-label {
   font-size: 0.75rem;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
   text-align: center;
 }
 
@@ -102,32 +104,32 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.875rem;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
   margin-bottom: 0.5rem;
 }
 
 .streak-card__progress-bar {
   height: 8px;
-  background: #F8F9FA;
+  background: var(--theme-color-neutral-surface);
   border-radius: 100px;
   overflow: hidden;
 }
 
 .streak-card__progress-fill {
   height: 100%;
-  background: #030174;
+  background: var(--theme-color-brand-primary, #030174);
   border-radius: 100px;
   transition: width 0.5s ease;
 
   &--complete {
-    background: linear-gradient(90deg, #059669, #10B981);
+    background: linear-gradient(90deg, var(--theme-color-success, #059669), var(--theme-color-success, #10B981));
   }
 }
 
 .streak-card__last-post {
   font-size: 0.75rem;
-  color: #A0A5B1;
+  color: var(--theme-color-neutral-text-subtle, #A0A5B1);
   text-align: center;
   padding-top: 0.75rem;
-  border-top: 1px solid #D0D3CF;
+  border-top: 1px solid var(--theme-color-neutral-border);
 }

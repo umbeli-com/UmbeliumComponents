@@ -1,13 +1,20 @@
 // KpiCard Component Styles
 
 .kpi-card {
-  background-color: #ffffff;
-  border: 1px solid #E8EBE7;
+  background-color: var(--theme-color-neutral-surface-alt);
+  border: 1px solid var(--theme-color-neutral-border);
   border-radius: 16px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
+
+  @media (max-width: 640px) {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
 }
 
 .kpi-card__header {
@@ -30,7 +37,14 @@
 .kpi-card__label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 640px) {
+    font-size: 0.75rem;
+  }
 }
 
 .kpi-card__body {
@@ -42,8 +56,12 @@
 .kpi-card__value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text);
   line-height: 1.2;
+
+  @media (max-width: 640px) {
+    font-size: 1.25rem;
+  }
 }
 
 .kpi-card__trend {
@@ -54,17 +72,17 @@
   border-radius: 100px;
   font-size: 0.75rem;
   font-weight: 500;
-  background-color: #F8F9FA;
-  color: #7E8594;
+  background-color: var(--theme-color-neutral-surface);
+  color: var(--theme-color-neutral-text-muted, #7E8594);
 
   &--up {
-    background-color: #ECFDF5;
-    color: #059669;
+    background-color: var(--theme-color-success-soft, #ECFDF5);
+    color: var(--theme-color-success, #059669);
   }
 
   &--down {
-    background-color: #FEF2F2;
-    color: #DC2626;
+    background-color: var(--theme-color-danger-soft, #FEF2F2);
+    color: var(--theme-color-danger, #DC2626);
   }
 }
 

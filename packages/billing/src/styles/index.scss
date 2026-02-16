@@ -1,2 +1,3 @@
-@import './billing';
-@import './payment-form';
+@use './variables';
+@use './billing';
+@use './payment-form';

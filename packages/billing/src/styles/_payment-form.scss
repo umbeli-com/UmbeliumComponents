@@ -1,21 +1,23 @@
+@use './variables' as *;
+
 .umbeli-payment-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: $spacing-6;
 
   &__error {
-    padding: 0.75rem 1rem;
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    color: #dc2626;
-    font-size: 0.875rem;
+    padding: $spacing-3 $spacing-4;
+    background-color: $semantic-danger-soft;
+    border: 1px solid rgba($semantic-danger, 0.25);
+    border-radius: $radius-sm;
+    color: $semantic-danger;
+    font-size: $font-size-md;
   }
 
   &__actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+    gap: $spacing-3;
+    margin-top: $spacing-2;
   }
 }

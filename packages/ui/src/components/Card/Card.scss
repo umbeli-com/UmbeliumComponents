@@ -1,9 +1,11 @@
 // Card Component Styles
 
 .card {
-  background-color: #ffffff;
-  border: 1px solid #E8EBE7;
+  background-color: var(--theme-color-neutral-surface-alt);
+  border: 1px solid var(--theme-color-neutral-border);
   border-radius: 16px;
+  min-width: 0;
+  overflow: hidden;
 
   &--padding-sm {
     padding: 1rem;
@@ -18,6 +20,6 @@
   }
 
   &--muted {
-    background-color: #F8F9FA;
+    background-color: var(--theme-color-neutral-surface-alt, #F8F9FA);
   }
 }

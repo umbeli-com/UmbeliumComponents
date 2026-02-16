@@ -6,18 +6,18 @@
   width: 100%;
 
   &--primary {
-    --chart-color: #030174;
-    --chart-color-soft: #F0F1FF;
+    --chart-color: var(--theme-color-brand-primary, #030174);
+    --chart-color-soft: var(--theme-color-brand-primary-soft, #F0F1FF);
   }
 
   &--secondary {
-    --chart-color: #1a1a2e;
-    --chart-color-soft: #F8F9FA;
+    --chart-color: var(--theme-color-neutral-text, #111827);
+    --chart-color-soft: var(--theme-color-neutral-surface, #E5E7EB);
   }
 
   &--success {
-    --chart-color: #059669;
-    --chart-color-soft: #ECFDF5;
+    --chart-color: var(--theme-color-success, #059669);
+    --chart-color-soft: var(--theme-color-success-soft, #ECFDF5);
   }
 }
 
@@ -54,7 +54,7 @@
     bottom: 0;
     transform: translateY(100%);
     font-size: 0.75rem;
-    color: #A0A5B1;
+    color: var(--theme-color-neutral-text-subtle, #A0A5B1);
     padding-top: 0.25rem;
   }
 }
@@ -81,6 +81,6 @@
 
   .mini-chart__label {
     font-size: 0.75rem;
-    color: #A0A5B1;
+    color: var(--theme-color-neutral-text-subtle, #A0A5B1);
   }
 }

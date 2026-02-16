@@ -1,22 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { Card, Button } from '@umbeli/ui';
-import { 
-  CheckmarkOutline, 
-  CardOutline, 
-  CloseOutline, 
-  TrashOutline,
-  DownloadOutline,
-  AddOutline 
-} from 'react-ionicons';
+import { Check, CreditCard, X, Trash2, Download, Plus } from 'lucide-react';
 import { PaymentForm } from './PaymentForm';
+import { useStripeContext } from './StripeProvider';
+import '../styles/index.scss';
 
 interface Plan {
   id: string;
   name: string;
   price: number;
   features: string[];
+  interval?: string;
+  trialDays?: number;
   popular?: boolean;
 }
 
@@ -43,7 +39,9 @@ interface Subscription {
   plan: string;
   status: string;
   periodEnd: string | null;
+  trialEnd?: string | null;
   cancelAtPeriodEnd?: boolean;
+  hasUsedTrial?: boolean;
   limits: {
     postsAnalyzed: number;
     workspaces: number;
@@ -57,7 +55,7 @@ interface BillingApi {
   getPaymentMethods: () => Promise<{ paymentMethods: PaymentMethod[] }>;
   getInvoices: (limit: number) => Promise<{ invoices: Invoice[] }>;
   createSetupIntent: () => Promise<{ clientSecret: string; customerId: string }>;
-  subscribeInApp: (planId: string, paymentMethodId: string) => Promise<{ subscriptionId: string; status: string; clientSecret?: string }>;
+  subscribeInApp: (planId: string, paymentMethodId?: string, options?: { trialOnly?: boolean }) => Promise<{ subscriptionId: string; status: string; clientSecret?: string }>;
   cancelSubscription: (immediately: boolean) => Promise<{ success: boolean; canceledImmediately: boolean }>;
   resumeSubscription: () => Promise<{ success: boolean }>;
   changePlan: (planId: string) => Promise<{ success: boolean; newPlan: string }>;
@@ -79,11 +77,21 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [showPaymentSelection, setShowPaymentSelection] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<'setup' | 'payment'>('setup');
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [authError, setAuthError] = useState(false);
 
-  const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
+  // Get stripe instance from context (initialized by StripeProvider)
+  const stripeContext = useStripeContext();
+  const stripePromise = stripeContext?.stripePromise || null;
+  
+  
+  if (!stripePromise && stripePublishableKey) {
+    console.error('[BillingManager] StripeProvider not found! Wrap BillingManager with <StripeProvider>');
+  }
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -97,9 +105,13 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
   const fetchPaymentMethods = useCallback(async () => {
     try {
       const res = await api.getPaymentMethods();
-      setPaymentMethods(res.paymentMethods);
-    } catch (err) {
+      setPaymentMethods(res.paymentMethods || []);
+      setAuthError(false);
+    } catch (err: any) {
       console.error('Failed to fetch payment methods:', err);
+      if (err?.message?.includes('Token') || err?.message?.includes('401')) {
+        setAuthError(true);
+      }
     }
   }, [api]);
 
@@ -126,28 +138,83 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
     }
   }, [activeTab, fetchInvoices]);
 
+  const handleSubscribeResult = useCallback(async (result: { status: string; clientSecret?: string } | null) => {
+    if (!result) return false;
+
+    if (result.status === 'active' || result.status === 'trialing') {
+      setShowPaymentForm(false);
+      setClientSecret(null);
+      setSelectedPlan(null);
+      setPaymentMode('setup');
+      onSubscriptionChange();
+      fetchPaymentMethods();
+      return true;
+    }
+
+    if (result.clientSecret) {
+      setClientSecret(result.clientSecret);
+      setPaymentMode('payment');
+      setShowPaymentForm(true);
+      return false;
+    }
+
+    return false;
+  }, [fetchPaymentMethods, onSubscriptionChange]);
+
   const handleUpgrade = async (planId: string) => {
+    if (authError) {
+      alert('Veuillez vous connecter pour souscrire à un plan.');
+      return;
+    }
     setSelectedPlan(planId);
+    
+    // If user has saved payment methods, show selection modal
+    if (paymentMethods.length > 0) {
+      setShowPaymentSelection(true);
+    } else {
+      // No saved methods, go directly to add new card
+      await handleAddNewCardForSubscription();
+    }
+  };
+
+  const handleAddNewCardForSubscription = async () => {
+    setShowPaymentSelection(false);
     setLoading(true);
     try {
-      if (paymentMethods.length > 0) {
-        const defaultMethod = paymentMethods.find(pm => pm.isDefault) || paymentMethods[0];
-        const res = await api.subscribeInApp(planId, defaultMethod.id);
-        if (res.status === 'active' || res.status === 'trialing') {
-          onSubscriptionChange();
-          setActiveTab('overview');
-        } else if (res.clientSecret) {
-          setClientSecret(res.clientSecret);
-          setShowPaymentForm(true);
-        }
+      const res = await api.createSetupIntent();
+      setClientSecret(res.clientSecret);
+      setPaymentMode('setup');
+      setShowPaymentForm(true);
+    } catch (err: any) {
+      console.error('Failed to create setup intent:', err);
+      if (err?.message?.includes('Token') || err?.message?.includes('401')) {
+        alert('Veuillez vous connecter pour ajouter une carte.');
       } else {
-        const res = await api.createSetupIntent();
-        setClientSecret(res.clientSecret);
-        setShowPaymentForm(true);
+        alert('Erreur lors de l\'ajout de la carte. Veuillez réessayer.');
       }
-    } catch (err) {
-      console.error('Failed to start upgrade:', err);
-      alert('Erreur lors de la mise à niveau. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectPaymentMethod = async (paymentMethodId: string) => {
+    if (!selectedPlan) return;
+    
+    setShowPaymentSelection(false);
+    setLoading(true);
+    try {
+      const res = await api.subscribeInApp(selectedPlan, paymentMethodId);
+      const finished = await handleSubscribeResult(res);
+      if (finished) {
+        setActiveTab('overview');
+      }
+    } catch (err: any) {
+      console.error('Failed to subscribe:', err);
+      if (err?.message?.includes('Token') || err?.message?.includes('401')) {
+        alert('Veuillez vous connecter pour souscrire à un plan.');
+      } else {
+        alert('Erreur lors de la souscription. Veuillez réessayer.');
+      }
     } finally {
       setLoading(false);
     }
@@ -163,6 +230,37 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
       alert('Erreur lors du changement de plan.');
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleSetupComplete = async (paymentMethodId: string) => {
+    if (selectedPlan) {
+      try {
+        const res = await api.subscribeInApp(selectedPlan, paymentMethodId);
+        const finished = await handleSubscribeResult(res);
+        if (finished) {
+          setActiveTab('overview');
+          return true;
+        }
+        // If a payment is still required, keep modal open for confirmation.
+        return false;
+      } catch (err) {
+        console.error('Failed to subscribe after setup:', err);
+        alert('Erreur lors de l\'activation de l\'abonnement.');
+        return true;
+      }
+    } else {
+      // Set as default if none exists yet
+      const hasDefault = paymentMethods.some(pm => pm.isDefault);
+      if (!hasDefault) {
+        try {
+          await api.setDefaultPaymentMethod(paymentMethodId);
+        } catch (err) {
+          console.warn('Failed to set default payment method automatically:', err);
+        }
+      }
+      await fetchPaymentMethods();
+      return true;
     }
   };
 
@@ -199,14 +297,24 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
   };
 
   const handleAddPaymentMethod = async () => {
+    if (authError) {
+      alert('Veuillez vous connecter pour ajouter une méthode de paiement.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await api.createSetupIntent();
       setClientSecret(res.clientSecret);
+      setPaymentMode('setup');
       setShowPaymentForm(true);
       setSelectedPlan(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create setup intent:', err);
+      if (err?.message?.includes('Token') || err?.message?.includes('401')) {
+        alert('Veuillez vous connecter pour ajouter une méthode de paiement.');
+      } else {
+        alert('Erreur lors de l\'ajout de la carte. Veuillez réessayer.');
+      }
     } finally {
       setLoading(false);
     }
@@ -242,18 +350,35 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
   };
 
   const handlePaymentSuccess = () => {
-    setShowPaymentForm(false);
-    setClientSecret(null);
-    setSelectedPlan(null);
-    fetchPaymentMethods();
-    onSubscriptionChange();
+    if (paymentMode === 'payment') {
+      setShowPaymentForm(false);
+      setClientSecret(null);
+      setSelectedPlan(null);
+      onSubscriptionChange();
+      fetchPaymentMethods();
+    } else {
+      if (!selectedPlan) {
+        fetchPaymentMethods();
+      }
+      setShowPaymentForm(false);
+      setClientSecret(null);
+      setSelectedPlan(null);
+    }
+    setPaymentMode('setup');
   };
 
-  const isPro = subscription?.plan === 'pro' || subscription?.plan === 'agency';
+  const isPro = subscription?.plan?.startsWith('pro');
   const currentPlan = subscription?.planDetails || { 
     name: 'Gratuit', 
     price: 0, 
-    features: ['10 posts analysés', 'Feedback basique', 'Streak tracking', '1 workspace'] 
+    features: ['10 posts analysés', 'Feedback basique', 'Streak tracking', '1 workspace'],
+    interval: 'month',
+  };
+
+  const formatPlanPrice = (plan: Plan) => {
+    if (plan.price === 0) return 'Gratuit';
+    const period = plan.interval === 'year' ? '/an' : '/mois';
+    return `${plan.price}€${period}`;
   };
 
   const renderOverview = () => (
@@ -263,17 +388,24 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
           <div>
             <h4>Plan {currentPlan.name}</h4>
             <span className="umbeli-billing__price">
-              {currentPlan.price === 0 ? 'Gratuit' : `${currentPlan.price}€/mois`}
+              {formatPlanPrice(currentPlan as Plan)}
             </span>
           </div>
           <span className={`umbeli-billing__status umbeli-billing__status--${subscription?.status || 'active'}`}>
             {subscription?.status === 'active' ? 'Actif' : 
+             subscription?.status === 'trialing' ? 'Essai en cours' :
              subscription?.status === 'past_due' ? 'Paiement en retard' :
              subscription?.status === 'canceled' ? 'Annulé' : 'Actif'}
           </span>
         </div>
 
-        {subscription?.periodEnd && (
+        {subscription?.trialEnd && subscription.status === 'trialing' && (
+          <p className="umbeli-billing__renewal">
+            Essai gratuit jusqu'au {new Date(subscription.trialEnd).toLocaleDateString('fr-FR')}
+          </p>
+        )}
+
+        {subscription?.periodEnd && subscription.status !== 'trialing' && (
           <p className="umbeli-billing__renewal">
             {subscription.status === 'canceled' || subscription.cancelAtPeriodEnd
               ? `Accès jusqu'au ${new Date(subscription.periodEnd).toLocaleDateString('fr-FR')}`
@@ -287,7 +419,7 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
           <ul>
             {currentPlan.features.map((feature, i) => (
               <li key={i}>
-                <CheckmarkOutline color="#16a34a" width="16px" height="16px" />
+                <Check size={16} color="#16a34a" />
                 {feature}
               </li>
             ))}
@@ -353,25 +485,23 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
       <div className="umbeli-billing__section-header">
         <h4>Méthodes de paiement</h4>
         <Button variant="secondary" size="sm" onClick={handleAddPaymentMethod} disabled={loading}>
-          <AddOutline color="currentColor" width="16px" height="16px" />
+          <Plus size={16} />
           Ajouter
         </Button>
       </div>
 
       {paymentMethods.length === 0 ? (
         <div className="umbeli-billing__empty">
-          <CardOutline color="#9ca3af" width="48px" height="48px" />
+          <CreditCard size={48} color="#9ca3af" />
           <p>Aucune méthode de paiement enregistrée</p>
-          <Button variant="primary" onClick={handleAddPaymentMethod}>
-            Ajouter une carte
-          </Button>
+          <p className="umbeli-billing__empty-hint">Cliquez sur "Ajouter" pour enregistrer une carte</p>
         </div>
       ) : (
         <div className="umbeli-billing__cards-list">
           {paymentMethods.map(pm => (
             <div key={pm.id} className="umbeli-billing__card-item">
               <div className="umbeli-billing__card-info">
-                <CardOutline color="#030174" width="24px" height="24px" />
+                <CreditCard size={24} color="#030174" />
                 <div>
                   <span className="umbeli-billing__card-brand">{pm.brand.toUpperCase()}</span>
                   <span className="umbeli-billing__card-number">•••• {pm.last4}</span>
@@ -400,7 +530,7 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
                   onClick={() => handleDeletePaymentMethod(pm.id)}
                   disabled={actionLoading === `delete-${pm.id}`}
                 >
-                  <TrashOutline color="#ef4444" width="16px" height="16px" />
+                  <Trash2 size={16} color="#ef4444" />
                 </Button>
               </div>
             </div>
@@ -438,7 +568,7 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
               </span>
               {invoice.pdfUrl && (
                 <a href={invoice.pdfUrl} target="_blank" rel="noopener noreferrer" className="umbeli-billing__invoice-download">
-                  <DownloadOutline color="#030174" width="18px" height="18px" />
+                  <Download size={18} color="#030174" />
                 </a>
               )}
             </div>
@@ -465,14 +595,21 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
               ) : (
                 <>
                   <span className="umbeli-billing__price-amount">{plan.price}€</span>
-                  <span className="umbeli-billing__price-period">/mois</span>
+                  <span className="umbeli-billing__price-period">
+                    {plan.interval === 'year' ? '/an' : '/mois'}
+                  </span>
                 </>
               )}
             </div>
+            {plan.trialDays && !subscription?.hasUsedTrial ? (
+              <div className="umbeli-billing__trial">
+                Essai gratuit {plan.trialDays} jours
+              </div>
+            ) : null}
             <ul className="umbeli-billing__plan-features">
               {plan.features.map((feature, i) => (
                 <li key={i}>
-                  <CheckmarkOutline color="#16a34a" width="14px" height="14px" />
+                  <Check size={14} color="#16a34a" />
                   {feature}
                 </li>
               ))}
@@ -554,22 +691,79 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
         {activeTab === 'upgrade' && renderUpgrade()}
       </div>
 
+      {showPaymentSelection && (
+        <div className="umbeli-billing__modal-overlay">
+          <Card className="umbeli-billing__modal">
+            <div className="umbeli-billing__modal-header">
+              <h4>Choisir un moyen de paiement</h4>
+              <button 
+                className="umbeli-billing__modal-close"
+                onClick={() => {
+                  setShowPaymentSelection(false);
+                  setSelectedPlan(null);
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="umbeli-billing__payment-selection">
+              <p className="umbeli-billing__payment-selection-hint">
+                Sélectionnez une carte enregistrée ou ajoutez-en une nouvelle
+              </p>
+              <div className="umbeli-billing__payment-selection-list">
+                {paymentMethods.map(pm => (
+                  <button
+                    key={pm.id}
+                    className={`umbeli-billing__payment-selection-item ${pm.isDefault ? 'is-default' : ''}`}
+                    onClick={() => handleSelectPaymentMethod(pm.id)}
+                    disabled={loading}
+                  >
+                    <div className="umbeli-billing__card-info">
+                      <CreditCard size={24} />
+                      <div>
+                        <span className="umbeli-billing__card-brand">{pm.brand.toUpperCase()}</span>
+                        <span className="umbeli-billing__card-number">•••• {pm.last4}</span>
+                      </div>
+                      {pm.isDefault && <span className="umbeli-billing__default-badge">Par défaut</span>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="umbeli-billing__payment-selection-divider">
+                <span>ou</span>
+              </div>
+              <Button 
+                variant="secondary" 
+                onClick={handleAddNewCardForSubscription}
+                disabled={loading}
+                className="umbeli-billing__payment-selection-new"
+              >
+                <Plus size={16} />
+                Utiliser une nouvelle carte
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {showPaymentForm && clientSecret && stripePromise && (
         <div className="umbeli-billing__modal-overlay">
           <Card className="umbeli-billing__modal">
             <div className="umbeli-billing__modal-header">
-              <h4>{selectedPlan ? 'Finaliser l\'abonnement' : 'Ajouter une carte'}</h4>
+              <h4>{paymentMode === 'payment' ? 'Finaliser le paiement' : selectedPlan ? 'Finaliser l\'abonnement' : 'Ajouter une carte'}</h4>
               <button 
                 className="umbeli-billing__modal-close"
                 onClick={() => {
                   setShowPaymentForm(false);
                   setClientSecret(null);
+                  setPaymentMode('setup');
                 }}
               >
-                <CloseOutline color="currentColor" width="24px" height="24px" />
+                <X size={24} />
               </button>
             </div>
             <Elements 
+              key={clientSecret}
               stripe={stripePromise} 
               options={{ 
                 clientSecret,
@@ -584,12 +778,14 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
               }}
             >
               <PaymentForm
-                mode={selectedPlan ? 'subscription' : 'one-time'}
+                mode={paymentMode}
                 planId={selectedPlan || undefined}
+                onSetupComplete={handleSetupComplete}
                 onSuccess={handlePaymentSuccess}
                 onCancel={() => {
                   setShowPaymentForm(false);
                   setClientSecret(null);
+                  setPaymentMode('setup');
                 }}
               />
             </Elements>

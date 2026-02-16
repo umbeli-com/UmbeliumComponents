@@ -49,6 +49,7 @@ const iconMap: Record<string, React.ComponentType<IonIconProps>> = {
   'logo-linkedin': IonIcons.LogoLinkedin,
   'logo-twitter': IonIcons.LogoTwitter,
   'logo-facebook': IonIcons.LogoFacebook,
+  'logo-pinterest': IonIcons.LogoPinterest,
   
   // Status
   'checkmark-circle-outline': IonIcons.CheckmarkCircleOutline,

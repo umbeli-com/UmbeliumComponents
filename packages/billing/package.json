@@ -8,7 +8,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
+      "import": "./src/index.ts",
       "types": "./dist/index.d.ts"
     },
     "./styles": "./dist/styles/index.css",
@@ -22,8 +22,7 @@
   ],
   "scripts": {
     "build": "tsc && npm run build:styles",
-    "build:styles": "sass src/styles:dist/styles --style=compressed",
-    "dev": "tsc --watch",
+    "build:styles": "sass src/styles:dist/styles --style=compressed --silence-deprecation=import",
     "clean": "rm -rf dist",
     "lint": "eslint src --ext .ts,.tsx"
   },
@@ -32,9 +31,10 @@
     "react-dom": "^18.0.0"
   },
   "dependencies": {
-    "@umbeli/ui": "workspace:*",
-    "@stripe/stripe-js": "^5.5.0",
-    "@stripe/react-stripe-js": "^3.1.1",
+    "@umbeli/ui": "file:../ui",
+    "@stripe/stripe-js": "^8.6.0",
+    "@stripe/react-stripe-js": "^5.4.1",
+    "lucide-react": "^0.315.0",
     "react-ionicons": "^4.2.1"
   },
   "devDependencies": {

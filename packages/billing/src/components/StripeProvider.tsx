@@ -1,14 +1,24 @@
-import { ReactNode } from 'react';
+import { ReactNode, createContext, useContext, useMemo } from 'react';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
 
-let stripePromise: Promise<Stripe | null> | null = null;
+interface StripeContextType {
+  stripePromise: Promise<Stripe | null> | null;
+  publishableKey: string;
+}
+
+const StripeContext = createContext<StripeContextType | null>(null);
+
+export function useStripeContext() {
+  return useContext(StripeContext);
+}
+
+let cachedStripePromise: Promise<Stripe | null> | null = null;
 
 export function initStripe(publishableKey: string): Promise<Stripe | null> {
-  if (!stripePromise && publishableKey) {
-    stripePromise = loadStripe(publishableKey);
+  if (!cachedStripePromise && publishableKey) {
+    cachedStripePromise = loadStripe(publishableKey);
   }
-  return stripePromise || Promise.resolve(null);
+  return cachedStripePromise || Promise.resolve(null);
 }
 
 interface StripeProviderProps {
@@ -17,33 +27,21 @@ interface StripeProviderProps {
 }
 
 export function StripeProvider({ children, publishableKey }: StripeProviderProps) {
-  if (!publishableKey) {
-    console.warn('Stripe publishable key not configured');
-    return <>{children}</>;
-  }
+  const stripePromise = useMemo(() => {
+    if (!publishableKey) return null;
+    return initStripe(publishableKey);
+  }, [publishableKey]);
 
-  const stripe = initStripe(publishableKey);
+  const contextValue = useMemo(() => ({
+    stripePromise,
+    publishableKey,
+  }), [stripePromise, publishableKey]);
 
   return (
-    <Elements 
-      stripe={stripe}
-      options={{
-        appearance: {
-          theme: 'stripe',
-          variables: {
-            colorPrimary: '#030174',
-            colorBackground: '#ffffff',
-            colorText: '#1f2937',
-            colorDanger: '#ef4444',
-            fontFamily: 'Inter, system-ui, sans-serif',
-            borderRadius: '8px',
-          },
-        },
-      }}
-    >
+    <StripeContext.Provider value={contextValue}>
       {children}
-    </Elements>
+    </StripeContext.Provider>
   );
 }
 
-export { stripePromise };
+export { cachedStripePromise as stripePromise };

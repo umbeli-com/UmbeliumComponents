@@ -14,7 +14,7 @@
   outline: none;
 
   &:focus-visible {
-    outline: 2px solid #030174;
+    outline: 2px solid var(--theme-color-brand-primary, #030174);
     outline-offset: 2px;
   }
 
@@ -48,35 +48,35 @@
 
   // Variants
   &--primary {
-    background-color: #030174;
-    color: #ffffff;
+    background-color: var(--theme-color-brand-primary, #030174);
+    color: var(--theme-color-brand-on-primary, #ffffff);
 
     &:hover:not(:disabled) {
-      background-color: #4f46e5;
+      background-color: var(--theme-color-brand-primary, #4f46e5);
     }
 
     &:active:not(:disabled) {
-      background-color: #4338ca;
+      background-color: var(--theme-color-brand-primary, #4338ca);
     }
   }
 
   &--secondary {
-    background-color: #F8F9FA;
-    color: #1a1a2e;
-    border: 1px solid #E8EBE7;
+    background-color: var(--theme-color-neutral-surface-alt, #F8F9FA);
+    color: var(--theme-color-neutral-text, #1a1a2e);
+    border: 1px solid var(--theme-color-neutral-surface);
 
     &:hover:not(:disabled) {
-      background-color: #E8EBE7;
+      background-color: var(--theme-color-neutral-surface);
     }
   }
 
   &--ghost {
     background-color: transparent;
-    color: #1a1a2e;
-    border: 1px solid #E8EBE7;
+    color: var(--theme-color-neutral-text, #1a1a2e);
+    border: 1px solid var(--theme-color-neutral-surface);
 
     &:hover:not(:disabled) {
-      background-color: #F8F9FA;
+      background-color: var(--theme-color-neutral-surface-alt, #F8F9FA);
     }
   }
 }

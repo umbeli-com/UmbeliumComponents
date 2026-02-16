@@ -20,10 +20,11 @@
   top: 0;
   right: 0;
   height: 100vh;
+  height: 100dvh;
   width: 400px;
   max-width: 100vw;
-  background: white;
-  border-left: 1px solid #E8EBE7;
+  background: var(--theme-color-neutral-surface-alt);
+  border-left: 1px solid var(--theme-color-neutral-surface);
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
   z-index: 200;
   display: flex;
@@ -34,6 +35,14 @@
   &--open {
     transform: translateX(0);
   }
+
+  @media (max-width: 767px) {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    border-left: none;
+    border-radius: 0;
+  }
 }
 
 .ai-chat-panel__header {
@@ -41,8 +50,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid #E8EBE7;
-  background: linear-gradient(135deg, #F8F9FA, #F0F1FF);
+  border-bottom: 1px solid var(--theme-color-neutral-surface);
+  background: linear-gradient(135deg, var(--theme-color-neutral-surface-alt, #F8F9FA), var(--theme-color-brand-primary-soft, #F0F1FF));
 }
 
 .ai-chat-panel__header-left {
@@ -57,7 +66,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #030174, #8b5cf6);
+  background: linear-gradient(135deg, var(--theme-color-brand-primary, #030174), #8b5cf6);
   color: white;
   border-radius: 12px;
 }
@@ -71,12 +80,12 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text, #1a1a2e);
 }
 
 .ai-chat-panel__subtitle {
   font-size: 0.75rem;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
 }
 
 .ai-chat-panel__header-actions {
@@ -95,12 +104,12 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
   transition: all 0.2s ease;
 
   &:hover {
     background: rgba(0, 0, 0, 0.05);
-    color: #1a1a2e;
+    color: var(--theme-color-neutral-text, #1a1a2e);
   }
 }
 
@@ -126,13 +135,13 @@
     margin: 1rem 0 0.5rem;
     font-size: 1.125rem;
     font-weight: 600;
-    color: #1a1a2e;
+    color: var(--theme-color-neutral-text, #1a1a2e);
   }
 
   p {
     margin: 0 0 1.5rem;
     font-size: 0.875rem;
-    color: #7E8594;
+    color: var(--theme-color-neutral-text-muted, #7E8594);
   }
 }
 
@@ -142,9 +151,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #F0F1FF, #E8E9FF);
+  background: linear-gradient(135deg, var(--theme-color-brand-primary-soft, #F0F1FF), #E8E9FF);
   border-radius: 20px;
-  color: #030174;
+  color: var(--theme-color-brand-primary, #030174);
 }
 
 .ai-chat-panel__suggestions {
@@ -156,18 +165,18 @@
 
 .ai-chat-panel__suggestion {
   padding: 0.75rem 1rem;
-  background: #F8F9FA;
-  border: 1px solid #E8EBE7;
+  background: var(--theme-color-neutral-surface-alt, #F8F9FA);
+  border: 1px solid var(--theme-color-neutral-surface);
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.875rem;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text, #1a1a2e);
   text-align: left;
   transition: all 0.2s ease;
 
   &:hover {
-    background: #F0F1FF;
-    border-color: #030174;
+    background: var(--theme-color-brand-primary-soft, #F0F1FF);
+    border-color: var(--theme-color-brand-primary, #030174);
   }
 }
 
@@ -181,7 +190,7 @@
     flex-direction: row-reverse;
 
     .ai-chat-panel__message-content {
-      background: linear-gradient(135deg, #030174, #8b5cf6);
+      background: linear-gradient(135deg, var(--theme-color-brand-primary, #030174), #8b5cf6);
       color: white;
       border-radius: 16px 16px 4px 16px;
 
@@ -199,7 +208,7 @@
     align-self: flex-start;
 
     .ai-chat-panel__message-content {
-      background: #F8F9FA;
+      background: var(--theme-color-neutral-surface-alt, #F8F9FA);
       border-radius: 16px 16px 16px 4px;
     }
   }
@@ -212,7 +221,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #030174, #8b5cf6);
+  background: linear-gradient(135deg, var(--theme-color-brand-primary, #030174), #8b5cf6);
   color: white;
   border-radius: 8px;
 }
@@ -224,7 +233,7 @@
     margin: 0;
     font-size: 0.875rem;
     line-height: 1.5;
-    color: #1a1a2e;
+    color: var(--theme-color-neutral-text, #1a1a2e);
   }
 
   &--typing {
@@ -239,13 +248,13 @@
   display: block;
   margin-top: 0.25rem;
   font-size: 0.625rem;
-  color: #7E8594;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
 }
 
 .ai-chat-panel__dot {
   width: 6px;
   height: 6px;
-  background: #7E8594;
+  background: var(--theme-color-neutral-text-muted, #7E8594);
   border-radius: 50%;
   animation: typing 1.4s infinite ease-in-out both;
 
@@ -274,28 +283,28 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  border-top: 1px solid #E8EBE7;
-  background: #F8F9FA;
+  border-top: 1px solid var(--theme-color-neutral-surface);
+  background: var(--theme-color-neutral-surface-alt, #F8F9FA);
 }
 
 .ai-chat-panel__input {
   flex: 1;
   padding: 0.75rem 1rem;
-  background: white;
-  border: 1px solid #E8EBE7;
+  background: var(--theme-color-neutral-surface-alt);
+  border: 1px solid var(--theme-color-neutral-surface);
   border-radius: 100px;
   font-size: 0.875rem;
-  color: #1a1a2e;
+  color: var(--theme-color-neutral-text, #1a1a2e);
   outline: none;
   transition: all 0.2s ease;
 
   &:focus {
-    border-color: #030174;
+    border-color: var(--theme-color-brand-primary, #030174);
     box-shadow: 0 0 0 3px rgba(3, 1, 116, 0.1);
   }
 
   &::placeholder {
-    color: #7E8594;
+    color: var(--theme-color-neutral-text-muted, #7E8594);
   }
 }
 
@@ -305,7 +314,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #030174, #8b5cf6);
+  background: linear-gradient(135deg, var(--theme-color-brand-primary, #030174), #8b5cf6);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -326,6 +335,6 @@
   padding: 0.5rem 1.25rem;
   text-align: center;
   font-size: 0.75rem;
-  color: #7E8594;
-  border-top: 1px solid #E8EBE7;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
+  border-top: 1px solid var(--theme-color-neutral-surface);
 }

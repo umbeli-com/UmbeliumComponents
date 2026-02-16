@@ -12,16 +12,19 @@
   top: 0;
   left: 0;
   height: 100vh;
+  height: 100dvh;
   width: 240px;
   z-index: 100;
   transition: width 0.2s ease, transform 0.2s ease;
 
   @media (max-width: 767px) {
     transform: translateX(-100%);
+    width: 85vw;
+    max-width: 320px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
 
     &.is-open {
       transform: translateX(0);
-      width: 280px;
     }
   }
 }
@@ -63,10 +66,16 @@
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 99;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 
   @media (max-width: 767px) {
+    display: block;
+    pointer-events: none;
+
     &.is-visible {
-      display: block;
+      opacity: 1;
+      pointer-events: auto;
     }
   }
 }

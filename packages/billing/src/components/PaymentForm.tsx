@@ -7,18 +7,21 @@ import {
 import { Button } from '@umbeli/ui';
 
 interface PaymentFormProps {
-  mode: 'subscription' | 'one-time';
+  mode: 'payment' | 'setup' | 'subscription' | 'one-time';
   planId?: string;
   amount?: number;
+  onSetupComplete?: (paymentMethodId: string) => Promise<boolean | void> | boolean | void;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export function PaymentForm({ mode, planId: _planId, amount, onSuccess, onCancel }: PaymentFormProps) {
+export function PaymentForm({ mode, planId: _planId, amount, onSuccess, onCancel, onSetupComplete }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const effectiveMode = mode === 'setup' ? 'setup' : 'payment';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,18 +41,46 @@ export function PaymentForm({ mode, planId: _planId, amount, onSuccess, onCancel
         return;
       }
 
-      const { error: confirmError } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/parametres?payment=success`,
-        },
-        redirect: 'if_required',
-      });
+      if (effectiveMode === 'setup') {
+        const { error: confirmError, setupIntent } = await stripe.confirmSetup({
+          elements,
+          confirmParams: {
+            return_url: `${window.location.origin}/parametres?payment=success`,
+          },
+          redirect: 'if_required',
+        });
 
-      if (confirmError) {
-        setError(confirmError.message || 'Échec du paiement');
+        if (confirmError) {
+          setError(confirmError.message || 'Échec de l\'enregistrement de la carte');
+        } else {
+          let shouldClose = true;
+          if (setupIntent?.payment_method && onSetupComplete) {
+            const paymentMethodId = typeof setupIntent.payment_method === 'string'
+              ? setupIntent.payment_method
+              : setupIntent.payment_method.id;
+            const result = await onSetupComplete(paymentMethodId);
+            if (result === false) {
+              shouldClose = false;
+            }
+          }
+          if (shouldClose) {
+            onSuccess();
+          }
+        }
       } else {
-        onSuccess();
+        const { error: confirmError } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: `${window.location.origin}/parametres?payment=success`,
+          },
+          redirect: 'if_required',
+        });
+
+        if (confirmError) {
+          setError(confirmError.message || 'Échec du paiement');
+        } else {
+          onSuccess();
+        }
       }
     } catch (_err) {
       setError('Une erreur inattendue est survenue');
@@ -58,13 +89,16 @@ export function PaymentForm({ mode, planId: _planId, amount, onSuccess, onCancel
     }
   };
 
+  const getButtonText = () => {
+    if (loading) return 'Traitement...';
+    if (effectiveMode === 'setup') return 'Enregistrer la carte';
+    if (amount !== undefined) return `Payer ${amount}€`;
+    return 'Payer';
+  };
+
   return (
     <form onSubmit={handleSubmit} className="umbeli-payment-form">
-      <PaymentElement 
-        options={{
-          layout: 'tabs',
-        }}
-      />
+      <PaymentElement options={{ layout: 'tabs' }} />
       
       {error && (
         <div className="umbeli-payment-form__error">
@@ -86,7 +120,7 @@ export function PaymentForm({ mode, planId: _planId, amount, onSuccess, onCancel
           variant="primary"
           disabled={!stripe || loading}
         >
-          {loading ? 'Traitement...' : mode === 'subscription' ? 'S\'abonner' : `Payer ${amount}€`}
+          {getButtonText()}
         </Button>
       </div>
     </form>
