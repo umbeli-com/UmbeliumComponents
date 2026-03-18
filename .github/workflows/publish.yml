@@ -49,5 +49,8 @@ jobs:
               continue
             fi
 
-            pnpm --dir "${package_dir}" publish --no-git-checks
+            (
+              cd "${package_dir}"
+              pnpm publish --no-git-checks
+            )
           done
