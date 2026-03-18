@@ -1,0 +1,31 @@
+.theme-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.theme-toggle__option {
+  transition: all 0.15s ease;
+}
+
+.theme-toggle__option:hover:not(.is-primary) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.theme-toggle__button {
+  transition: all 0.15s ease;
+}
+
+.theme-toggle__button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+html.dark .theme-toggle__button,
+.dark .theme-toggle__button {
+  color: #ffffff;
+  border-color: #374151;
+}
+
+html.dark .theme-toggle__button:hover,
+.dark .theme-toggle__button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}

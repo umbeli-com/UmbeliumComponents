@@ -1,14 +1,14 @@
-# UmbeliComponents
+# UmbeliumComponents
 
 Monorepo de composants React réutilisables pour les applications SaaS Umbeli.
 
 ## Structure
 
 ```
-UmbeliComponents/
+UmbeliumComponents/
 ├── packages/
-│   ├── ui/          # @umbeli/ui - Composants UI génériques
-│   └── layout/      # @umbeli/layout - Composants de layout
+│   ├── ui/          # @umbeli-com/ui - Composants UI génériques
+│   └── layout/      # @umbeli-com/layout - Composants de layout
 ├── package.json
 ├── pnpm-workspace.yaml
 └── tsconfig.json
@@ -16,7 +16,7 @@ UmbeliComponents/
 
 ## Packages
 
-### @umbeli/ui
+### @umbeli-com/ui
 
 Composants UI de base réutilisables:
 - **Button** - Bouton avec variants (primary, secondary, ghost)
@@ -25,7 +25,7 @@ Composants UI de base réutilisables:
 - **Tabs** - Onglets avec variants (default, pills)
 - **Skeleton** - Placeholder de chargement
 
-### @umbeli/layout
+### @umbeli-com/layout
 
 Composants de layout:
 - **PageHeader** - En-tête de page avec titre, sous-titre et actions
@@ -42,8 +42,8 @@ Composants de layout:
 
 ```bash
 # Cloner le repo
-git clone https://github.com/umbeli-com/UmbeliComponents.git
-cd UmbeliComponents
+git clone https://github.com/umbeli-com/UmbeliumComponents.git
+cd UmbeliumComponents
 
 # Installer les dépendances
 pnpm install
@@ -61,8 +61,8 @@ Si votre projet est dans le même monorepo:
 ```json
 {
   "dependencies": {
-    "@umbeli/ui": "workspace:*",
-    "@umbeli/layout": "workspace:*"
+    "@umbeli-com/ui": "workspace:*",
+    "@umbeli-com/layout": "workspace:*"
   }
 }
 ```
@@ -70,22 +70,22 @@ Si votre projet est dans le même monorepo:
 ### Avec npm/pnpm link (développement local)
 
 ```bash
-# Dans UmbeliComponents/packages/ui
+# Dans UmbeliumComponents/packages/ui
 pnpm link --global
 
 # Dans votre projet
-pnpm link --global @umbeli/ui
+pnpm link --global @umbeli-com/ui
 ```
 
 ### Import des composants
 
 ```tsx
-import { Button, Card, Icon, Tabs } from '@umbeli/ui';
-import { PageHeader, GridSection } from '@umbeli/layout';
+import { Button, Card, Icon, Tabs } from '@umbeli-com/ui';
+import { PageHeader, GridSection } from '@umbeli-com/layout';
 
 // Import des styles (dans votre fichier principal)
-import '@umbeli/ui/styles';
-import '@umbeli/layout/styles';
+import '@umbeli-com/ui/styles';
+import '@umbeli-com/layout/styles';
 ```
 
 ## Développement
@@ -103,10 +103,10 @@ pnpm lint
 
 ## Design Tokens
 
-Les design tokens (couleurs, typography, spacing, etc.) sont définis dans `@umbeli/ui/src/styles/settings/` et peuvent être importés dans vos fichiers SCSS:
+Les design tokens (couleurs, typography, spacing, etc.) sont définis dans `@umbeli-com/ui/src/styles/settings/` et peuvent être importés dans vos fichiers SCSS:
 
 ```scss
-@use '@umbeli/ui/src/styles/settings' as *;
+@use '@umbeli-com/ui/src/styles/settings' as *;
 
 .my-component {
   color: $color-brand-primary;

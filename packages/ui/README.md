@@ -1,11 +1,11 @@
-# @umbeli/ui
+# @umbeli-com/ui
 
 Composants UI React réutilisables pour les applications SaaS Umbeli.
 
 ## Installation
 
 ```bash
-pnpm add @umbeli/ui
+pnpm add @umbeli-com/ui
 ```
 
 ## Composants
@@ -13,7 +13,7 @@ pnpm add @umbeli/ui
 ### Button
 
 ```tsx
-import { Button } from '@umbeli/ui';
+import { Button } from '@umbeli-com/ui';
 
 <Button variant="primary" size="md">
   Click me
@@ -36,7 +36,7 @@ import { Button } from '@umbeli/ui';
 ### Card
 
 ```tsx
-import { Card } from '@umbeli/ui';
+import { Card } from '@umbeli-com/ui';
 
 <Card padding="md" variant="default">
   Card content
@@ -50,7 +50,7 @@ import { Card } from '@umbeli/ui';
 ### Icon
 
 ```tsx
-import { Icon } from '@umbeli/ui';
+import { Icon } from '@umbeli-com/ui';
 
 <Icon name="settings-outline" size={24} color="#333" />
 ```
@@ -63,7 +63,7 @@ import { Icon } from '@umbeli/ui';
 ### Tabs
 
 ```tsx
-import { Tabs } from '@umbeli/ui';
+import { Tabs } from '@umbeli-com/ui';
 
 <Tabs
   tabs={[
@@ -85,7 +85,7 @@ import { Tabs } from '@umbeli/ui';
 ### Skeleton
 
 ```tsx
-import { Skeleton } from '@umbeli/ui';
+import { Skeleton } from '@umbeli-com/ui';
 
 <Skeleton style={{ width: 200, height: 20 }} />
 ```
@@ -95,11 +95,11 @@ import { Skeleton } from '@umbeli/ui';
 Import styles in your app entry point:
 
 ```tsx
-import '@umbeli/ui/styles';
+import '@umbeli-com/ui/styles';
 ```
 
 Or import individual component styles in SCSS:
 
 ```scss
-@use '@umbeli/ui/src/styles/settings' as *;
+@use '@umbeli-com/ui/src/styles/settings' as *;
 ```

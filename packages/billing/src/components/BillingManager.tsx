@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
-import { Card, Button } from '@umbeli/ui';
+import { Card, Button } from '@umbeli-com/ui';
 import { Check, CreditCard, X, Trash2, Download, Plus } from 'lucide-react';
 import { PaymentForm } from './PaymentForm';
 import { useStripeContext } from './StripeProvider';
-import '../styles/index.scss';
 
 interface Plan {
   id: string;

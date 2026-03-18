@@ -1,4 +1,4 @@
-import { Icon } from '@umbeli/ui';
+import { Icon } from '@umbeli-com/ui';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface KpiCardProps {

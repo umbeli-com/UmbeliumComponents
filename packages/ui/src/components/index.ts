@@ -17,3 +17,4 @@ export { DetailedChart } from './DetailedChart';
 export { OnboardingChat, type OnboardingData } from './OnboardingChat';
 export { AIChatPanel } from './AIChatPanel';
 export { LanguageSwitcher } from './LanguageSwitcher';
+export { ThemeToggle } from './ThemeToggle';

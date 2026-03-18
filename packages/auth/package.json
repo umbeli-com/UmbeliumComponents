@@ -1,7 +1,7 @@
 {
-  "name": "@umbeli-com/billing",
+  "name": "@umbeli-com/auth",
   "version": "1.0.0",
-  "description": "Billing and payment components for Umbeli SaaS applications",
+  "description": "Shared authentication components and utilities for Umbeli SaaS applications",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -14,7 +14,7 @@
     },
     "./styles": {
       "types": "./styles.d.ts",
-      "default": "./dist/styles/index.css"
+      "default": "./dist/styles/AuthPages.css"
     },
     "./styles/*": "./dist/styles/*"
   },
@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "build": "tsc && npm run build:styles",
-    "build:styles": "sass src/styles:dist/styles --style=compressed --silence-deprecation=import",
+    "build:styles": "mkdir -p dist/styles && cp src/styles/AuthPages.css dist/styles/AuthPages.css",
     "clean": "rm -rf dist",
     "lint": "eslint src --ext .ts,.tsx"
   },
@@ -33,16 +33,11 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@umbeli-com/ui": "workspace:^",
-    "@stripe/stripe-js": "^8.6.0",
-    "@stripe/react-stripe-js": "^5.4.1",
-    "lucide-react": "^0.315.0",
-    "react-ionicons": "^4.2.1"
+    "@supabase/supabase-js": "^2.39.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
-    "sass": "^1.70.0",
     "typescript": "^5.3.3"
   },
   "publishConfig": {
@@ -52,7 +47,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/umbeli-com/UmbeliumComponents.git",
-    "directory": "packages/billing"
+    "directory": "packages/auth"
   },
   "license": "MIT"
 }

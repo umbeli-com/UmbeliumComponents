@@ -1,11 +1,11 @@
-# @umbeli/layout
+# @umbeli-com/layout
 
 Composants de layout React réutilisables pour les applications SaaS Umbeli.
 
 ## Installation
 
 ```bash
-pnpm add @umbeli/layout
+pnpm add @umbeli-com/layout
 ```
 
 ## Composants
@@ -13,8 +13,8 @@ pnpm add @umbeli/layout
 ### PageHeader
 
 ```tsx
-import { PageHeader } from '@umbeli/layout';
-import { Button } from '@umbeli/ui';
+import { PageHeader } from '@umbeli-com/layout';
+import { Button } from '@umbeli-com/ui';
 
 <PageHeader
   title="Dashboard"
@@ -33,8 +33,8 @@ import { Button } from '@umbeli/ui';
 ### GridSection
 
 ```tsx
-import { GridSection } from '@umbeli/layout';
-import { Card } from '@umbeli/ui';
+import { GridSection } from '@umbeli-com/layout';
+import { Card } from '@umbeli-com/ui';
 
 <GridSection title="Statistiques" columns={3} gap="md">
   <Card>Card 1</Card>
@@ -54,9 +54,9 @@ import { Card } from '@umbeli/ui';
 Import styles in your app entry point:
 
 ```tsx
-import '@umbeli/layout/styles';
+import '@umbeli-com/layout/styles';
 ```
 
 ## Dépendances
 
-Ce package dépend de `@umbeli/ui` pour les design tokens.
+Ce package dépend de `@umbeli-com/ui` pour les design tokens.

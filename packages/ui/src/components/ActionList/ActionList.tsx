@@ -1,4 +1,4 @@
-import { Icon } from '@umbeli/ui';
+import { Icon } from '@umbeli-com/ui';
 import { Check, Circle, CircleDot } from 'lucide-react';
 
 interface ActionItem {

@@ -1,5 +1,5 @@
 import * as IonIcons from 'react-ionicons';
-// Styles are imported separately via @umbeli/ui/styles
+// Styles are imported separately via @umbeli-com/ui/styles
 
 interface IonIconProps {
   color?: string;

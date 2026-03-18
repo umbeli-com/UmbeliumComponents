@@ -1,5 +1,5 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react';
-// Styles are imported separately via @umbeli/ui/styles
+// Styles are imported separately via @umbeli-com/ui/styles
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;

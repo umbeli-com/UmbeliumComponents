@@ -1,4 +1,4 @@
-import { Button } from '@umbeli/ui';
+import { Button } from '@umbeli-com/ui';
 
 interface CoachFocusCardProps {
   title: string;

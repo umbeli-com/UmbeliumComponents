@@ -4,7 +4,7 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { Button } from '@umbeli/ui';
+import { Button } from '@umbeli-com/ui';
 
 interface PaymentFormProps {
   mode: 'payment' | 'setup' | 'subscription' | 'one-time';
