@@ -1,127 +1,212 @@
-import * as IonIcons from 'react-ionicons';
+import {
+  LayoutGrid,
+  Edit,
+  Rocket,
+  Calendar,
+  BarChart,
+  Settings,
+  Menu,
+  Search,
+  Bell,
+  Plus,
+  X,
+  Check,
+  ArrowUp,
+  ArrowDown,
+  ChevronRight,
+  ChevronLeft,
+  Eye,
+  FileText,
+  MessageCircle,
+  MessagesSquare,
+  Flame,
+  Smartphone,
+  Camera,
+  Video,
+  Image as ImageIcon,
+  ImagePlus,
+  Play,
+  Pause,
+  Music,
+  Instagram,
+  Youtube,
+  Linkedin,
+  Twitter,
+  Facebook,
+  Pin,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  AlertTriangle,
+  Clock,
+  Lightbulb,
+  Trophy,
+  TrendingUp,
+  TrendingDown,
+  LineChart,
+  Activity,
+  Zap,
+  Star,
+  Heart,
+  ThumbsUp,
+  User,
+  Users,
+  CreditCard,
+  Wallet,
+  Link as LinkIcon,
+  RefreshCw,
+  Globe,
+  Moon,
+  Sun,
+  Copy,
+  Share2,
+  Download,
+  Trash2,
+  Pencil,
+  MoreHorizontal,
+  Filter,
+  SlidersHorizontal,
+  Send,
+  Smile,
+  Tag,
+  Book,
+  BookOpen,
+  List,
+  Film,
+  type LucideIcon,
+} from 'lucide-react';
+
 // Styles are imported separately via @umbeli-com/ui/styles
 
-interface IonIconProps {
-  color?: string;
-  width?: string;
-  height?: string;
-}
-
-const iconMap: Record<string, React.ComponentType<IonIconProps>> = {
+const iconMap: Record<string, LucideIcon> = {
   // Navigation
-  'grid-outline': IonIcons.GridOutline,
-  'create-outline': IonIcons.CreateOutline,
-  'rocket-outline': IonIcons.RocketOutline,
-  'calendar-outline': IonIcons.CalendarOutline,
-  'bar-chart-outline': IonIcons.BarChartOutline,
-  'settings-outline': IonIcons.SettingsOutline,
-  
+  'grid-outline': LayoutGrid,
+  'create-outline': Edit,
+  'rocket-outline': Rocket,
+  'calendar-outline': Calendar,
+  'bar-chart-outline': BarChart,
+  'settings-outline': Settings,
+
   // Actions
-  'menu-outline': IonIcons.MenuOutline,
-  'search-outline': IonIcons.SearchOutline,
-  'notifications-outline': IonIcons.NotificationsOutline,
-  'add-outline': IonIcons.AddOutline,
-  'close-outline': IonIcons.CloseOutline,
-  'checkmark-outline': IonIcons.CheckmarkOutline,
-  'arrow-up-outline': IonIcons.ArrowUpOutline,
-  'arrow-down-outline': IonIcons.ArrowDownOutline,
-  'chevron-forward-outline': IonIcons.ChevronForwardOutline,
-  'chevron-back-outline': IonIcons.ChevronBackOutline,
-  
+  'menu-outline': Menu,
+  'search-outline': Search,
+  'notifications-outline': Bell,
+  'add-outline': Plus,
+  'close-outline': X,
+  'checkmark-outline': Check,
+  'arrow-up-outline': ArrowUp,
+  'arrow-down-outline': ArrowDown,
+  'chevron-forward-outline': ChevronRight,
+  'chevron-back-outline': ChevronLeft,
+
   // Content
-  'eye-outline': IonIcons.EyeOutline,
-  'document-text-outline': IonIcons.DocumentTextOutline,
-  'chatbubble-outline': IonIcons.ChatbubbleOutline,
-  'chatbubbles-outline': IonIcons.ChatbubblesOutline,
-  'flame-outline': IonIcons.FlameOutline,
-  'phone-portrait-outline': IonIcons.PhonePortraitOutline,
-  'camera-outline': IonIcons.CameraOutline,
-  'videocam-outline': IonIcons.VideocamOutline,
-  'image-outline': IonIcons.ImageOutline,
-  'images-outline': IonIcons.ImagesOutline,
-  'play-outline': IonIcons.PlayOutline,
-  'pause-outline': IonIcons.PauseOutline,
-  
-  // Social
-  'logo-tiktok': IonIcons.LogoTiktok,
-  'logo-instagram': IonIcons.LogoInstagram,
-  'logo-youtube': IonIcons.LogoYoutube,
-  'logo-linkedin': IonIcons.LogoLinkedin,
-  'logo-twitter': IonIcons.LogoTwitter,
-  'logo-facebook': IonIcons.LogoFacebook,
-  'logo-pinterest': IonIcons.LogoPinterest,
-  
+  'eye-outline': Eye,
+  'document-text-outline': FileText,
+  'chatbubble-outline': MessageCircle,
+  'chatbubbles-outline': MessagesSquare,
+  'flame-outline': Flame,
+  'phone-portrait-outline': Smartphone,
+  'camera-outline': Camera,
+  'videocam-outline': Video,
+  'image-outline': ImageIcon,
+  'images-outline': ImagePlus,
+  'play-outline': Play,
+  'pause-outline': Pause,
+
+  // Social logos
+  'logo-tiktok': Music,
+  'logo-instagram': Instagram,
+  'logo-youtube': Youtube,
+  'logo-linkedin': Linkedin,
+  'logo-twitter': Twitter,
+  'logo-facebook': Facebook,
+  'logo-pinterest': Pin,
+
+  // Social short names used by some consumers
+  'facebook': Facebook,
+  'instagram': Instagram,
+  'linkedin': Linkedin,
+  'twitter': Twitter,
+  'youtube': Youtube,
+  'tiktok': Music,
+  'pinterest': Pin,
+  'f': Facebook,
+  'in': Linkedin,
+  'blog': FileText,
+
   // Status
-  'checkmark-circle-outline': IonIcons.CheckmarkCircleOutline,
-  'alert-circle-outline': IonIcons.AlertCircleOutline,
-  'information-circle-outline': IonIcons.InformationCircleOutline,
-  'warning-outline': IonIcons.WarningOutline,
-  'time-outline': IonIcons.TimeOutline,
-  
+  'checkmark-circle-outline': CheckCircle,
+  'alert-circle-outline': AlertCircle,
+  'information-circle-outline': Info,
+  'warning-outline': AlertTriangle,
+  'time-outline': Clock,
+
   // Coach / Strategy
-  'bulb-outline': IonIcons.BulbOutline,
-  'trophy-outline': IonIcons.TrophyOutline,
-  'trending-up-outline': IonIcons.TrendingUpOutline,
-  'trending-down-outline': IonIcons.TrendingDownOutline,
-  'analytics-outline': IonIcons.AnalyticsOutline,
-  'pulse-outline': IonIcons.PulseOutline,
-  'flash-outline': IonIcons.FlashOutline,
-  'star-outline': IonIcons.StarOutline,
-  'heart-outline': IonIcons.HeartOutline,
-  'thumbs-up-outline': IonIcons.ThumbsUpOutline,
-  
+  'bulb-outline': Lightbulb,
+  'trophy-outline': Trophy,
+  'trending-up-outline': TrendingUp,
+  'trending-down-outline': TrendingDown,
+  'analytics-outline': LineChart,
+  'pulse-outline': Activity,
+  'flash-outline': Zap,
+  'star-outline': Star,
+  'heart-outline': Heart,
+  'thumbs-up-outline': ThumbsUp,
+
   // Settings
-  'person-outline': IonIcons.PersonOutline,
-  'people-outline': IonIcons.PeopleOutline,
-  'card-outline': IonIcons.CardOutline,
-  'wallet-outline': IonIcons.WalletOutline,
-  'link-outline': IonIcons.LinkOutline,
-  'sync-outline': IonIcons.SyncOutline,
-  'globe-outline': IonIcons.GlobeOutline,
-  'moon-outline': IonIcons.MoonOutline,
-  'sunny-outline': IonIcons.SunnyOutline,
-  
+  'person-outline': User,
+  'people-outline': Users,
+  'card-outline': CreditCard,
+  'wallet-outline': Wallet,
+  'link-outline': LinkIcon,
+  'sync-outline': RefreshCw,
+  'globe-outline': Globe,
+  'moon-outline': Moon,
+  'sunny-outline': Sun,
+
   // Misc
-  'copy-outline': IonIcons.CopyOutline,
-  'share-outline': IonIcons.ShareOutline,
-  'download-outline': IonIcons.DownloadOutline,
-  'trash-outline': IonIcons.TrashOutline,
-  'pencil-outline': IonIcons.PencilOutline,
-  'ellipsis-horizontal-outline': IonIcons.EllipsisHorizontalOutline,
-  'filter-outline': IonIcons.FilterOutline,
-  'options-outline': IonIcons.OptionsOutline,
-  'refresh-outline': IonIcons.RefreshOutline,
-  'send-outline': IonIcons.SendOutline,
-  'happy-outline': IonIcons.HappyOutline,
-  'pricetag-outline': IonIcons.PricetagOutline,
-  
+  'copy-outline': Copy,
+  'share-outline': Share2,
+  'download-outline': Download,
+  'trash-outline': Trash2,
+  'pencil-outline': Pencil,
+  'ellipsis-horizontal-outline': MoreHorizontal,
+  'filter-outline': Filter,
+  'options-outline': SlidersHorizontal,
+  'refresh-outline': RefreshCw,
+  'send-outline': Send,
+  'happy-outline': Smile,
+  'pricetag-outline': Tag,
+
   // Additional icons for templates/content
-  'book-outline': IonIcons.BookOutline,
-  'reader-outline': IonIcons.ReaderOutline,
-  'list-outline': IonIcons.ListOutline,
-  'film-outline': IonIcons.FilmOutline,
+  'book-outline': Book,
+  'reader-outline': BookOpen,
+  'list-outline': List,
+  'film-outline': Film,
 };
 
 interface IconProps {
-  name: string;
+  name?: string;
   size?: number | string;
   color?: string;
   className?: string;
 }
 
 export function Icon({ name, size = 20, color = 'currentColor', className = '' }: IconProps) {
-  const IconComponent = iconMap[name];
-  
+  const IconComponent = name ? iconMap[name] : undefined;
+
   if (!IconComponent) {
-    console.warn(`Icon "${name}" not found in icon map`);
+    if (name) {
+      console.warn(`Icon "${name}" not found in icon map`);
+    }
     return <span className={`icon icon--missing ${className}`}>?</span>;
   }
 
-  const sizeStr = typeof size === 'number' ? `${size}px` : size;
+  const sizeNum = typeof size === 'number' ? size : parseInt(size, 10) || 20;
 
   return (
     <span className={`icon ${className}`}>
-      <IconComponent color={color} width={sizeStr} height={sizeStr} />
+      <IconComponent size={sizeNum} color={color} />
     </span>
   );
 }
