@@ -4,34 +4,25 @@ import { ArrowRight, RefreshCw, ExternalLink, LogOut, Check } from 'lucide-react
 export interface SubscriptionGatePlan {
   id: string;
   name: string;
-  /** Monthly price in EUR */
-  monthlyPrice: number;
-  /** Annual price in EUR (total for the year) */
-  annualPrice: number;
+  price: number;
+  interval: 'month' | 'year';
   description: string;
-  features?: string[];
+  /** Badge text shown on this plan (e.g. "2 mois gratuits") */
+  badge?: string;
 }
 
 export interface SubscriptionGateProps {
-  /** Display name of the SaaS app (e.g. "Dialum", "Socialum") */
   appName: string;
-  /** Currently authenticated user's email */
   userEmail?: string;
-  /** Available plan tiers — each with monthly + annual pricing */
   plans: SubscriptionGatePlan[];
-  /** Number of free trial days (default: 14) */
+  /** Shared feature bullets shown below plans */
+  features?: string[];
   trialDays?: number;
-  /** Called when user clicks the trial CTA — receives the selected plan id */
   onStartTrial: (planId: string) => Promise<void>;
-  /** Called when user wants to refresh subscription status */
   onRefreshStatus: () => Promise<void>;
-  /** Called when user wants to open the billing portal */
   onOpenPortal: () => Promise<void>;
-  /** Called when user signs out */
   onSignOut: () => Promise<void>;
-  /** Whether the subscription status is currently loading */
   statusLoading?: boolean;
-  /** Error message to display */
   error?: string | null;
 }
 
@@ -39,6 +30,7 @@ export function SubscriptionGate({
   appName,
   userEmail,
   plans,
+  features = [],
   trialDays = 14,
   onStartTrial,
   onRefreshStatus,
@@ -47,8 +39,9 @@ export function SubscriptionGate({
   statusLoading = false,
   error: externalError = null,
 }: SubscriptionGateProps) {
-  const [selectedPlan, setSelectedPlan] = useState(plans[0]?.id ?? '');
-  const [interval, setInterval] = useState<'annual' | 'monthly'>('annual');
+  // Default to the plan with a badge, or the last one (typically annual)
+  const defaultPlan = plans.find(p => p.badge) || plans[plans.length - 1];
+  const [selectedId, setSelectedId] = useState(defaultPlan?.id ?? '');
   const [trialLoading, setTrialLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -57,201 +50,129 @@ export function SubscriptionGate({
   const error = localError || externalError;
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(t);
   }, []);
 
   const handleTrial = useCallback(async () => {
     setTrialLoading(true);
     setLocalError(null);
     try {
-      await onStartTrial(selectedPlan);
+      await onStartTrial(selectedId);
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Impossible de demarrer l'essai");
     } finally {
       setTrialLoading(false);
     }
-  }, [onStartTrial, selectedPlan]);
+  }, [onStartTrial, selectedId]);
 
   const handleRefresh = useCallback(async () => {
     setLocalError(null);
-    try {
-      await onRefreshStatus();
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Impossible de rafraichir le statut');
-    }
+    try { await onRefreshStatus(); }
+    catch (err) { setLocalError(err instanceof Error ? err.message : 'Erreur'); }
   }, [onRefreshStatus]);
 
   const handlePortal = useCallback(async () => {
     setPortalLoading(true);
     setLocalError(null);
-    try {
-      await onOpenPortal();
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Impossible d'ouvrir le portail");
-    } finally {
-      setPortalLoading(false);
-    }
+    try { await onOpenPortal(); }
+    catch (err) { setLocalError(err instanceof Error ? err.message : 'Erreur'); }
+    finally { setPortalLoading(false); }
   }, [onOpenPortal]);
 
-  const isAnyLoading = trialLoading || portalLoading;
-
-  const computeSavings = (plan: SubscriptionGatePlan) => {
-    const fullYearMonthly = plan.monthlyPrice * 12;
-    const saved = fullYearMonthly - plan.annualPrice;
-    if (saved <= 0) return null;
-    const monthsFree = Math.round(saved / plan.monthlyPrice);
-    return monthsFree;
-  };
+  const isLoading = trialLoading || portalLoading;
 
   return (
     <div className="subgate">
-      <div className={`subgate__container ${mounted ? 'subgate__container--visible' : ''}`}>
+      <div className={`subgate__card ${mounted ? 'subgate__card--visible' : ''}`}>
 
-        {/* Close / sign-out X */}
-        <button className="subgate__close" onClick={onSignOut} aria-label="Fermer">
-          &times;
-        </button>
+        <button className="subgate__close" onClick={onSignOut} aria-label="Fermer">&times;</button>
 
-        {/* Title */}
-        <h1 className="subgate__title">
-          Essayez <span className="subgate__title-accent">{appName}</span> gratuitement
-        </h1>
+        {/* Header */}
+        <div className="subgate__header">
+          <h1 className="subgate__title">
+            Essayez <span className="subgate__accent">{appName}</span> gratuitement
+          </h1>
+          {userEmail && (
+            <p className="subgate__subtitle">
+              Connecte en tant que <strong>{userEmail}</strong>
+            </p>
+          )}
+        </div>
 
-        {userEmail && (
-          <p className="subgate__email">
-            Connecte en tant que <strong>{userEmail}</strong>
-          </p>
-        )}
-
-        {/* Plan radio selectors */}
+        {/* Plan selector — cards side by side */}
         <div className="subgate__plans">
           {plans.map((plan) => {
-            const isSelected = selectedPlan === plan.id;
-            const priceLabel = interval === 'annual'
-              ? `0$ CAD pour ${trialDays} jours, puis ${plan.annualPrice}$ CAD/an`
-              : `0$ CAD pour ${trialDays} jours, puis ${plan.monthlyPrice}$ CAD/mois`;
-            const monthsFree = interval === 'annual' ? computeSavings(plan) : null;
+            const selected = plan.id === selectedId;
+            const priceStr = `${plan.price}€`;
+            const periodStr = plan.interval === 'month' ? '/mois' : '/an';
 
             return (
-              <label
+              <button
                 key={plan.id}
-                className={`subgate__plan-option ${isSelected ? 'subgate__plan-option--selected' : ''}`}
-                onClick={() => setSelectedPlan(plan.id)}
+                type="button"
+                className={`subgate__plan ${selected ? 'subgate__plan--selected' : ''}`}
+                onClick={() => setSelectedId(plan.id)}
               >
-                <span className={`subgate__radio ${isSelected ? 'subgate__radio--checked' : ''}`} />
-                <span className="subgate__plan-info">
-                  <span className="subgate__plan-name">
-                    {plan.name}
-                    {monthsFree && monthsFree > 0 && (
-                      <span className="subgate__plan-savings">
-                        {monthsFree} mois gratuit{monthsFree > 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </span>
-                  <span className="subgate__plan-price">{priceLabel}</span>
+                {plan.badge && <span className="subgate__plan-badge">{plan.badge}</span>}
+                <span className="subgate__plan-name">{plan.name}</span>
+                <span className="subgate__plan-pricing">
+                  <span className="subgate__plan-price">{priceStr}</span>
+                  <span className="subgate__plan-period">{periodStr}</span>
                 </span>
-              </label>
+                <span className="subgate__plan-desc">{plan.description}</span>
+                <span className={`subgate__plan-check ${selected ? 'subgate__plan-check--on' : ''}`}>
+                  {selected && <Check size={14} />}
+                </span>
+              </button>
             );
           })}
         </div>
 
-        {/* Interval toggle */}
-        <div className="subgate__interval">
-          <button
-            className={`subgate__interval-btn ${interval === 'monthly' ? 'subgate__interval-btn--active' : ''}`}
-            onClick={() => setInterval('monthly')}
-          >
-            Mensuel
-          </button>
-          <button
-            className={`subgate__interval-btn ${interval === 'annual' ? 'subgate__interval-btn--active' : ''}`}
-            onClick={() => setInterval('annual')}
-          >
-            Annuel
-          </button>
-        </div>
-
         {/* Features */}
-        {(() => {
-          const currentPlan = plans.find(p => p.id === selectedPlan);
-          if (!currentPlan) return null;
-          const allFeatures = currentPlan.features && currentPlan.features.length > 0
-            ? currentPlan.features
-            : [currentPlan.description];
-
-          return (
-            <div className="subgate__features">
-              <p className="subgate__features-label">
-                Tout ce dont vous avez besoin pour travailler plus vite et plus intelligemment&nbsp;:
-              </p>
-              <ul className="subgate__features-list">
-                {allFeatures.map((feat, i) => (
-                  <li key={i}>
-                    <Check size={16} />
-                    <span>{feat}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })()}
+        {features.length > 0 && (
+          <ul className="subgate__features">
+            {features.map((f, i) => (
+              <li key={i}><Check size={15} /><span>{f}</span></li>
+            ))}
+          </ul>
+        )}
 
         {/* Error */}
         {error && (
-          <div className="subgate__error">
-            <p>{error}</p>
-          </div>
+          <div className="subgate__error"><p>{error}</p></div>
         )}
 
-        {/* Main CTA */}
-        <button
-          className="subgate__cta"
-          onClick={handleTrial}
-          disabled={isAnyLoading}
-        >
+        {/* CTA */}
+        <button className="subgate__cta" onClick={handleTrial} disabled={isLoading}>
           {trialLoading ? (
-            <span className="subgate__btn-loading">
-              <span className="subgate__spinner" />
-              Creation...
-            </span>
+            <span className="subgate__cta-loading"><span className="subgate__spinner" />Creation...</span>
           ) : (
             <>
+              Demarrer {trialDays} jours gratuits
               <ArrowRight size={16} />
-              Essayer gratuitement pendant {trialDays} jours
             </>
           )}
         </button>
 
-        <p className="subgate__disclaimer">
-          Nous vous rappellerons avant la fin de l'essai. Annulez a tout moment en quelques clics.
+        <p className="subgate__fine-print">
+          Aucun paiement requis. Annulez a tout moment.
         </p>
 
-        {/* Secondary actions */}
-        <div className="subgate__actions">
-          <button
-            className="subgate__action-btn"
-            onClick={handleRefresh}
-            disabled={statusLoading}
-          >
-            <RefreshCw size={14} className={statusLoading ? 'subgate__icon-spin' : ''} />
-            {statusLoading ? 'Verification...' : "J'ai deja paye, verifier l'acces"}
+        {/* Secondary links */}
+        <div className="subgate__links">
+          <button className="subgate__link" onClick={handleRefresh} disabled={statusLoading}>
+            <RefreshCw size={13} className={statusLoading ? 'subgate__spin' : ''} />
+            {statusLoading ? 'Verification...' : "Deja abonne? Verifier l'acces"}
           </button>
-
-          <button
-            className="subgate__action-btn"
-            onClick={handlePortal}
-            disabled={portalLoading}
-          >
-            <ExternalLink size={14} />
-            {portalLoading ? 'Ouverture...' : 'Portail de facturation'}
+          <span className="subgate__link-sep" />
+          <button className="subgate__link" onClick={handlePortal} disabled={portalLoading}>
+            <ExternalLink size={13} />
+            Facturation
           </button>
-
-          <button
-            className="subgate__action-btn subgate__action-btn--danger"
-            onClick={onSignOut}
-          >
-            <LogOut size={14} />
+          <span className="subgate__link-sep" />
+          <button className="subgate__link subgate__link--muted" onClick={onSignOut}>
+            <LogOut size={13} />
             Deconnexion
           </button>
         </div>

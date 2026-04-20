@@ -1,9 +1,9 @@
 @use './variables' as *;
 
 // ─────────────────────────────────────────────────────────────
-// SubscriptionGate — Trial activation (Canva-style)
-// Single card, radio plan selectors, interval toggle, features,
-// one big CTA. Clean, focused, conversion-oriented.
+// SubscriptionGate — Trial activation screen
+// Balanced: focused card, selectable plan tiles, features,
+// single CTA. Matches umbeli.com design tokens.
 // ─────────────────────────────────────────────────────────────
 
 @keyframes subgate-spin {
@@ -15,17 +15,6 @@
   50%      { background-position: 100% 50%; }
 }
 
-@keyframes subgate-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 .subgate {
   min-height: 100vh;
   display: flex;
@@ -33,28 +22,27 @@
   justify-content: center;
   padding: 32px 20px;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(91, 86, 255, 0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(91, 86, 255, 0.04) 0%, transparent 70%),
     linear-gradient(180deg, #fbfbfd 0%, #f3f4fb 100%);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 
-  // ── Container / Card ────────────────────────────────────
-  &__container {
+  // ── Card ────────────────────────────────────────────────
+  &__card {
     position: relative;
     width: 100%;
-    max-width: 480px;
+    max-width: 520px;
     background: #ffffff;
     border: 1px solid #e7e9ef;
-    border-radius: 16px;
-    padding: 36px 32px 28px;
+    border-radius: 18px;
+    padding: 40px 36px 32px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    box-shadow: 0 8px 32px rgba(13, 13, 43, 0.07);
+    gap: 24px;
+    box-shadow: 0 4px 24px rgba(13, 13, 43, 0.06);
 
-    // Entrance
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
     transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
                 transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 
@@ -63,17 +51,17 @@
       transform: none;
     }
 
-    @media (max-width: 520px) {
-      padding: 28px 20px 22px;
-      border-radius: 12px;
+    @media (max-width: 560px) {
+      padding: 28px 22px 24px;
+      border-radius: 14px;
     }
   }
 
-  // ── Close button ────────────────────────────────────────
+  // ── Close ───────────────────────────────────────────────
   &__close {
     position: absolute;
-    top: 14px;
-    right: 16px;
+    top: 16px;
+    right: 18px;
     width: 28px;
     height: 28px;
     display: grid;
@@ -84,7 +72,7 @@
     font-size: 22px;
     line-height: 1;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 8px;
     transition: color 0.15s, background 0.15s;
 
     &:hover {
@@ -93,18 +81,24 @@
     }
   }
 
-  // ── Title ───────────────────────────────────────────────
-  &__title {
-    font-family: 'Manrope', 'Inter', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    color: #0d0d2b;
-    padding-right: 28px; // room for close button
+  // ── Header ──────────────────────────────────────────────
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 28px;
   }
 
-  &__title-accent {
+  &__title {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    font-size: clamp(1.35rem, 3.5vw, 1.6rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: #0d0d2b;
+  }
+
+  &__accent {
     background: linear-gradient(95deg, #030174 0%, #5b56ff 55%, #00d4d4 110%);
     background-size: 200% 200%;
     -webkit-background-clip: text;
@@ -113,10 +107,9 @@
     animation: subgate-shimmer 6s ease infinite;
   }
 
-  &__email {
+  &__subtitle {
     font-size: 13px;
     color: #9099ad;
-    margin-top: -12px;
 
     strong {
       color: #5e6479;
@@ -124,150 +117,122 @@
     }
   }
 
-  // ── Plan radio selectors ────────────────────────────────
+  // ── Plans ───────────────────────────────────────────────
   &__plans {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
   }
 
-  &__plan-option {
+  &__plan {
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
+    flex-direction: column;
+    gap: 6px;
+    padding: 18px 18px 16px;
+    background: #ffffff;
     border: 2px solid #e7e9ef;
-    border-radius: 12px;
+    border-radius: 14px;
+    text-align: left;
     cursor: pointer;
-    transition: border-color 0.2s ease, background 0.2s ease;
+    font-family: inherit;
+    transition: border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 
     &:hover {
       border-color: #c5c3e8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(13, 13, 43, 0.06);
     }
 
     &--selected {
       border-color: #5b56ff;
-      background: rgba(91, 86, 255, 0.03);
-    }
-  }
+      background: rgba(91, 86, 255, 0.02);
+      box-shadow: 0 0 0 3px rgba(91, 86, 255, 0.08);
 
-  &__radio {
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #d1d5db;
-    border-radius: 50%;
-    position: relative;
-    transition: border-color 0.2s ease;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #5b56ff;
-      transform: scale(0);
-      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    &--checked {
-      border-color: #5b56ff;
-
-      &::after {
-        transform: scale(1);
+      &:hover {
+        border-color: #5b56ff;
       }
     }
   }
 
-  &__plan-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+  &__plan-badge {
+    position: absolute;
+    top: -9px;
+    right: 14px;
+    background: linear-gradient(95deg, #5b56ff, #00d4d4);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
   }
 
   &__plan-name {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-family: 'Manrope', 'Inter', sans-serif;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     color: #0d0d2b;
+    letter-spacing: -0.01em;
   }
 
-  &__plan-savings {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    background: linear-gradient(95deg, #5b56ff, #00d4d4);
-    color: white;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
+  &__plan-pricing {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
   }
 
   &__plan-price {
-    font-size: 13px;
-    color: #5e6479;
-    font-weight: 400;
+    font-family: 'Manrope', 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #0d0d2b;
+    letter-spacing: -0.02em;
+    line-height: 1;
   }
 
-  // ── Interval toggle ─────────────────────────────────────
-  &__interval {
-    display: inline-flex;
-    align-self: flex-start;
-    background: #f3f4fb;
-    border-radius: 999px;
-    padding: 3px;
-    gap: 2px;
-  }
-
-  &__interval-btn {
-    padding: 6px 16px;
-    border: none;
-    background: transparent;
-    color: #5e6479;
-    font-family: inherit;
+  &__plan-period {
     font-size: 13px;
+    color: #5e6479;
     font-weight: 500;
-    cursor: pointer;
-    border-radius: 999px;
+  }
+
+  &__plan-desc {
+    font-size: 12px;
+    color: #9099ad;
+    line-height: 1.35;
+  }
+
+  &__plan-check {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
     transition: all 0.2s ease;
 
-    &--active {
-      background: #ffffff;
-      color: #0d0d2b;
-      font-weight: 600;
-      box-shadow: 0 1px 3px rgba(13, 13, 43, 0.08);
+    &--on {
+      border-color: #5b56ff;
+      background: #5b56ff;
+      color: white;
     }
   }
 
   // ── Features ────────────────────────────────────────────
   &__features {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  &__features-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #0d0d2b;
-    line-height: 1.4;
-  }
-
-  &__features-list {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 9px;
 
     li {
       display: flex;
@@ -288,7 +253,7 @@
   // ── Error ───────────────────────────────────────────────
   &__error {
     background: #fde8e8;
-    border: 1px solid rgba(220, 38, 38, 0.15);
+    border: 1px solid rgba(220, 38, 38, 0.12);
     border-radius: 10px;
     padding: 12px 14px;
 
@@ -296,11 +261,10 @@
       font-size: 13px;
       color: #dc2626;
       margin: 0;
-      line-height: 1.4;
     }
   }
 
-  // ── Main CTA ───────────────────────────────────────────
+  // ── CTA ─────────────────────────────────────────────────
   &__cta {
     display: flex;
     align-items: center;
@@ -308,7 +272,7 @@
     gap: 8px;
     width: 100%;
     padding: 14px 24px;
-    background: linear-gradient(135deg, #030174 0%, #1a0fa0 100%);
+    background: #030174;
     color: white;
     border: none;
     border-radius: 12px;
@@ -323,15 +287,14 @@
 
     &:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(3, 1, 116, 0.25);
+      box-shadow: 0 6px 20px rgba(3, 1, 116, 0.22);
     }
 
-    // Shimmer sweep
     &::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+      background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.18) 50%, transparent 70%);
       transform: translateX(-100%);
       transition: transform 0.8s ease;
     }
@@ -346,40 +309,45 @@
     }
   }
 
-  // ── Disclaimer ──────────────────────────────────────────
-  &__disclaimer {
+  &__cta-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  // ── Fine print ──────────────────────────────────────────
+  &__fine-print {
     text-align: center;
     font-size: 12px;
     color: #9099ad;
-    line-height: 1.4;
-    margin-top: -8px;
+    margin-top: -10px;
   }
 
-  // ── Secondary actions ───────────────────────────────────
-  &__actions {
+  // ── Secondary links ─────────────────────────────────────
+  &__links {
     display: flex;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 4px;
-    padding-top: 4px;
+    gap: 0;
+    padding-top: 8px;
     border-top: 1px solid #f0f1f5;
   }
 
-  &__action-btn {
+  &__link {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 6px 12px;
+    padding: 6px 10px;
     background: transparent;
-    color: #9099ad;
+    color: #5e6479;
     border: none;
-    border-radius: 999px;
+    border-radius: 6px;
     font-family: inherit;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    transition: color 0.15s ease, background 0.15s ease;
+    transition: color 0.15s, background 0.15s;
 
     &:hover:not(:disabled) {
       color: #030174;
@@ -391,21 +359,24 @@
       cursor: not-allowed;
     }
 
-    &--danger {
+    &--muted {
+      color: #9099ad;
+
       &:hover:not(:disabled) {
         color: #dc2626;
-        background: rgba(220, 38, 38, 0.05);
+        background: rgba(220, 38, 38, 0.04);
       }
     }
   }
 
-  // ── Utilities ───────────────────────────────────────────
-  &__btn-loading {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+  &__link-sep {
+    width: 1px;
+    height: 14px;
+    background: #e7e9ef;
+    margin: 0 2px;
   }
 
+  // ── Utilities ───────────────────────────────────────────
   &__spinner {
     width: 14px;
     height: 14px;
@@ -415,7 +386,7 @@
     animation: subgate-spin 0.8s linear infinite;
   }
 
-  &__icon-spin {
+  &__spin {
     animation: subgate-spin 1s linear infinite;
   }
 }
