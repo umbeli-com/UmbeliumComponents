@@ -1,31 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Sparkles, ArrowRight, CreditCard, RefreshCw, ExternalLink, LogOut, Check, Zap } from 'lucide-react';
+import { ArrowRight, RefreshCw, ExternalLink, LogOut, Check } from 'lucide-react';
 
 export interface SubscriptionGatePlan {
   id: string;
   name: string;
-  price: number;
-  interval: 'month' | 'year';
+  /** Monthly price in EUR */
+  monthlyPrice: number;
+  /** Annual price in EUR (total for the year) */
+  annualPrice: number;
   description: string;
   features?: string[];
-  popular?: boolean;
 }
 
 export interface SubscriptionGateProps {
   /** Display name of the SaaS app (e.g. "Dialum", "Socialum") */
   appName: string;
-  /** Short tagline shown under the heading */
-  appTagline?: string;
   /** Currently authenticated user's email */
   userEmail?: string;
-  /** Available billing plans */
+  /** Available plan tiers — each with monthly + annual pricing */
   plans: SubscriptionGatePlan[];
   /** Number of free trial days (default: 14) */
   trialDays?: number;
-  /** Called when user clicks "Start free trial" */
-  onStartTrial: () => Promise<void>;
-  /** Called when user selects a paid plan */
-  onSelectPlan: (planId: string) => Promise<void>;
+  /** Called when user clicks the trial CTA — receives the selected plan id */
+  onStartTrial: (planId: string) => Promise<void>;
   /** Called when user wants to refresh subscription status */
   onRefreshStatus: () => Promise<void>;
   /** Called when user wants to open the billing portal */
@@ -40,19 +37,18 @@ export interface SubscriptionGateProps {
 
 export function SubscriptionGate({
   appName,
-  appTagline,
   userEmail,
   plans,
   trialDays = 14,
   onStartTrial,
-  onSelectPlan,
   onRefreshStatus,
   onOpenPortal,
   onSignOut,
   statusLoading = false,
   error: externalError = null,
 }: SubscriptionGateProps) {
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState(plans[0]?.id ?? '');
+  const [interval, setInterval] = useState<'annual' | 'monthly'>('annual');
   const [trialLoading, setTrialLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -61,7 +57,6 @@ export function SubscriptionGate({
   const error = localError || externalError;
 
   useEffect(() => {
-    // Stagger the entrance animation
     const timer = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(timer);
   }, []);
@@ -70,25 +65,13 @@ export function SubscriptionGate({
     setTrialLoading(true);
     setLocalError(null);
     try {
-      await onStartTrial();
+      await onStartTrial(selectedPlan);
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Impossible de demarrer l'essai");
     } finally {
       setTrialLoading(false);
     }
-  }, [onStartTrial]);
-
-  const handleCheckout = useCallback(async (planId: string) => {
-    setLoadingPlan(planId);
-    setLocalError(null);
-    try {
-      await onSelectPlan(planId);
-    } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'Erreur lors de la redirection');
-    } finally {
-      setLoadingPlan(null);
-    }
-  }, [onSelectPlan]);
+  }, [onStartTrial, selectedPlan]);
 
   const handleRefresh = useCallback(async () => {
     setLocalError(null);
@@ -111,126 +94,108 @@ export function SubscriptionGate({
     }
   }, [onOpenPortal]);
 
-  const formatPrice = (price: number, interval: 'month' | 'year') => {
-    return { amount: `${price}€`, period: interval === 'month' ? '/mois' : '/an' };
-  };
+  const isAnyLoading = trialLoading || portalLoading;
 
-  const isAnyLoading = trialLoading || loadingPlan !== null || portalLoading;
+  const computeSavings = (plan: SubscriptionGatePlan) => {
+    const fullYearMonthly = plan.monthlyPrice * 12;
+    const saved = fullYearMonthly - plan.annualPrice;
+    if (saved <= 0) return null;
+    const monthsFree = Math.round(saved / plan.monthlyPrice);
+    return monthsFree;
+  };
 
   return (
     <div className="subgate">
       <div className={`subgate__container ${mounted ? 'subgate__container--visible' : ''}`}>
-        {/* Header */}
-        <div className="subgate__header" style={{ transitionDelay: '0.1s' }}>
-          <span className="subgate__eyebrow">
-            <Sparkles size={13} />
-            Activation requise
-          </span>
 
-          <h1 className="subgate__title">
-            Activez <span className="subgate__title-accent">{appName}</span>
-          </h1>
+        {/* Close / sign-out X */}
+        <button className="subgate__close" onClick={onSignOut} aria-label="Fermer">
+          &times;
+        </button>
 
-          {appTagline && (
-            <p className="subgate__tagline">{appTagline}</p>
-          )}
+        {/* Title */}
+        <h1 className="subgate__title">
+          Essayez <span className="subgate__title-accent">{appName}</span> gratuitement
+        </h1>
 
-          {userEmail && (
-            <p className="subgate__email">
-              Connecte en tant que <strong>{userEmail}</strong>
-            </p>
-          )}
+        {userEmail && (
+          <p className="subgate__email">
+            Connecte en tant que <strong>{userEmail}</strong>
+          </p>
+        )}
+
+        {/* Plan radio selectors */}
+        <div className="subgate__plans">
+          {plans.map((plan) => {
+            const isSelected = selectedPlan === plan.id;
+            const priceLabel = interval === 'annual'
+              ? `0$ CAD pour ${trialDays} jours, puis ${plan.annualPrice}$ CAD/an`
+              : `0$ CAD pour ${trialDays} jours, puis ${plan.monthlyPrice}$ CAD/mois`;
+            const monthsFree = interval === 'annual' ? computeSavings(plan) : null;
+
+            return (
+              <label
+                key={plan.id}
+                className={`subgate__plan-option ${isSelected ? 'subgate__plan-option--selected' : ''}`}
+                onClick={() => setSelectedPlan(plan.id)}
+              >
+                <span className={`subgate__radio ${isSelected ? 'subgate__radio--checked' : ''}`} />
+                <span className="subgate__plan-info">
+                  <span className="subgate__plan-name">
+                    {plan.name}
+                    {monthsFree && monthsFree > 0 && (
+                      <span className="subgate__plan-savings">
+                        {monthsFree} mois gratuit{monthsFree > 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </span>
+                  <span className="subgate__plan-price">{priceLabel}</span>
+                </span>
+              </label>
+            );
+          })}
         </div>
 
-        {/* Free Trial CTA */}
-        <div className="subgate__trial" style={{ transitionDelay: '0.2s' }}>
-          <div className="subgate__trial-content">
-            <div className="subgate__trial-icon">
-              <Zap size={20} />
-            </div>
-            <div className="subgate__trial-text">
-              <h2 className="subgate__trial-title">Essai gratuit</h2>
-              <p className="subgate__trial-desc">
-                Explorez {appName} pendant {trialDays} jours, sans engagement.
-              </p>
-            </div>
-          </div>
+        {/* Interval toggle */}
+        <div className="subgate__interval">
           <button
-            className="subgate__trial-btn"
-            onClick={handleTrial}
-            disabled={isAnyLoading}
+            className={`subgate__interval-btn ${interval === 'monthly' ? 'subgate__interval-btn--active' : ''}`}
+            onClick={() => setInterval('monthly')}
           >
-            {trialLoading ? (
-              <span className="subgate__btn-loading">
-                <span className="subgate__spinner" />
-                Creation...
-              </span>
-            ) : (
-              <>
-                Demarrer l'essai gratuit
-                <ArrowRight size={16} />
-              </>
-            )}
+            Mensuel
+          </button>
+          <button
+            className={`subgate__interval-btn ${interval === 'annual' ? 'subgate__interval-btn--active' : ''}`}
+            onClick={() => setInterval('annual')}
+          >
+            Annuel
           </button>
         </div>
 
-        {/* Plan Cards */}
-        <div className="subgate__plans" style={{ transitionDelay: '0.3s' }}>
-          <p className="subgate__plans-label">Ou choisissez un plan</p>
-          <div className="subgate__plans-grid">
-            {plans.map((plan, index) => {
-              const { amount, period } = formatPrice(plan.price, plan.interval);
-              return (
-                <div
-                  key={plan.id}
-                  className={`subgate__plan ${plan.popular ? 'subgate__plan--popular' : ''}`}
-                  style={{ transitionDelay: `${0.35 + index * 0.08}s` }}
-                >
-                  {plan.popular && (
-                    <span className="subgate__plan-badge">Populaire</span>
-                  )}
-                  <div className="subgate__plan-head">
-                    <h3 className="subgate__plan-name">{plan.name}</h3>
-                    <div className="subgate__plan-price">
-                      <span className="subgate__plan-amount">{amount}</span>
-                      <span className="subgate__plan-period">{period}</span>
-                    </div>
-                  </div>
-                  <p className="subgate__plan-desc">{plan.description}</p>
+        {/* Features */}
+        {(() => {
+          const currentPlan = plans.find(p => p.id === selectedPlan);
+          if (!currentPlan) return null;
+          const allFeatures = currentPlan.features && currentPlan.features.length > 0
+            ? currentPlan.features
+            : [currentPlan.description];
 
-                  {plan.features && plan.features.length > 0 && (
-                    <ul className="subgate__plan-features">
-                      {plan.features.map((feat, i) => (
-                        <li key={i}>
-                          <Check size={14} />
-                          {feat}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  <button
-                    className={`subgate__plan-btn ${plan.popular ? 'subgate__plan-btn--primary' : ''}`}
-                    disabled={isAnyLoading}
-                    onClick={() => handleCheckout(plan.id)}
-                  >
-                    {loadingPlan === plan.id ? (
-                      <span className="subgate__btn-loading">
-                        <span className="subgate__spinner" />
-                        Redirection...
-                      </span>
-                    ) : (
-                      <>
-                        <CreditCard size={15} />
-                        Choisir ce plan
-                      </>
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+          return (
+            <div className="subgate__features">
+              <p className="subgate__features-label">
+                Tout ce dont vous avez besoin pour travailler plus vite et plus intelligemment&nbsp;:
+              </p>
+              <ul className="subgate__features-list">
+                {allFeatures.map((feat, i) => (
+                  <li key={i}>
+                    <Check size={16} />
+                    <span>{feat}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })()}
 
         {/* Error */}
         {error && (
@@ -239,8 +204,31 @@ export function SubscriptionGate({
           </div>
         )}
 
-        {/* Secondary Actions */}
-        <div className="subgate__actions" style={{ transitionDelay: '0.45s' }}>
+        {/* Main CTA */}
+        <button
+          className="subgate__cta"
+          onClick={handleTrial}
+          disabled={isAnyLoading}
+        >
+          {trialLoading ? (
+            <span className="subgate__btn-loading">
+              <span className="subgate__spinner" />
+              Creation...
+            </span>
+          ) : (
+            <>
+              <ArrowRight size={16} />
+              Essayer gratuitement pendant {trialDays} jours
+            </>
+          )}
+        </button>
+
+        <p className="subgate__disclaimer">
+          Nous vous rappellerons avant la fin de l'essai. Annulez a tout moment en quelques clics.
+        </p>
+
+        {/* Secondary actions */}
+        <div className="subgate__actions">
           <button
             className="subgate__action-btn"
             onClick={handleRefresh}
