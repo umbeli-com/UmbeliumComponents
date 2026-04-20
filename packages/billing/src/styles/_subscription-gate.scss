@@ -1,0 +1,542 @@
+@use './variables' as *;
+
+// ─────────────────────────────────────────────────────────────
+// SubscriptionGate — Activation / paywall screen
+// Design: matches umbeli.com — airy, gradient accents, playful
+// ─────────────────────────────────────────────────────────────
+
+// Keyframes
+@keyframes subgate-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+@keyframes subgate-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes subgate-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+@keyframes subgate-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(91, 86, 255, 0.25); }
+  50%      { box-shadow: 0 0 0 10px rgba(91, 86, 255, 0); }
+}
+
+.subgate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(91, 86, 255, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(0, 212, 212, 0.04) 0%, transparent 60%),
+    linear-gradient(180deg, #fbfbfd 0%, #f0eff8 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+
+  // Container
+  &__container {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    // Entrance animation — children fade up with stagger
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+                transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    &--visible {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  // ── Header ──────────────────────────────────────────────
+  &__header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(91, 86, 255, 0.08);
+    color: #5b56ff;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border: 1px solid rgba(91, 86, 255, 0.12);
+
+    svg {
+      animation: subgate-float 2.4s ease infinite;
+    }
+  }
+
+  &__title {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: #0d0d2b;
+    margin: 4px 0 0;
+  }
+
+  &__title-accent {
+    background: linear-gradient(95deg, #030174 0%, #5b56ff 55%, #00d4d4 110%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: subgate-shimmer 6s ease infinite;
+  }
+
+  &__tagline {
+    font-size: 15px;
+    color: #5e6479;
+    line-height: 1.5;
+    max-width: 440px;
+  }
+
+  &__email {
+    font-size: 13px;
+    color: #9099ad;
+
+    strong {
+      color: #5e6479;
+      font-weight: 500;
+    }
+  }
+
+  // ── Free Trial CTA ──────────────────────────────────────
+  &__trial {
+    background: #ffffff;
+    border: 1px solid #e7e9ef;
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.25s ease,
+                border-color 0.25s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(13, 13, 43, 0.08);
+      border-color: rgba(91, 86, 255, 0.2);
+    }
+
+    @media (max-width: 560px) {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+    }
+  }
+
+  &__trial-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    @media (max-width: 560px) {
+      flex-direction: column;
+      gap: 12px;
+    }
+  }
+
+  &__trial-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #030174, #5b56ff);
+    color: white;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(3, 1, 116, 0.2);
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    .subgate__trial:hover & {
+      transform: rotate(-6deg) scale(1.06);
+    }
+  }
+
+  &__trial-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__trial-title {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #0d0d2b;
+    letter-spacing: -0.01em;
+  }
+
+  &__trial-desc {
+    font-size: 13px;
+    color: #5e6479;
+    line-height: 1.4;
+  }
+
+  &__trial-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: #030174;
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(3, 1, 116, 0.2);
+    transition: transform 0.18s ease,
+                box-shadow 0.25s ease,
+                background 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(3, 1, 116, 0.3);
+    }
+
+    // Shimmer sweep on hover
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform 0.8s ease;
+    }
+
+    &:hover:not(:disabled)::after {
+      transform: translateX(100%);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    // Pulse glow when idle (draws attention)
+    animation: subgate-pulse-glow 3s ease infinite;
+
+    &:hover, &:disabled {
+      animation: none;
+    }
+  }
+
+  // ── Plans ───────────────────────────────────────────────
+  &__plans {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__plans-label {
+    text-align: center;
+    font-size: 13px;
+    color: #9099ad;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    &::before,
+    &::after {
+      content: '';
+      display: inline-block;
+      width: 32px;
+      height: 1px;
+      background: #e7e9ef;
+      vertical-align: middle;
+      margin: 0 12px;
+    }
+  }
+
+  &__plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  // ── Individual Plan Card ────────────────────────────────
+  &__plan {
+    position: relative;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #e7e9ef;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.25s ease,
+                border-color 0.25s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(13, 13, 43, 0.08);
+      border-color: rgba(91, 86, 255, 0.3);
+    }
+
+    &--popular {
+      border-color: #5b56ff;
+      box-shadow: 0 0 0 4px rgba(91, 86, 255, 0.1), 0 6px 20px rgba(13, 13, 43, 0.08);
+    }
+  }
+
+  &__plan-badge {
+    position: absolute;
+    top: -10px;
+    left: 18px;
+    background: linear-gradient(95deg, #5b56ff, #00d4d4);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  &__plan-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__plan-name {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #0d0d2b;
+    letter-spacing: -0.02em;
+  }
+
+  &__plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  &__plan-amount {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #0d0d2b;
+    line-height: 1;
+  }
+
+  &__plan-period {
+    font-size: 14px;
+    color: #5e6479;
+    font-weight: 500;
+  }
+
+  &__plan-desc {
+    font-size: 13px;
+    color: #5e6479;
+    line-height: 1.5;
+  }
+
+  &__plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: #5e6479;
+
+      svg {
+        color: #16a34a;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+    }
+  }
+
+  // ── Plan Button ─────────────────────────────────────────
+  &__plan-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 20px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: auto;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.18s ease,
+                box-shadow 0.25s ease,
+                background 0.2s ease,
+                color 0.2s ease,
+                border-color 0.2s ease;
+
+    // Ghost style by default
+    background: #ffffff;
+    color: #0d0d2b;
+    border: 1px solid #e7e9ef;
+
+    &:hover:not(:disabled) {
+      border-color: #030174;
+      color: #030174;
+      transform: translateY(-1px);
+    }
+
+    // Primary style for popular plans
+    &--primary {
+      background: #030174;
+      color: white;
+      border: none;
+      box-shadow: 0 4px 14px rgba(3, 1, 116, 0.2);
+
+      &:hover:not(:disabled) {
+        color: white;
+        box-shadow: 0 8px 24px rgba(3, 1, 116, 0.3);
+      }
+
+      // Shimmer sweep
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.25) 50%, transparent 70%);
+        transform: translateX(-100%);
+        transition: transform 0.8s ease;
+      }
+
+      &:hover:not(:disabled)::after {
+        transform: translateX(100%);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // ── Error ───────────────────────────────────────────────
+  &__error {
+    background: #fde8e8;
+    border: 1px solid rgba(220, 38, 38, 0.15);
+    border-radius: 12px;
+    padding: 14px 18px;
+
+    p {
+      font-size: 13px;
+      color: #dc2626;
+      margin: 0;
+      line-height: 1.4;
+    }
+  }
+
+  // ── Secondary Actions ───────────────────────────────────
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: transparent;
+    color: #5e6479;
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+
+    &:hover:not(:disabled) {
+      color: #030174;
+      background: rgba(91, 86, 255, 0.06);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--danger {
+      &:hover:not(:disabled) {
+        color: #dc2626;
+        background: rgba(220, 38, 38, 0.06);
+      }
+    }
+  }
+
+  // ── Utilities ───────────────────────────────────────────
+  &__btn-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: subgate-spin 0.8s linear infinite;
+
+    // Adjust spinner for ghost buttons
+    .subgate__plan-btn:not(.subgate__plan-btn--primary) & {
+      border-color: rgba(13, 13, 43, 0.15);
+      border-top-color: #030174;
+    }
+
+    .subgate__action-btn & {
+      border-color: rgba(13, 13, 43, 0.15);
+      border-top-color: #5e6479;
+    }
+  }
+
+  &__icon-spin {
+    animation: subgate-spin 1s linear infinite;
+  }
+}

@@ -12,6 +12,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./subscription-gate": {
+      "types": "./dist/components/SubscriptionGate/index.d.ts",
+      "import": "./dist/components/SubscriptionGate/index.js",
+      "default": "./dist/components/SubscriptionGate/index.js"
+    },
     "./styles": {
       "types": "./styles.d.ts",
       "default": "./dist/styles/index.css"
