@@ -12,6 +12,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./client": {
+      "types": "./dist/utils/BillingClient.d.ts",
+      "import": "./dist/utils/BillingClient.js",
+      "default": "./dist/utils/BillingClient.js"
+    },
     "./subscription-gate": {
       "types": "./dist/components/SubscriptionGate/index.d.ts",
       "import": "./dist/components/SubscriptionGate/index.js",
