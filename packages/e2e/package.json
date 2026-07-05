@@ -1,0 +1,27 @@
+{
+  "name": "@umbeli-com/e2e",
+  "version": "1.0.0",
+  "description": "Shared Playwright E2E harness for Umbeli SaaS apps — network mocks (Supabase/Stripe), config preset, acceptance-checklist gate.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./mocks": "./src/mocks.js",
+    "./config": "./src/config.js",
+    "./acceptance": "./src/acceptance.js"
+  },
+  "bin": {
+    "umbeli-acceptance": "./src/acceptance-cli.js"
+  },
+  "files": ["src"],
+  "peerDependencies": {
+    "@playwright/test": ">=1.40.0"
+  },
+  "dependencies": {
+    "js-yaml": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
+  },
+  "license": "MIT"
+}
