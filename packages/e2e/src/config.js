@@ -21,9 +21,9 @@ export function defineUmbeliE2EConfig(opts) {
 
   return defineConfig({
     testDir: opts.testDir ?? './e2e',
-    // La config mock ne doit PAS ramasser les smokes staging réels (e2e/staging/**),
-    // qui ont leur propre config (playwright.staging.config.ts).
-    testIgnore: opts.testIgnore ?? '**/staging/**',
+    // La config mock ne ramasse ni les smokes staging réels (e2e/staging/**) ni la
+    // régression visuelle (e2e/visual/**) — chacun a sa propre config.
+    testIgnore: opts.testIgnore ?? ['**/staging/**', '**/visual/**'],
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
