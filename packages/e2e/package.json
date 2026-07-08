@@ -7,7 +7,9 @@
     ".": "./src/index.js",
     "./mocks": "./src/mocks.js",
     "./config": "./src/config.js",
-    "./acceptance": "./src/acceptance.js"
+    "./acceptance": "./src/acceptance.js",
+    "./net": "./src/net.js",
+    "./crawl": "./src/crawl.js"
   },
   "bin": {
     "umbeli-acceptance": "./src/acceptance-cli.js"

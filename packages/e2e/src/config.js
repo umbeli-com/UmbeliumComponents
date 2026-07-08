@@ -21,6 +21,9 @@ export function defineUmbeliE2EConfig(opts) {
 
   return defineConfig({
     testDir: opts.testDir ?? './e2e',
+    // La config mock ne doit PAS ramasser les smokes staging réels (e2e/staging/**),
+    // qui ont leur propre config (playwright.staging.config.ts).
+    testIgnore: opts.testIgnore ?? '**/staging/**',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
@@ -36,7 +39,9 @@ export function defineUmbeliE2EConfig(opts) {
       screenshot: 'only-on-failure',
       video: 'retain-on-failure',
     },
-    projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+    // Cross-browser à la demande : E2E_BROWSERS=all (ou "chromium,firefox,webkit").
+    // Défaut = chromium seul (vitesse). Ajoute un viewport mobile avec ...,mobile.
+    projects: buildProjects(process.env.E2E_BROWSERS),
     webServer: process.env.E2E_BASE_URL
       ? undefined
       : {
@@ -47,4 +52,22 @@ export function defineUmbeliE2EConfig(opts) {
         },
     ...(opts.override || {}),
   });
+}
+
+/**
+ * Construit la liste des projets Playwright selon E2E_BROWSERS.
+ * @param {string|undefined} spec  "all" | "chromium,firefox,webkit,mobile" | undefined
+ */
+function buildProjects(spec) {
+  const catalog = {
+    chromium: { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    firefox: { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    webkit: { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    mobile: { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+  };
+  const wanted =
+    !spec ? ['chromium']
+    : spec === 'all' ? ['chromium', 'firefox', 'webkit', 'mobile']
+    : spec.split(',').map((s) => s.trim()).filter((s) => catalog[s]);
+  return (wanted.length ? wanted : ['chromium']).map((k) => catalog[k]);
 }
