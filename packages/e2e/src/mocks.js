@@ -83,6 +83,11 @@ export async function installUmbeliMocks(page, options = {}) {
   await page.route('**/auth/v1/**', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
   );
+  // Données Supabase (PostgREST) : réponse vide immédiate — évite que les fetch de
+  // données vers l'URL Supabase dummy pendent jusqu'au timeout (tests lents).
+  await page.route('**/rest/v1/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+  );
   await page.route('**/auth/v1/user**', (route) =>
     sessionValid
       ? route.fulfill({ json: user })
