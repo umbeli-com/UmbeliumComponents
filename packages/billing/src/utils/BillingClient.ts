@@ -37,10 +37,22 @@ export interface BillingClientConfig {
 export interface BillingClient {
   getSubscriptionStatus: () => Promise<SubscriptionStatus>;
   startTrial: () => Promise<void>;
-  createCheckoutSession: (billingInterval: 'monthly' | 'annual') => Promise<{ url: string }>;
-  openBillingPortal: () => Promise<{ url: string }>;
+  /** returnUrl: where Stripe sends the user back after checkout. Defaults to the
+   *  current in-app page so the user never lands on the Manager. */
+  createCheckoutSession: (billingInterval: 'monthly' | 'annual', returnUrl?: string) => Promise<{ url: string }>;
+  /** returnUrl: where Stripe's billing portal sends the user back. Defaults to the
+   *  current in-app page so the user never lands on the Manager. */
+  openBillingPortal: (returnUrl?: string) => Promise<{ url: string }>;
   /** Returns true if status is 'active' or 'trialing' and not blocked */
   isAccessGranted: (status: SubscriptionStatus) => boolean;
+}
+
+/** The URL Stripe should return to. Defaults to the current in-app page so the
+ *  user stays in-app instead of bouncing to the Manager's own domain. */
+function resolveReturnUrl(explicit?: string): string | undefined {
+  if (explicit) return explicit;
+  if (typeof window !== 'undefined' && window.location?.href) return window.location.href;
+  return undefined;
 }
 
 async function readError(response: Response): Promise<string> {
@@ -119,16 +131,18 @@ export function createBillingClient(config: BillingClientConfig): BillingClient 
       }
     },
 
-    async createCheckoutSession(billingInterval: 'monthly' | 'annual'): Promise<{ url: string }> {
+    async createCheckoutSession(billingInterval: 'monthly' | 'annual', returnUrl?: string): Promise<{ url: string }> {
       if (!apiBaseUrl) {
         throw new Error('Billing API non configuree.');
       }
 
+      const ret = resolveReturnUrl(returnUrl);
       const response = await authFetch(`${apiBaseUrl}/stripe/workspace-checkout`, {
         method: 'POST',
         body: JSON.stringify({
           selectedApps: [appKey],
           billingInterval,
+          ...(ret ? { successUrl: ret, cancelUrl: ret } : {}),
         }),
       });
 
@@ -143,13 +157,15 @@ export function createBillingClient(config: BillingClientConfig): BillingClient 
       return { url: payload.url };
     },
 
-    async openBillingPortal(): Promise<{ url: string }> {
+    async openBillingPortal(returnUrl?: string): Promise<{ url: string }> {
       if (!apiBaseUrl) {
         throw new Error('Billing API non configuree.');
       }
 
+      const ret = resolveReturnUrl(returnUrl);
       const response = await authFetch(`${apiBaseUrl}/stripe/portal`, {
         method: 'POST',
+        body: JSON.stringify(ret ? { returnUrl: ret } : {}),
       });
 
       if (!response.ok) {
