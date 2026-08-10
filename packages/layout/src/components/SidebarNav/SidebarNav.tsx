@@ -115,78 +115,82 @@ export function SidebarNav({
     }
   };
 
+  const showWorkspaceHeader = workspaces.length > 0 && currentWorkspace != null;
+
   return (
     <nav className="sidebar-nav">
-      <div className="sidebar-nav__header">
-        <div className="sidebar-nav__workspace" ref={workspaceMenuRef}>
-          <button
-            className="sidebar-nav__workspace-btn"
-            onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
-            disabled={switchingWorkspace}
-          >
-            <span className="sidebar-nav__workspace-icon">
-              {currentWorkspace?.logo_url ? (
-                <img src={currentWorkspace.logo_url} alt={currentWorkspace.name} className="sidebar-nav__workspace-logo" />
-              ) : (
-                getInitials(currentWorkspace?.name || 'W')
-              )}
-            </span>
-            <span className="sidebar-nav__workspace-name">
-              {switchingWorkspace ? t.loading : (currentWorkspace?.name || 'Workspace')}
-            </span>
-            <ChevronDown
-              size={14}
-              className={`sidebar-nav__workspace-chevron ${showWorkspaceMenu ? 'is-open' : ''}`}
-            />
-          </button>
+      {showWorkspaceHeader && (
+        <div className="sidebar-nav__header">
+          <div className="sidebar-nav__workspace" ref={workspaceMenuRef}>
+            <button
+              className="sidebar-nav__workspace-btn"
+              onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
+              disabled={switchingWorkspace}
+            >
+              <span className="sidebar-nav__workspace-icon">
+                {currentWorkspace?.logo_url ? (
+                  <img src={currentWorkspace.logo_url} alt={currentWorkspace.name} className="sidebar-nav__workspace-logo" />
+                ) : (
+                  getInitials(currentWorkspace?.name || 'W')
+                )}
+              </span>
+              <span className="sidebar-nav__workspace-name">
+                {switchingWorkspace ? t.loading : (currentWorkspace?.name || 'Workspace')}
+              </span>
+              <ChevronDown
+                size={14}
+                className={`sidebar-nav__workspace-chevron ${showWorkspaceMenu ? 'is-open' : ''}`}
+              />
+            </button>
 
-          {showWorkspaceMenu && (
-            <div className="sidebar-nav__workspace-menu">
-              <div className="sidebar-nav__workspace-menu-header">
-                {t.workspaces}
-              </div>
-              <ul className="sidebar-nav__workspace-list">
-                {workspaces.map((workspace) => (
-                  <li key={workspace.id}>
-                    <button
-                      className={`sidebar-nav__workspace-item ${workspace.id === currentWorkspace?.id ? 'is-active' : ''}`}
-                      onClick={() => handleSwitchWorkspace(workspace)}
-                    >
-                      <span className="sidebar-nav__workspace-item-icon">
-                        {workspace.logo_url ? (
-                          <img src={workspace.logo_url} alt={workspace.name} className="sidebar-nav__workspace-logo" />
-                        ) : (
-                          getInitials(workspace.name)
-                        )}
-                      </span>
-                      <span className="sidebar-nav__workspace-item-name">
-                        {workspace.name}
-                      </span>
-                      {workspace.id === currentWorkspace?.id && (
-                        <CheckCircle size={16} color="#16A34A" />
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              {onCreateWorkspace && (
-                <div className="sidebar-nav__workspace-menu-footer">
-                  <button
-                    className="sidebar-nav__workspace-add"
-                    onClick={() => {
-                      setShowWorkspaceMenu(false);
-                      onCreateWorkspace();
-                    }}
-                  >
-                    <Plus size={16} />
-                    <span>{t.newWorkspace}</span>
-                  </button>
+            {showWorkspaceMenu && (
+              <div className="sidebar-nav__workspace-menu">
+                <div className="sidebar-nav__workspace-menu-header">
+                  {t.workspaces}
                 </div>
-              )}
-            </div>
-          )}
+                <ul className="sidebar-nav__workspace-list">
+                  {workspaces.map((workspace) => (
+                    <li key={workspace.id}>
+                      <button
+                        className={`sidebar-nav__workspace-item ${workspace.id === currentWorkspace?.id ? 'is-active' : ''}`}
+                        onClick={() => handleSwitchWorkspace(workspace)}
+                      >
+                        <span className="sidebar-nav__workspace-item-icon">
+                          {workspace.logo_url ? (
+                            <img src={workspace.logo_url} alt={workspace.name} className="sidebar-nav__workspace-logo" />
+                          ) : (
+                            getInitials(workspace.name)
+                          )}
+                        </span>
+                        <span className="sidebar-nav__workspace-item-name">
+                          {workspace.name}
+                        </span>
+                        {workspace.id === currentWorkspace?.id && (
+                          <CheckCircle size={16} color="#16A34A" />
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {onCreateWorkspace && (
+                  <div className="sidebar-nav__workspace-menu-footer">
+                    <button
+                      className="sidebar-nav__workspace-add"
+                      onClick={() => {
+                        setShowWorkspaceMenu(false);
+                        onCreateWorkspace();
+                      }}
+                    >
+                      <Plus size={16} />
+                      <span>{t.newWorkspace}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="sidebar-nav__content">
         <ul className="sidebar-nav__list">
