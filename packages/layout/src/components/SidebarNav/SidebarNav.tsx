@@ -29,18 +29,33 @@ interface SidebarNavProps {
   onSwitchWorkspace: (workspace: Workspace) => void;
   onCreateWorkspace?: () => void;
   mainNavItems: NavItem[];
+  /** Liens rendus DANS le footer, au-dessus des toggles thème/langue
+   *  (spec sidebar Umbelium : « Paramètres » vit ici). */
   bottomNavItems?: NavItem[];
   onLogout?: () => void;
   onClose?: () => void;
   isActive: (path: string) => boolean;
   renderLink: (item: NavItem, isActive: boolean, onClick?: () => void) => ReactNode;
   onRequestFeature?: () => void;
+  /** Wordmark de l'app en HAUT de la sidebar (spec : 18px/700, couleur accent,
+   *  bordure basse) — ex. <NavLink to="/app">Socialum</NavLink>. */
+  logo?: ReactNode;
   // Theme and language settings
+  /** Thème affiché par le segmented Sun/Moon. La valeur `'system'` est
+   *  DÉPRÉCIÉE (spec 2026-08-12) : elle est résolue en light/dark via
+   *  `prefers-color-scheme` pour l'affichage — l'app doit migrer son état
+   *  stocké vers le thème résolu au chargement. */
   theme?: 'dark' | 'light' | 'system';
+  /** @deprecated Bascule binaire héritée — préférer `onSetTheme`. */
   onToggleTheme?: () => void;
+  /** Sélection directe du thème (segmented Sun/Moon 13, spec Umbelium) —
+   *  DEUX états seulement, l'option « système » n'existe plus. */
+  onSetTheme?: (theme: 'light' | 'dark') => void;
   language?: 'fr' | 'en';
   onToggleLanguage?: () => void;
-  /** Carte d'upgrade d'essai (style Anonymum), rendue sous les toggles thème/langue. */
+  /** Carte d'upgrade d'essai (style Anonymum), rendue sous les toggles
+   *  thème/langue. Son CTA mène à la page Facturation de l'app (choix
+   *  Mensuel/Annuel) — jamais directement sur Stripe. */
   upgradeSlot?: ReactNode;
   /** Bloc compte (chip identité + déconnexion, style Anonymum), rendu en bas du footer.
    *  Quand il est fourni, le bouton logout intégré s'efface. */
@@ -85,8 +100,10 @@ export function SidebarNav({
   isActive,
   renderLink,
   onRequestFeature,
+  logo,
   theme,
   onToggleTheme,
+  onSetTheme,
   language,
   onToggleLanguage,
   upgradeSlot,
@@ -124,8 +141,31 @@ export function SidebarNav({
 
   const showWorkspaceHeader = workspaces.length > 0 && currentWorkspace != null;
 
+  // Toggle thème à DEUX états (spec 2026-08-12) : la valeur héritée 'system'
+  // est résolue vers le thème effectif de l'OS pour l'affichage. Les apps
+  // migrent leur état stocké 'system' au chargement — ceci n'est qu'un filet.
+  const resolvedTheme: 'light' | 'dark' | undefined =
+    theme === 'system'
+      ? (typeof window !== 'undefined' &&
+         window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light')
+      : theme;
+
+  const selectTheme = (next: 'light' | 'dark') => {
+    if (onSetTheme) {
+      onSetTheme(next);
+      return;
+    }
+    if (resolvedTheme !== next) onToggleTheme?.();
+  };
+
   return (
     <nav className="sidebar-nav">
+      {/* Wordmark de l'app — spec sidebar Umbelium (18px/700, accent,
+          padding 0 8px 20px, bordure basse). */}
+      {logo && <div className="sidebar-nav__wordmark">{logo}</div>}
+
       {showWorkspaceHeader && (
         <div className="sidebar-nav__header">
           <div className="sidebar-nav__workspace" ref={workspaceMenuRef}>
@@ -209,30 +249,70 @@ export function SidebarNav({
         </ul>
       </div>
 
+      {/* ── Footer — ordre EXACT de la spec sidebar Umbelium :
+          1. liens bas (« Paramètres », au-dessus des toggles)
+          2. toggles thème + langue (une rangée)
+          3. carte upgrade d'essai (upgradeSlot)
+          4. rangée compte + déconnexion (accountSlot) ── */}
       <div className="sidebar-nav__footer">
-        {/* Theme and Language Settings */}
-        {(onToggleTheme || onToggleLanguage) && (
+        <ul className="sidebar-nav__list">
+          {onRequestFeature && (
+            <li className="sidebar-nav__item">
+              <button
+                className="sidebar-nav__link sidebar-nav__request-feature"
+                onClick={onRequestFeature}
+              >
+                <span className="sidebar-nav__icon">
+                  <MessageSquarePlus size={18} />
+                </span>
+                <span className="sidebar-nav__label">{t.requestFeature}</span>
+              </button>
+            </li>
+          )}
+          {bottomNavItems.map((item) => (
+            <li key={item.path} className="sidebar-nav__item">
+              {renderLink(item, isActive(item.path), onClose)}
+            </li>
+          ))}
+          {onLogout && !accountSlot && (
+            <li className="sidebar-nav__item">
+              <button
+                className="sidebar-nav__link sidebar-nav__logout"
+                onClick={onLogout}
+              >
+                <span className="sidebar-nav__icon">
+                  <LogOut size={18} />
+                </span>
+                <span className="sidebar-nav__label">{t.logout}</span>
+              </button>
+            </li>
+          )}
+        </ul>
+
+        {/* Toggles thème + langue — une rangée (segmented, spec Umbelium).
+            Thème : DEUX états Sun/Moon 13 — l'option « système » est retirée. */}
+        {(onSetTheme || onToggleTheme || onToggleLanguage) && (
           <div className="sidebar-nav__settings">
-            {onToggleTheme && (
-              <div className="sidebar-nav__switch">
+            {(onSetTheme || onToggleTheme) && (
+              <div className="sidebar-nav__switch sidebar-nav__switch--theme">
                 <button
-                  className={`sidebar-nav__switch-tab ${theme === 'light' ? 'is-active' : ''}`}
-                  onClick={() => theme !== 'light' && onToggleTheme()}
-                  title="Light mode"
+                  className={`sidebar-nav__switch-tab ${resolvedTheme === 'light' ? 'is-active' : ''}`}
+                  onClick={() => selectTheme('light')}
+                  title="Mode clair"
                 >
-                  <Sun size={16} />
+                  <Sun size={13} />
                 </button>
                 <button
-                  className={`sidebar-nav__switch-tab ${theme === 'dark' ? 'is-active' : ''}`}
-                  onClick={() => theme !== 'dark' && onToggleTheme()}
-                  title="Dark mode"
+                  className={`sidebar-nav__switch-tab ${resolvedTheme === 'dark' ? 'is-active' : ''}`}
+                  onClick={() => selectTheme('dark')}
+                  title="Mode sombre"
                 >
-                  <Moon size={16} />
+                  <Moon size={13} />
                 </button>
               </div>
             )}
             {onToggleLanguage && (
-              <div className="sidebar-nav__switch">
+              <div className="sidebar-nav__switch sidebar-nav__switch--lang">
                 <button
                   className={`sidebar-nav__switch-tab ${language === 'fr' ? 'is-active' : ''}`}
                   onClick={() => language !== 'fr' && onToggleLanguage()}
@@ -252,47 +332,10 @@ export function SidebarNav({
           </div>
         )}
 
-        {/* Carte upgrade d'essai — sous les réglages thème/langue, juste
-            au-dessus du bloc compte (ordre du footer Anonymum). */}
+        {/* Carte upgrade d'essai — sous les toggles, au-dessus du compte. */}
         {upgradeSlot}
 
-        <div className="sidebar-nav__divider" />
-
-        <ul className="sidebar-nav__list">
-          {onRequestFeature && (
-            <li className="sidebar-nav__item">
-              <button
-                className="sidebar-nav__link sidebar-nav__request-feature"
-                onClick={onRequestFeature}
-              >
-                <span className="sidebar-nav__icon">
-                  <MessageSquarePlus size={22} />
-                </span>
-                <span className="sidebar-nav__label">{t.requestFeature}</span>
-              </button>
-            </li>
-          )}
-          {bottomNavItems.map((item) => (
-            <li key={item.path} className="sidebar-nav__item">
-              {renderLink(item, isActive(item.path), onClose)}
-            </li>
-          ))}
-          {onLogout && !accountSlot && (
-            <li className="sidebar-nav__item">
-              <button
-                className="sidebar-nav__link sidebar-nav__logout"
-                onClick={onLogout}
-              >
-                <span className="sidebar-nav__icon">
-                  <LogOut size={22} />
-                </span>
-                <span className="sidebar-nav__label">{t.logout}</span>
-              </button>
-            </li>
-          )}
-        </ul>
-
-        {/* Chip compte + déconnexion (style Anonymum) — tout en bas du footer. */}
+        {/* Chip compte + déconnexion — tout en bas du footer. */}
         {accountSlot}
       </div>
     </nav>
