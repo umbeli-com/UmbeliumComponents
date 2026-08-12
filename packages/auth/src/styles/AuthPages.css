@@ -38,6 +38,18 @@
 
 .auth-page__logo {
   margin-bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Logo du SaaS (même visuel que le favicon), devant le nom. */
+.auth-page__logo-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
 }
 
 .auth-page__logo-text {
