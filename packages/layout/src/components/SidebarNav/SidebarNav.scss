@@ -9,19 +9,32 @@
   gap: 4px;
   height: 100%;
   padding: 24px 16px;
+  // Base typo de la référence Webum (pixel-audit 2026-08-12) : line-height 1.6
+  // hérité par toute la sidebar (liens 22.4px, wordmark 28.8px, compte…).
+  line-height: 1.6;
   background-color: var(--theme-color-sidebar-bg);
   border-right: 1px solid var(--theme-color-sidebar-border);
   overflow-y: auto;
 }
 
-// Wordmark de l'app en haut (spec : 18px/700, accent, bordure basse).
+// Rangée de marque en haut — structure Webum (Layout.tsx) : la bordure basse,
+// le padding-bottom 20 et la marge 12 vivent sur le CONTENEUR ; le wordmark
+// lui-même reste une simple ligne 18px/700 (boîte 28.8px).
+.sidebar-nav__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--theme-color-sidebar-border);
+  margin-bottom: 12px;
+}
+
+// Wordmark de l'app (spec : 18px/700, accent, padding latéral 8).
 .sidebar-nav__wordmark {
   font-size: 18px;
   font-weight: 700;
   color: var(--theme-color-brand-primary, #030174);
-  padding: 0 8px 20px;
-  border-bottom: 1px solid var(--theme-color-sidebar-border);
-  margin-bottom: 12px;
+  padding: 0 8px;
 
   a {
     color: inherit;
@@ -74,9 +87,10 @@
 }
 
 // Segmented control (spec : conteneur padding 2, fond --bg, radius 6, bordure).
+// Pas d'align-items : stretch par défaut (Webum) — les onglets icône suivent
+// la hauteur naturelle donnée par les onglets texte FR/EN.
 .sidebar-nav__switch {
   display: flex;
-  align-items: center;
   gap: 2px;
   background: var(--theme-color-neutral-bg, #f8f9fb);
   border: 1px solid var(--theme-color-sidebar-border, #e2e5ea);
@@ -92,8 +106,16 @@
       padding: 4px 0;
     }
   }
+
+  // FR/EN en 600 (Webum) — les onglets thème (icônes) restent en 400.
+  &--lang .sidebar-nav__switch-tab {
+    font-weight: 600;
+  }
 }
 
+// Onglets des segmented — parité Webum : 11px, line-height hérité (1.6 →
+// 17.6px) ; hauteur NATURELLE 25.6 (padding 4) donnée par les onglets texte,
+// segmented 31.6 ; poids 400 par défaut (thème = icônes), FR/EN en 600.
 .sidebar-nav__switch-tab {
   display: flex;
   align-items: center;
@@ -104,7 +126,7 @@
   background: transparent;
   color: var(--theme-color-neutral-text-muted, #7E8594);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 
@@ -186,7 +208,7 @@
   font-size: inherit;
   font-weight: inherit;
   text-align: left;
-  line-height: 1.35;
+  // line-height hérité (1.6) — parité Webum : boîte de lien 42.4px.
 
   @media (max-width: 767px) {
     font-size: 1rem;

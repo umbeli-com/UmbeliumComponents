@@ -11,7 +11,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  margin-top: 10px; // sous les réglages thème/langue, juste au-dessus du compte
+  margin-top: 4px; // sous les réglages thème/langue, juste au-dessus du compte (parité Webum)
   border-radius: 12px;
   border: 1px solid var(--theme-color-brand-primary, #030174);
   background:
@@ -70,6 +70,7 @@
   justify-content: center;
   gap: 6px;
   min-height: 38px;
+  padding: 10px 8px; // parité Webum : vertical 10, horizontal serré 8 (boîte 40px)
   font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap; // le texte du CTA tient sur UNE ligne, toujours

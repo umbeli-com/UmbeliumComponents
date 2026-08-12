@@ -37,8 +37,9 @@ interface SidebarNavProps {
   isActive: (path: string) => boolean;
   renderLink: (item: NavItem, isActive: boolean, onClick?: () => void) => ReactNode;
   onRequestFeature?: () => void;
-  /** Wordmark de l'app en HAUT de la sidebar (spec : 18px/700, couleur accent,
-   *  bordure basse) — ex. <NavLink to="/app">Socialum</NavLink>. */
+  /** Wordmark de l'app en HAUT de la sidebar (spec : 18px/700, couleur accent ;
+   *  la bordure basse vit sur la rangée .sidebar-nav__brand, comme Webum) —
+   *  ex. <NavLink to="/app">Socialum</NavLink>. */
   logo?: ReactNode;
   // Theme and language settings
   /** Thème affiché par le segmented Sun/Moon. La valeur `'system'` est
@@ -162,9 +163,14 @@ export function SidebarNav({
 
   return (
     <nav className="sidebar-nav">
-      {/* Wordmark de l'app — spec sidebar Umbelium (18px/700, accent,
-          padding 0 8px 20px, bordure basse). */}
-      {logo && <div className="sidebar-nav__wordmark">{logo}</div>}
+      {/* Rangée de marque — structure Webum (Layout.tsx) : le conteneur porte
+          la bordure basse (padding-bottom 20 + marge 12), le wordmark reste
+          une simple ligne 18px/700 accent. */}
+      {logo && (
+        <div className="sidebar-nav__brand">
+          <div className="sidebar-nav__wordmark">{logo}</div>
+        </div>
+      )}
 
       {showWorkspaceHeader && (
         <div className="sidebar-nav__header">
