@@ -1,0 +1,81 @@
+// Carte d'upgrade d'essai en SIDEBAR — le standard de la suite (décision
+// 2026-08-12, référence Anonymum) : « Essai gratuit — N jours restants » +
+// CTA « Passer au plan payant » SUR UNE LIGNE, avec un reflet qui balaie la
+// carte périodiquement. À rendre via le `upgradeSlot` de SidebarNav (ou tel
+// quel dans une sidebar maison). Tokenisé sur --theme-color-* avec fallbacks.
+
+.sidebar-upgrade {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  margin-top: 10px; // sous les réglages thème/langue, juste au-dessus du compte
+  border-radius: 12px;
+  border: 1px solid var(--theme-color-brand-primary, #030174);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--theme-color-brand-primary, #030174) 8%, transparent),
+      color-mix(in srgb, var(--theme-color-brand-primary, #030174) 3%, transparent)
+    );
+}
+
+// Reflet périodique (~toutes les 10 s) : ~1,2 s de sweep puis attente
+// hors-champ. Le contenu reste au-dessus ; coupé en reduced-motion.
+.sidebar-upgrade > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-upgrade::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  width: 55%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in srgb, #fff 48%, transparent) 50%,
+    transparent 100%
+  );
+  transform: translateX(-160%) skewX(-18deg);
+  animation: sidebar-upgrade-sheen 10s ease-in-out infinite;
+}
+
+@keyframes sidebar-upgrade-sheen {
+  0%   { transform: translateX(-160%) skewX(-18deg); }
+  12%  { transform: translateX(260%) skewX(-18deg); }
+  100% { transform: translateX(260%) skewX(-18deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-upgrade::after { animation: none; opacity: 0; }
+}
+
+.sidebar-upgrade__days {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
+  text-align: center;
+}
+
+.sidebar-upgrade__cta {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap; // le texte du CTA tient sur UNE ligne, toujours
+}
+
+// Mode replié : bouton-icône primaire (éclair), même flux.
+.sidebar-upgrade-collapsed {
+  margin-bottom: 8px;
+}

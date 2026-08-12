@@ -40,6 +40,11 @@ interface SidebarNavProps {
   onToggleTheme?: () => void;
   language?: 'fr' | 'en';
   onToggleLanguage?: () => void;
+  /** Carte d'upgrade d'essai (style Anonymum), rendue sous les toggles thème/langue. */
+  upgradeSlot?: ReactNode;
+  /** Bloc compte (chip identité + déconnexion, style Anonymum), rendu en bas du footer.
+   *  Quand il est fourni, le bouton logout intégré s'efface. */
+  accountSlot?: ReactNode;
   translations?: {
     workspaces?: string;
     newWorkspace?: string;
@@ -84,6 +89,8 @@ export function SidebarNav({
   onToggleTheme,
   language,
   onToggleLanguage,
+  upgradeSlot,
+  accountSlot,
   translations = {},
 }: SidebarNavProps) {
   const t = { ...defaultTranslations, ...translations };
@@ -245,6 +252,10 @@ export function SidebarNav({
           </div>
         )}
 
+        {/* Carte upgrade d'essai — sous les réglages thème/langue, juste
+            au-dessus du bloc compte (ordre du footer Anonymum). */}
+        {upgradeSlot}
+
         <div className="sidebar-nav__divider" />
 
         <ul className="sidebar-nav__list">
@@ -266,7 +277,7 @@ export function SidebarNav({
               {renderLink(item, isActive(item.path), onClose)}
             </li>
           ))}
-          {onLogout && (
+          {onLogout && !accountSlot && (
             <li className="sidebar-nav__item">
               <button
                 className="sidebar-nav__link sidebar-nav__logout"
@@ -280,6 +291,9 @@ export function SidebarNav({
             </li>
           )}
         </ul>
+
+        {/* Chip compte + déconnexion (style Anonymum) — tout en bas du footer. */}
+        {accountSlot}
       </div>
     </nav>
   );
