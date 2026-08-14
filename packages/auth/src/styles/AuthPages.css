@@ -1,3 +1,7 @@
+/* AUTOSUFFISANT : la page fige sa propre typographie et son box model pour
+   rendre PIXEL-IDENTIQUE dans toutes les apps, quels que soient les resets ou
+   la police globale de l'app hôte (Tailwind preflight, Sass maison, rien…).
+   Aucune app ne doit re-styler les classes .auth-page__* localement. */
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -5,6 +9,28 @@
   justify-content: center;
   background: linear-gradient(135deg, #f3f4f6 0%, #e9ebff 100%);
   padding: 24px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #111827;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Resets en :where() → spécificité NULLE : de purs défauts que n'importe
+   quelle classe .auth-page__* du package écrase, mais qui neutralisent les
+   écarts entre apps avec/sans reset global. */
+:where(.auth-page) :where(*, *::before, *::after) {
+  box-sizing: border-box;
+}
+
+/* Les contrôles n'héritent PAS de la police par défaut (UA font) — on force
+   l'héritage pour que champs et boutons suivent la typo de la page. */
+:where(.auth-page) :where(input, button, select, textarea) {
+  font-family: inherit;
+}
+
+:where(.auth-page) :where(h1, h2, h3, p) {
+  margin: 0;
 }
 
 @media (max-width: 640px) {
@@ -57,6 +83,7 @@
   font-weight: 700;
   color: #030174;
   letter-spacing: -0.02em;
+  line-height: 1.3;
 }
 
 @media (max-width: 640px) {
@@ -70,6 +97,7 @@
   font-weight: 600;
   color: #111827;
   margin: 0 0 8px 0;
+  line-height: 1.6;
 }
 
 @media (max-width: 640px) {
@@ -83,6 +111,7 @@
   color: #6b7280;
   margin: 0;
   text-align: center;
+  line-height: 1.6;
 }
 
 .auth-page__card {
@@ -118,6 +147,7 @@
   color: #111827;
   cursor: pointer;
   transition: all 0.15s ease;
+  line-height: 1.5;
 }
 
 .auth-page__oauth-btn:hover:not(:disabled) {
@@ -173,6 +203,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: #111827;
+  line-height: 1.6;
 }
 
 .auth-page__input {
@@ -185,6 +216,7 @@
   color: #111827;
   background: #fff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  line-height: 1.5;
 }
 
 .auth-page__input::placeholder {
@@ -221,6 +253,7 @@
   border: 0;
   cursor: pointer;
   padding: 0;
+  line-height: 1.6;
 }
 
 .auth-page__link:hover {
@@ -267,6 +300,7 @@
   background: #030174;
   cursor: pointer;
   transition: opacity 0.15s ease;
+  line-height: 1.5;
 }
 
 .auth-page__submit:hover:not(:disabled) {
@@ -283,6 +317,7 @@
   margin-top: 24px;
   font-size: 0.875rem;
   color: #6b7280;
+  line-height: 1.6;
 }
 
 .auth-page__icon {
