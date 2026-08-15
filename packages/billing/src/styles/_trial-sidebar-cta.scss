@@ -1,11 +1,8 @@
-// Carte d'upgrade d'essai en SIDEBAR — le standard de la suite (référence
-// Webum, pixel-audit 2026-08 gelé) : « Essai — N jours restants » + CTA
-// « Passer au plan payant » SUR UNE LIGNE, avec un reflet qui balaie la carte
-// périodiquement. Composant canonique : TrialSidebarCta (@umbeli-com/billing),
-// à rendre via le `upgradeSlot` de SidebarNav. Les MÊMES classes/valeurs sont
-// livrées par les styles du package billing (_trial-sidebar-cta.scss) — toute
-// évolution doit rester byte-synchrone entre les deux.
-// Tokenisé sur --theme-color-* avec fallbacks.
+// TrialSidebarCta — carte d'essai canonique de la sidebar (référence Webum,
+// pixel-audit 2026-08 gelé). MÊMES classes/valeurs que
+// layout/components/SidebarNav/SidebarUpgrade.scss — toute évolution doit
+// rester byte-synchrone entre les deux copies (le package layout garde la
+// sienne pour les apps qui n'importent pas les styles billing).
 
 .sidebar-upgrade {
   position: relative;

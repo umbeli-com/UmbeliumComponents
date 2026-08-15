@@ -1,0 +1,156 @@
+// BillingUpgradeCard — carte d'upgrade canonique de la page Facturation
+// (pendant l'essai). Référence : carte « upgrade now » Webum (structure) +
+// bouton prix Anonymum (« Passer au plan payant — 29 €/mois »).
+// Tokenisé --theme-color-* avec fallbacks (palette Webum).
+
+.billing-upgrade-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border: 2px solid var(--theme-color-brand-primary, #030174);
+  border-radius: 12px;
+  background: var(--theme-color-neutral-surface, var(--theme-color-neutral-surface-alt, #ffffff));
+}
+
+.billing-upgrade-card__left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 230px;
+  flex: 1 1 auto;
+}
+
+.billing-upgrade-card__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--theme-color-neutral-text, #1a1a2e);
+}
+
+.billing-upgrade-card__title-icon {
+  color: var(--theme-color-brand-primary, #030174);
+  flex-shrink: 0;
+}
+
+// Toggle Mensuel/Annuel — pilule (parité Webum IntervalToggle).
+.billing-upgrade-card__toggle {
+  display: inline-flex;
+  background: var(--theme-color-neutral-bg, #f8f9fb);
+  border: 1px solid var(--theme-color-neutral-border, #e2e5ea);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.billing-upgrade-card__toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+  background: transparent;
+  border: 1px solid var(--theme-color-neutral-border, #e2e5ea);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  &.is-active {
+    background: var(--theme-color-neutral-surface, var(--theme-color-neutral-surface-alt, #ffffff));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.7;
+  }
+}
+
+// Badge « 2 mois offerts » sur l'option annuelle.
+.billing-upgrade-card__badge {
+  background: var(--theme-color-success, #16a34a);
+  color: #ffffff;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.billing-upgrade-card__right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  flex: 1 1 260px;
+  max-width: 400px;
+}
+
+// CTA « Passer au plan payant — {prix} » — avec reflet périodique (~7 s).
+.billing-upgrade-card__cta {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: stretch;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: var(--theme-color-brand-primary, #030174);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    width: 55%;
+    background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+    transform: translateX(-160%) skewX(-18deg);
+    animation: billing-upgrade-cta-sheen 7s ease-in-out infinite;
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.7;
+  }
+}
+
+@keyframes billing-upgrade-cta-sheen {
+  0%   { transform: translateX(-160%) skewX(-18deg); }
+  14%  { transform: translateX(260%) skewX(-18deg); }
+  100% { transform: translateX(260%) skewX(-18deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .billing-upgrade-card__cta::after { animation: none; opacity: 0; }
+}
+
+.billing-upgrade-card__note {
+  font-size: 12px;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+  margin: 0;
+  line-height: 1.5;
+}

@@ -18,7 +18,12 @@ export interface SubscriptionGateProps {
   /** Shared feature bullets shown below plans */
   features?: string[];
   trialDays?: number;
+  /** True when the free trial was already consumed (and no live subscription):
+   *  the gate then offers a paid checkout ("S'abonner") instead of a new trial. */
+  trialUsed?: boolean;
   onStartTrial: (planId: string) => Promise<void>;
+  /** Classic paid checkout for the selected plan — required when trialUsed is used. */
+  onSubscribe?: (planId: string) => Promise<void>;
   onRefreshStatus: () => Promise<void>;
   onOpenPortal: () => Promise<void>;
   onSignOut: () => Promise<void>;
@@ -32,7 +37,9 @@ export function SubscriptionGate({
   plans,
   features = [],
   trialDays = 14,
+  trialUsed = false,
   onStartTrial,
+  onSubscribe,
   onRefreshStatus,
   onOpenPortal,
   onSignOut,
@@ -60,11 +67,24 @@ export function SubscriptionGate({
     try {
       await onStartTrial(selectedId);
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Impossible de demarrer l'essai");
+      setLocalError(err instanceof Error ? err.message : "Impossible de démarrer l'essai");
     } finally {
       setTrialLoading(false);
     }
   }, [onStartTrial, selectedId]);
+
+  // Classic paid checkout — used instead of the trial when the trial was already consumed.
+  const handleSubscribe = useCallback(async () => {
+    setTrialLoading(true);
+    setLocalError(null);
+    try {
+      await onSubscribe?.(selectedId);
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : "Impossible d'ouvrir le paiement");
+    } finally {
+      setTrialLoading(false);
+    }
+  }, [onSubscribe, selectedId]);
 
   const handleRefresh = useCallback(async () => {
     setLocalError(null);
@@ -88,14 +108,23 @@ export function SubscriptionGate({
 
         <button className="subgate__close" onClick={onSignOut} aria-label="Fermer">&times;</button>
 
-        {/* Header */}
+        {/* Header — trial offer, or "trial over" paywall (trialUsed) */}
         <div className="subgate__header">
-          <h1 className="subgate__title">
-            Essayez <span className="subgate__accent">{appName}</span> gratuitement
-          </h1>
+          {trialUsed ? (
+            <h1 className="subgate__title">Votre essai gratuit est terminé</h1>
+          ) : (
+            <h1 className="subgate__title">
+              Essayez <span className="subgate__accent">{appName}</span> gratuitement
+            </h1>
+          )}
+          {trialUsed && (
+            <p className="subgate__subtitle">
+              Abonnez-vous pour continuer à utiliser <strong>{appName}</strong>.
+            </p>
+          )}
           {userEmail && (
             <p className="subgate__subtitle">
-              Connecte en tant que <strong>{userEmail}</strong>
+              Connecté en tant que <strong>{userEmail}</strong>
             </p>
           )}
         </div>
@@ -143,27 +172,37 @@ export function SubscriptionGate({
           <div className="subgate__error"><p>{error}</p></div>
         )}
 
-        {/* CTA */}
-        <button className="subgate__cta" onClick={handleTrial} disabled={isLoading}>
+        {/* CTA — trial start, or paid checkout when the trial was consumed */}
+        <button className="subgate__cta" onClick={trialUsed ? handleSubscribe : handleTrial} disabled={isLoading}>
           {trialLoading ? (
-            <span className="subgate__cta-loading"><span className="subgate__spinner" />Creation...</span>
+            <span className="subgate__cta-loading">
+              <span className="subgate__spinner" />
+              {trialUsed ? 'Redirection...' : 'Création...'}
+            </span>
+          ) : trialUsed ? (
+            <>
+              S'abonner
+              <ArrowRight size={16} />
+            </>
           ) : (
             <>
-              Demarrer {trialDays} jours gratuits
+              Démarrer {trialDays} jours gratuits
               <ArrowRight size={16} />
             </>
           )}
         </button>
 
         <p className="subgate__fine-print">
-          Aucun paiement requis. Annulez a tout moment.
+          {trialUsed
+            ? 'Paiement sécurisé par Stripe. Vous pouvez annuler à tout moment.'
+            : 'Aucun paiement requis. Annulez à tout moment.'}
         </p>
 
         {/* Secondary links */}
         <div className="subgate__links">
           <button className="subgate__link" onClick={handleRefresh} disabled={statusLoading}>
             <RefreshCw size={13} className={statusLoading ? 'subgate__spin' : ''} />
-            {statusLoading ? 'Verification...' : "Deja abonne? Verifier l'acces"}
+            {statusLoading ? 'Vérification...' : "Déjà abonné? Vérifier l'accès"}
           </button>
           <span className="subgate__link-sep" />
           <button className="subgate__link" onClick={handlePortal} disabled={portalLoading}>
@@ -173,7 +212,7 @@ export function SubscriptionGate({
           <span className="subgate__link-sep" />
           <button className="subgate__link subgate__link--muted" onClick={onSignOut}>
             <LogOut size={13} />
-            Deconnexion
+            Déconnexion
           </button>
         </div>
       </div>

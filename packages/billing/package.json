@@ -22,6 +22,16 @@
       "import": "./dist/components/SubscriptionGate/index.js",
       "default": "./dist/components/SubscriptionGate/index.js"
     },
+    "./trial-sidebar-cta": {
+      "types": "./dist/components/TrialSidebarCta/index.d.ts",
+      "import": "./dist/components/TrialSidebarCta/index.js",
+      "default": "./dist/components/TrialSidebarCta/index.js"
+    },
+    "./billing-upgrade-card": {
+      "types": "./dist/components/BillingUpgradeCard/index.d.ts",
+      "import": "./dist/components/BillingUpgradeCard/index.js",
+      "default": "./dist/components/BillingUpgradeCard/index.js"
+    },
     "./styles": {
       "types": "./styles.d.ts",
       "default": "./dist/styles/index.css"

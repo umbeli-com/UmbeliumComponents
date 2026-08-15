@@ -1,7 +1,24 @@
-/* AUTOSUFFISANT : la page fige sa propre typographie et son box model pour
+/* ════════════════════════════════════════════════════════════════════════════
+   CANONIQUE @umbeli-com/auth — PAGES D'AUTH PIXEL-IDENTIQUES
+   Toute modification ICI = TOUTES les apps (Webum, Anonymum, Dialum, …) via le
+   vendoring byte-identique. Ne JAMAIS overrider les classes .auth-page__* dans
+   une app : si un rendu doit changer, il change ICI (puis re-sync vendor).
+   Référence visuelle gelée : Webum admin /login (pixel-audit v2, light).
+
+   AUTOSUFFISANT : la page fige sa propre typographie et son box model pour
    rendre PIXEL-IDENTIQUE dans toutes les apps, quels que soient les resets ou
    la police globale de l'app hôte (Tailwind preflight, Sass maison, rien…).
-   Aucune app ne doit re-styler les classes .auth-page__* localement. */
+
+   COPIE CANONIQUE (défauts des composants ; les apps peuvent passer les props
+   mais le TEXTE doit rester celui-ci, hors nom de marque) :
+     titre « Connexion » · sous-titre « Connectez-vous à votre compte pour
+     continuer » · « Continuer avec Google » · divider « ou » · labels
+     « Email » / « Mot de passe » · « Mot de passe oublié ? » · bouton
+     « Se connecter » · pied « Pas encore de compte ? Créer un compte ».
+
+   DARK MODE : intégré en fin de fichier, keyed html.dark ET [data-theme='dark']
+   (absorbé de l'override historique d'Anonymum _auth.scss). Aucune app ne doit
+   porter son propre dark auth. */
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -93,6 +110,9 @@
 }
 
 .auth-page__title {
+  /* Police figée : sans ça, un hôte qui met une serif sur h1/h2 (Profilum) fait
+     dériver le titre — la page de connexion doit être identique partout. */
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   color: #111827;
@@ -177,7 +197,9 @@
 .auth-page__divider span {
   padding: 0 16px;
   font-size: 0.875rem;
-  color: #9ca3af;
+  /* #9ca3af échouait AA (2,53:1) — #6b7280 donne 4,83:1 sur blanc. Change pour
+     TOUTES les apps à la fois, donc la parité est préservée. */
+  color: #6b7280;
 }
 
 .auth-page__form {
@@ -287,6 +309,9 @@
   font-size: 0.875rem;
   color: #6b7280;
   line-height: 1.5;
+  /* Épinglé (autosuffisance) : le <p> des CGU suivait le margin-bottom de
+     l'hôte — l'espacement vient du gap du formulaire, pas du paragraphe. */
+  margin: 0;
 }
 
 .auth-page__submit {
@@ -314,7 +339,9 @@
 
 .auth-page__footer {
   text-align: center;
-  margin-top: 24px;
+  /* margin-bottom épinglé : les hôtes à reset typographique (p { margin-bottom })
+     fuyaient 16px sous le pied — la réf Webum rend 0 (audit pixel Socialum). */
+  margin: 24px 0 0;
   font-size: 0.875rem;
   color: #6b7280;
   line-height: 1.6;
@@ -392,4 +419,180 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DARK MODE CANONIQUE — absorbé de l'override historique d'Anonymum
+   (src/styles/components/_auth.scss, supprimé côté app). Keyed sur les DEUX
+   signaux dark de la suite : `html.dark` (Webum/Anonymum/Dialum) et
+   `[data-theme='dark']`. En light, AUCUNE de ces règles ne s'applique — la
+   référence Webum light reste intouchée. Le CTA principal garde le navy DA
+   (#030174) : l'identité de marque ne bascule pas en dark. */
+
+html.dark .auth-page,
+[data-theme='dark'] .auth-page {
+  /* Fond nuit teinté navy (miroir du dégradé indigo clair). */
+  background: linear-gradient(135deg, #0b1220 0%, #141a33 100%);
+}
+
+/* Wordmark : reste dans la famille navy/indigo, éclairci pour lire sur fond
+   sombre (élément de marque — exclu des comparaisons pixel inter-apps). */
+html.dark .auth-page__logo-text,
+[data-theme='dark'] .auth-page__logo-text {
+  color: #a5b4fc;
+}
+
+html.dark .auth-page__title,
+[data-theme='dark'] .auth-page__title {
+  color: #f8fafc;
+}
+
+html.dark .auth-page__subtitle,
+[data-theme='dark'] .auth-page__subtitle {
+  color: #94a3b8;
+}
+
+/* Carte = surface sombre. */
+html.dark .auth-page__card,
+[data-theme='dark'] .auth-page__card {
+  background: #172033;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(3, 8, 20, 0.4);
+}
+
+html.dark .auth-page__oauth-btn,
+[data-theme='dark'] .auth-page__oauth-btn {
+  background: #172033;
+  border-color: #243045;
+  color: #f8fafc;
+}
+
+html.dark .auth-page__oauth-btn:hover:not(:disabled),
+[data-theme='dark'] .auth-page__oauth-btn:hover:not(:disabled) {
+  background: #1a2436;
+  border-color: #41526f;
+}
+
+html.dark .auth-page__divider::before,
+html.dark .auth-page__divider::after,
+[data-theme='dark'] .auth-page__divider::before,
+[data-theme='dark'] .auth-page__divider::after {
+  background: #243045;
+}
+
+html.dark .auth-page__divider span,
+[data-theme='dark'] .auth-page__divider span {
+  color: #94a3b8;
+}
+
+html.dark .auth-page__label,
+[data-theme='dark'] .auth-page__label {
+  color: #e2e8f0;
+}
+
+html.dark .auth-page__input,
+[data-theme='dark'] .auth-page__input {
+  background: #0f172a;
+  border-color: #243045;
+  color: #f8fafc;
+}
+
+html.dark .auth-page__input::placeholder,
+[data-theme='dark'] .auth-page__input::placeholder {
+  color: #64748b;
+}
+
+html.dark .auth-page__input:focus,
+[data-theme='dark'] .auth-page__input:focus {
+  border-color: #7c8cff;
+  box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.35);
+}
+
+html.dark .auth-page__input:disabled,
+[data-theme='dark'] .auth-page__input:disabled {
+  background: #111827;
+}
+
+html.dark .auth-page__hint,
+[data-theme='dark'] .auth-page__hint {
+  color: #64748b;
+}
+
+html.dark .auth-page__link,
+[data-theme='dark'] .auth-page__link {
+  color: #94a3b8;
+}
+
+html.dark .auth-page__link:hover,
+[data-theme='dark'] .auth-page__link:hover {
+  color: #a5b4fc;
+}
+
+html.dark .auth-page__link--accent,
+[data-theme='dark'] .auth-page__link--accent {
+  color: #a5b4fc;
+}
+
+/* CTA principal : navy DA conservé, texte blanc (identité de marque). */
+html.dark .auth-page__submit,
+[data-theme='dark'] .auth-page__submit {
+  background: #030174;
+  color: #ffffff;
+}
+
+html.dark .auth-page__error,
+[data-theme='dark'] .auth-page__error {
+  background: rgba(248, 113, 113, 0.14);
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #fca5a5;
+}
+
+html.dark .auth-page__info,
+[data-theme='dark'] .auth-page__info {
+  background: rgba(74, 222, 128, 0.14);
+  border-color: rgba(74, 222, 128, 0.5);
+  color: #86efac;
+}
+
+html.dark .auth-page__footer,
+html.dark .auth-page__terms,
+[data-theme='dark'] .auth-page__footer,
+[data-theme='dark'] .auth-page__terms {
+  color: #94a3b8;
+}
+
+html.dark .auth-page__message,
+[data-theme='dark'] .auth-page__message {
+  color: #f8fafc;
+}
+
+html.dark .auth-page__message--muted,
+[data-theme='dark'] .auth-page__message--muted {
+  color: #94a3b8;
+}
+
+html.dark .auth-page__help,
+[data-theme='dark'] .auth-page__help {
+  border-top-color: #243045;
+}
+
+html.dark .auth-page__help p,
+[data-theme='dark'] .auth-page__help p {
+  color: #f8fafc;
+}
+
+html.dark .auth-page__help ul li,
+[data-theme='dark'] .auth-page__help ul li {
+  color: #94a3b8;
+}
+
+html.dark .auth-page__loading p,
+[data-theme='dark'] .auth-page__loading p {
+  color: #94a3b8;
+}
+
+html.dark .auth-page__spinner,
+[data-theme='dark'] .auth-page__spinner {
+  border-color: #243045;
+  border-top-color: #7c8cff;
 }

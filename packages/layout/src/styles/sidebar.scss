@@ -1,0 +1,7 @@
+// Entrée CSS « sidebar seule » — pour les apps qui possèdent déjà leur propre
+// shell/page-header (ex. Webum) et ne veulent QUE la sidebar canonique sans
+// risquer de collision avec leurs classes (.app-shell, .page-header, .topbar…).
+// Import côté app : `@umbeli-com/layout/styles/sidebar.css`.
+
+@use '../components/SidebarNav/SidebarNav';
+@use '../components/SidebarNav/SidebarUpgrade';

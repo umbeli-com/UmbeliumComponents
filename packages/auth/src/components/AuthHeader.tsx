@@ -1,4 +1,5 @@
 interface AuthHeaderProps {
+  /** Copie canonique Umbelium — passer '' pour masquer explicitement. */
   title?: string;
   subtitle?: string;
   showLogo?: boolean;
@@ -8,8 +9,8 @@ interface AuthHeaderProps {
 }
 
 export function AuthHeader({
-  title,
-  subtitle,
+  title = 'Connexion',
+  subtitle = 'Connectez-vous à votre compte pour continuer',
   showLogo = true,
   logoText = 'Umbeli',
   logoSrc,

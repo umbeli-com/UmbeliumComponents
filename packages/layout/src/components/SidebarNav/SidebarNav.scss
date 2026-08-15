@@ -1,20 +1,51 @@
 // SidebarNav Component Styles
-// Métriques = SPEC CANONIQUE sidebar Umbelium (référence Webum admin) :
-// padding 24px 16px, gap 4, liens 14px/500 en 10px 12px radius 8, wordmark
-// 18px/700 accent, footer margin-top:auto (Paramètres → toggles → CTA → compte).
+// Métriques = SPEC CANONIQUE sidebar Umbelium (référence Webum admin, pixel-audit
+// 2026-08 gelé) : padding 24px 16px, gap 4, liens 14px/500 en 10px 12px radius 8,
+// wordmark 18px/700 accent, footer margin-top:auto (Paramètres → toggles → CTA
+// essai → compte), repli desktop 56px, tiroir mobile ≤768px (topbar hamburger +
+// backdrop + overlay min(82vw, 300px)).
+//
+// Tokens consommés (à mapper sur les variables de l'app) :
+//   --theme-color-sidebar-bg              (Webum : var(--surface))
+//   --theme-color-sidebar-border          (Webum : var(--border))
+//   --theme-color-brand-primary           (Webum : var(--accent))
+//   --theme-color-sidebar-item-active-bg  (Webum : var(--accent-light))
+//   --theme-color-sidebar-item-active-text(Webum : var(--accent))
+//   --theme-color-neutral-bg              (Webum : var(--bg))
+//   --theme-color-neutral-text            (Webum : var(--text))
+//   --theme-color-neutral-text-muted      (Webum : var(--text-secondary))
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  height: 100%;
   padding: 24px 16px;
   // Base typo de la référence Webum (pixel-audit 2026-08-12) : line-height 1.6
   // hérité par toute la sidebar (liens 22.4px, wordmark 28.8px, compte…).
   line-height: 1.6;
-  background-color: var(--theme-color-sidebar-bg);
-  border-right: 1px solid var(--theme-color-sidebar-border);
+  background-color: var(--theme-color-sidebar-bg, #ffffff);
+  border-right: 1px solid var(--theme-color-sidebar-border, #e2e5ea);
+  // Épinglée au viewport (Webum) : une page haute n'étire jamais la nav — le
+  // footer reste en bas de l'écran, seule la nav défile si elle déborde.
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
   overflow-y: auto;
+  transition: padding 0.2s ease, width 0.2s ease;
+}
+
+// ── Repli desktop (spec Webum : colonne 56px côté shell) ──
+.sidebar-nav--collapsed {
+  padding: 16px 8px;
+  align-items: center;
+}
+.sidebar-nav--collapsed .sidebar-nav__link {
+  justify-content: center;
+  padding: 10px;
+}
+.sidebar-nav--collapsed .sidebar-nav__label {
+  display: none;
 }
 
 // Rangée de marque en haut — structure Webum (Layout.tsx) : la bordure basse,
@@ -27,6 +58,10 @@
   padding-bottom: 20px;
   border-bottom: 1px solid var(--theme-color-sidebar-border);
   margin-bottom: 12px;
+
+  &--collapsed {
+    justify-content: center;
+  }
 }
 
 // Wordmark de l'app (spec : 18px/700, accent, padding latéral 8).
@@ -40,6 +75,30 @@
     color: inherit;
     text-decoration: none;
   }
+}
+
+// Bouton de repli — parité Webum EXACTE : bouton nu (PAS de display:flex — le
+// svg reste en ligne sur la baseline, la rangée de marque garde sa hauteur de
+// référence), padding 4, couleur secondaire.
+.sidebar-nav__collapse {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
+  padding: 4px;
+}
+
+// Fermeture du tiroir — n'existe qu'en mobile (voir media query).
+.sidebar-nav__drawer-close {
+  display: none;
+}
+
+// Topbar + backdrop mobiles — cachés sur desktop.
+.sidebar-nav-topbar {
+  display: none;
+}
+.sidebar-nav-backdrop {
+  display: none;
 }
 
 .sidebar-nav__header {
@@ -65,8 +124,14 @@
   font-weight: 700;
 }
 
+// Zone de nav : reproduit le flux Webum (pile verticale, 4px entre entrées) —
+// les `children` d'app (liens canoniques, dividers, sous-items…) y héritent du
+// même rythme que les liens historiques directement enfants de l'aside.
 .sidebar-nav__content {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 // Footer — bloc unique collé en bas : margin-top:auto + bordure haute.
@@ -84,6 +149,25 @@
   display: flex;
   align-items: stretch;
   gap: 4px;
+}
+
+// Repliés → pile verticale de deux boutons-icônes (bascule directe, Webum).
+.sidebar-nav__settings--collapsed {
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+.sidebar-nav__settings-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
+  padding: 4px;
+
+  &--lang {
+    font-size: 11px;
+    font-weight: 700;
+  }
 }
 
 // Segmented control (spec : conteneur padding 2, fond --bg, radius 6, bordure).
@@ -121,6 +205,10 @@
   align-items: center;
   justify-content: center;
   padding: 4px 8px;
+  // Hauteur canonique garantie même sans onglet texte voisin : chez Webum/Socialum
+  // ce sont les onglets FR/EN (line-height 17.6) qui étirent la rangée. Une app
+  // sans switch de langue (Monitorum) s'écrasait sinon à 21px au lieu de 25.6.
+  min-height: 17.6px;
   border: none;
   border-radius: 4px;
   background: transparent;
@@ -137,12 +225,66 @@
   &.is-active {
     background: var(--theme-color-sidebar-bg, #fff);
     color: var(--theme-color-brand-primary, #030174);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    // Ombre tokenisée : Webum mappe --theme-color-shadow-sm sur SA --shadow
+    // (0 1px 3px rgba(0,0,0,0.06) clair / 0.3 sombre) — parité pixel exacte.
+    box-shadow: var(--theme-color-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
   }
 
   svg {
     flex-shrink: 0;
   }
+}
+
+// Rangée compte canonique (spec Webum) : bordure haute + padding-top 8 ;
+// nom 12/600 + email 11/400 tronqués ; bouton logout 28×28 (icône 16 + pad 6).
+.sidebar-nav__account {
+  padding-top: 8px;
+  border-top: 1px solid var(--theme-color-sidebar-border, #e2e5ea);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+
+  &--collapsed {
+    justify-content: center;
+  }
+}
+
+.sidebar-account-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.sidebar-account-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-color-neutral-text, #1a1a2e);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-account-email {
+  font-size: 11px;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-account-logout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--theme-color-neutral-text-muted, #7E8594);
+  padding: 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .sidebar-nav__divider {
@@ -155,6 +297,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  // Auto-suffisant : ne dépend pas du reset global de l'app.
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .sidebar-nav__item {
@@ -186,13 +332,6 @@
     color: var(--theme-color-sidebar-item-active-text, var(--theme-color-brand-primary, #030174));
     font-weight: 600;
   }
-
-  @media (max-width: 767px) {
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-  }
 }
 
 .sidebar-nav__icon {
@@ -209,10 +348,8 @@
   font-weight: inherit;
   text-align: left;
   // line-height hérité (1.6) — parité Webum : boîte de lien 42.4px.
-
-  @media (max-width: 767px) {
-    font-size: 1rem;
-  }
+  // Le tiroir mobile garde les métriques desktop (parité Webum) — aucun
+  // override ≤768px.
 }
 
 // Request Feature button styled like other nav items (mêmes métriques que
@@ -239,6 +376,85 @@
   &:disabled {
     cursor: wait;
     opacity: 0.6;
+  }
+}
+
+// ── Tiroir mobile (spec Webum, ≤768px) ──────────────────────────────────────
+@media (max-width: 768px) {
+  // La sidebar disparaît du flux : elle ne revit qu'en overlay (drawer).
+  .sidebar-nav {
+    display: none;
+  }
+
+  // Le repli est une affordance desktop — sans objet dans le tiroir.
+  .sidebar-nav__collapse {
+    display: none;
+  }
+
+  // Topbar sticky : hamburger + wordmark (Webum .mobile-topbar).
+  .sidebar-nav-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--theme-color-sidebar-bg, #ffffff);
+    border-bottom: 1px solid var(--theme-color-sidebar-border, #e2e5ea);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+
+  .sidebar-nav-topbar__burger,
+  .sidebar-nav__drawer-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    color: var(--theme-color-neutral-text, #1a1a2e);
+    background: none;
+    border: 1px solid var(--theme-color-sidebar-border, #e2e5ea);
+    cursor: pointer;
+  }
+  .sidebar-nav-topbar__burger:hover,
+  .sidebar-nav__drawer-close:hover {
+    background: var(--theme-color-sidebar-item-active-bg, rgba(3, 1, 116, 0.08));
+    color: var(--theme-color-brand-primary, #030174);
+  }
+
+  .sidebar-nav-topbar__logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--theme-color-brand-primary, #030174);
+    text-decoration: none;
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+  }
+
+  // Backdrop plein écran sous le tiroir.
+  .sidebar-nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+  }
+
+  // Tiroir : overlay pleine hauteur AU-DESSUS du backdrop/topbar. Sa propre
+  // overflow-y:auto (héritée de .sidebar-nav) le fait défiler.
+  .sidebar-nav.sidebar-nav--mobile-open {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: min(82vw, 300px);
+    z-index: 1001;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
   }
 }
 
