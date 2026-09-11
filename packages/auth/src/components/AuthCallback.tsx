@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-interface AuthCallbackProps {
+export interface AuthCallbackProps {
   /** Where to redirect after successful auth. Defaults to '/' */
   redirectTo?: string;
   /** Optional Supabase client to manually exchange the code. If omitted, relies on detectSessionInUrl. */

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import '../styles/AuthPages.css';
 
-interface AuthPageLayoutProps {
+export interface AuthPageLayoutProps {
   children: ReactNode;
 }
 

@@ -1,4 +1,4 @@
-interface AuthHeaderProps {
+export interface AuthHeaderProps {
   /** Copie canonique Umbelium — passer '' pour masquer explicitement. */
   title?: string;
   subtitle?: string;

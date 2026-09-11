@@ -602,3 +602,53 @@ html.dark .auth-page__spinner,
   border-color: #243045;
   border-top-color: #7c8cff;
 }
+
+/* ==========================================================================
+   Placeholder des gardes de route (RequireAuth / RedirectIfAuthenticated…).
+   Ici plutôt que dans un .scss : ce package n'a pas de pipeline Sass, et
+   AuthPages.css est la feuille unique que les apps importent
+   (`@umbeli-com/auth/styles`). Une feuille séparée aurait obligé chaque app
+   à ajouter un second import — donc à l'oublier.
+   ========================================================================== */
+
+/* Placeholder plein écran des gardes de route (@umbeli-com/auth). */
+/* Couleurs : variables de thème de la suite — aucun bloc dark-mode nécessaire. */
+
+.auth-route-guard {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px;
+  background: var(--theme-color-bg, #f8fafc);
+  color: var(--theme-color-text-muted, #64748b);
+  font-size: 14px;
+  text-align: center;
+}
+
+.auth-route-guard__spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--theme-color-border, #e2e8f0);
+  border-top-color: var(--theme-color-primary, #4f46e5);
+  border-radius: 50%;
+  animation: auth-route-guard-spin 0.8s linear infinite;
+}
+
+.auth-route-guard__label {
+  color: var(--theme-color-text-muted, #64748b);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-route-guard__spinner {
+    animation: none;
+  }
+}
+
+@keyframes auth-route-guard-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

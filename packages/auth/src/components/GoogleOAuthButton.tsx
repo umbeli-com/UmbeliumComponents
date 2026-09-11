@@ -1,4 +1,4 @@
-interface GoogleOAuthButtonProps {
+export interface GoogleOAuthButtonProps {
   onClick: () => void;
   disabled?: boolean;
   label?: string;

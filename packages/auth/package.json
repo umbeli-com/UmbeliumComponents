@@ -1,6 +1,6 @@
 {
   "name": "@umbeli-com/auth",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Shared authentication components and utilities for Umbeli SaaS applications",
   "type": "module",
   "main": "./dist/index.js",
@@ -24,6 +24,7 @@
   ],
   "scripts": {
     "build": "tsc && npm run build:styles",
+    "typecheck": "tsc --noEmit --composite false --declaration false --declarationMap false",
     "build:styles": "mkdir -p dist/styles && cp src/styles/AuthPages.css dist/styles/AuthPages.css",
     "clean": "rm -rf dist",
     "lint": "eslint src --ext .ts,.tsx"
