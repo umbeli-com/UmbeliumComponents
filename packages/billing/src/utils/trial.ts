@@ -289,27 +289,34 @@ export interface FormatPriceOptions {
   /** Locale d'affichage (défaut 'fr-FR'). */
   locale?: string;
   /**
-   * Unité du montant reçu : 'cents' (défaut — 1900 → « 19 € ») ou 'major'
-   * (1900 → « 1 900 € »). Les call-sites existants passent des unités entières
-   * (`prices: { monthly: 19 }` de BillingUpgradeCard) : ceux-là doivent passer
-   * `{ unit: 'major' }` ou multiplier par 100.
+   * Unité du montant reçu : 'major' (défaut — 19 → « 19 € ») ou 'cents'
+   * (1900 → « 19 € », le contrat `unit_amount` de Stripe).
+   *
+   * Le défaut est 'major' parce que c'est ce que reçoit TOUT consommateur de la
+   * suite : l'API du Manager divise déjà par 100 avant de servir le front
+   * (`stripe.service.js` → `amount: inv.amount_paid / 100`), BillingUpgradeCard
+   * prend `prices: { monthly: 19 }`, et Webum formate les prix Gandi tels quels.
+   * Un défaut 'cents' afficherait donc chaque prix 100 fois trop petit, en
+   * silence — la pire panne possible sur un écran de facturation.
+   * Passez `{ unit: 'cents' }` quand le montant vient directement de Stripe.
    */
   unit?: 'cents' | 'major';
 }
 
 /**
- * Prix formaté à partir de CENTIMES (contrat Stripe : `unit_amount`).
+ * Prix formaté à partir d'un montant en unités entières (19 → « 19 € »).
+ * Pour des centimes Stripe, passer `{ unit: 'cents' }`.
  *
  * Un montant rond s'affiche sans décimales (« 19 € », comme partout dans la
  * suite) ; un montant à centimes garde ses deux décimales (« 19,99 € ») au lieu
  * d'être arrondi à tort par le `maximumFractionDigits: 0` recopié dans les apps.
  */
-export function formatPrice(cents: number | null | undefined, options: FormatPriceOptions = {}): string {
-  const { currency = 'EUR', locale = 'fr-FR', unit = 'cents' } = options;
+export function formatPrice(value: number | null | undefined, options: FormatPriceOptions = {}): string {
+  const { currency = 'EUR', locale = 'fr-FR', unit = 'major' } = options;
 
-  if (cents === null || cents === undefined || !Number.isFinite(cents)) return '—';
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—';
 
-  const amount = unit === 'major' ? cents : cents / 100;
+  const amount = unit === 'cents' ? value / 100 : value;
   const fractionDigits = Number.isInteger(amount) ? 0 : 2;
 
   try {
