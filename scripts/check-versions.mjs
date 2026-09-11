@@ -29,15 +29,28 @@ const git = (...args) => {
   try { return execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8' }).trim() } catch { return '' }
 }
 
-/** Dernier commit qui a changé le champ `version` du package. */
-function lastVersionBump(pkg) {
-  const manifest = `packages/${pkg}/package.json`
-  const shas = git('log', '--format=%H', '--', manifest).split('\n').filter(Boolean)
-  for (const sha of shas) {
-    const diff = git('show', '--format=', '-U0', sha, '--', manifest)
-    if (/^[+-]\s*"version"\s*:/m.test(diff)) return sha
-  }
-  return shas[shas.length - 1] || ''
+/**
+ * Référence de comparaison : `origin/main`, c'est-à-dire ce qui a été publié.
+ *
+ * Comparer au dernier commit qui a bumpé la version marche mal : dans une série
+ * de commits pour une même release, tout ce qui suit le commit du bump repasse
+ * en « non publié » alors que la version en cours n'est toujours pas en ligne.
+ * La vraie question est « le src a-t-il bougé depuis la version que porte
+ * origin/main, sans que la version change ? ».
+ */
+const BASELINE = ['origin/main', 'origin/HEAD', 'main'].find((ref) => git('rev-parse', '--verify', '--quiet', ref))
+
+function publishedVersion(pkg) {
+  if (!BASELINE) return null
+  const raw = git('show', `${BASELINE}:packages/${pkg}/package.json`)
+  if (!raw) return null
+  try { return JSON.parse(raw).version } catch { return null }
+}
+
+function srcChangedSinceBaseline(pkg) {
+  if (!BASELINE) return 0
+  return git('diff', '--name-only', BASELINE, 'HEAD', '--', `packages/${pkg}/src`)
+    .split('\n').filter(Boolean).length
 }
 
 function bumpVersion(v, kind) {
@@ -51,21 +64,19 @@ let stale = 0
 const report = []
 
 for (const pkg of PACKAGES) {
-  const manifestPath = join(canonicalDir(pkg), 'package.json')
-  const version = readJson(manifestPath)?.version ?? '?'
-  const since = lastVersionBump(pkg)
+  const version = readJson(join(canonicalDir(pkg), 'package.json'))?.version ?? '?'
+  const published = publishedVersion(pkg)
 
-  // Sans historique on ne peut rien affirmer — on ne bloque pas un checkout superficiel.
-  if (!since) { report.push([pkg, version, null, 'historique git absent']); continue }
+  // Sans référence distante on ne peut rien affirmer : un checkout superficiel
+  // ou un premier push ne doit pas bloquer la publication.
+  if (!BASELINE || published === null) { report.push([pkg, version, null, 'aucune référence publiée']); continue }
 
-  const changed = git('log', '--format=%h', `${since}..HEAD`, '--', `packages/${pkg}/src`)
-    .split('\n').filter(Boolean)
-
-  if (changed.length) {
+  const changed = srcChangedSinceBaseline(pkg)
+  if (changed && version === published) {
     stale++
-    report.push([pkg, version, changed.length, null])
+    report.push([pkg, version, changed, null])
   } else {
-    report.push([pkg, version, 0, null])
+    report.push([pkg, version, 0, changed ? `${version} (publié : ${published})` : null])
   }
 }
 
@@ -73,7 +84,7 @@ console.log(c('bold', '\nVersions des packages\n'))
 for (const [pkg, version, changed, note] of report) {
   const name = `@umbeli-com/${pkg}`.padEnd(22)
   if (note) console.log(`  ${name} ${version.padEnd(8)} ${c('dim', note)}`)
-  else if (changed) console.log(`  ${name} ${version.padEnd(8)} ${c('yellow', `${changed} commit(s) sur src/ depuis le dernier bump`)}`)
+  else if (changed) console.log(`  ${name} ${version.padEnd(8)} ${c('yellow', `${changed} fichier(s) de src/ modifiés depuis la version publiée — bump manquant`)}`)
   else console.log(`  ${name} ${version.padEnd(8)} ${c('green', 'à jour')}`)
 }
 
