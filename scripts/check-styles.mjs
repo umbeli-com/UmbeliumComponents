@@ -1,11 +1,19 @@
 #!/usr/bin/env node
 /**
- * Tout .scss d'un composant doit être atteignable depuis le styles/index.scss de son package.
+ * Deux garde-fous sur ce que les packages livrent réellement.
+ *
+ * 1. Tout .scss d'un composant doit être atteignable depuis le styles/index.scss de son package.
  *
  * DetailedChart et LanguageSwitcher ont été exportés sans feuille de style : leurs classes
  * n'apparaissaient nulle part dans dist/styles/index.css et chaque app les affichait nues.
  * Un fichier de styles qui existe mais que personne n'`@use` produit exactement le même
  * silence — d'où ce garde-fou.
+ *
+ * 2. Tout `var(--theme-*)` consommé doit être défini dans tokens.scss. Les composants
+ * donnent tous un repli (`var(--theme-color-neutral-bg, #fff)`), donc un token absent
+ * ne casse rien à l'œil : il fige juste la couleur, et le mode sombre cesse de suivre.
+ * C'est exactement ce qui est arrivé quand deux conventions de nommage ont coexisté
+ * (`--theme-color-bg` contre `--theme-color-neutral-bg`).
  */
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -64,4 +72,43 @@ if (problems) {
   console.log(c('dim', "  → ajouter la ligne @use correspondante dans packages/<pkg>/src/styles/index.scss\n"))
   process.exit(1)
 }
-console.log(c('green', '\n✓ Toutes les feuilles de style sont câblées.\n'))
+console.log(c('green', '✓ Toutes les feuilles de style sont câblées.'))
+
+// ── 2. Couverture des design tokens ─────────────────────────────────────────
+
+function styleSources(dir, out = []) {
+  let entries
+  try { entries = readdirSync(dir, { withFileTypes: true }) } catch { return out }
+  for (const e of entries) {
+    const full = join(dir, e.name)
+    if (e.isDirectory()) styleSources(full, out)
+    else if (/\.(scss|css|tsx|ts)$/.test(e.name)) out.push(full)
+  }
+  return out
+}
+
+const consumed = new Map()
+const defined = new Set()
+
+for (const pkg of PACKAGES) {
+  for (const file of styleSources(join(canonicalDir(pkg), 'src'))) {
+    const src = readFileSync(file, 'utf8')
+    for (const m of src.matchAll(/var\(\s*(--theme-[a-z0-9-]+)\s*[,)]/g)) {
+      if (!consumed.has(m[1])) consumed.set(m[1], file.slice(REPO_ROOT.length + 1))
+    }
+    for (const m of src.matchAll(/^\s*(--theme-[a-z0-9-]+)\s*:/gm)) defined.add(m[1])
+  }
+}
+
+const undefinedTokens = [...consumed].filter(([token]) => !defined.has(token))
+for (const [token, where] of undefinedTokens) {
+  console.log(c('red', `✗ ${token} est consommé (${where}) mais n'est défini nulle part`))
+}
+
+if (undefinedTokens.length) {
+  console.log(c('red', `\n${undefinedTokens.length} token(s) sans définition.`))
+  console.log(c('dim', '  → les définir dans packages/ui/src/styles/tokens.scss (thème clair ET sombre),'))
+  console.log(c('dim', '    ou utiliser le nom canonique existant.\n'))
+  process.exit(1)
+}
+console.log(c('green', `✓ ${consumed.size} token(s) consommé(s), tous définis parmi ${defined.size}.\n`))

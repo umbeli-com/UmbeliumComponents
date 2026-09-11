@@ -12,14 +12,14 @@
 // les apps qui exposent l'autre convention, et un hex en tout dernier recours
 // (aligné sur styles/tokens.scss, la palette canonique de la suite).
 
-$c-surface:       var(--theme-color-neutral-surface-alt, var(--theme-color-surface-alt, #ffffff));
-$c-surface-muted: var(--theme-color-neutral-surface-muted, var(--theme-color-surface-muted, #e5e7eb));
-$c-border:        var(--theme-color-neutral-border, var(--theme-color-border, #d1d5db));
-$c-border-strong: var(--theme-color-neutral-border-strong, var(--theme-color-border-strong, #9ca3af));
-$c-text:          var(--theme-color-neutral-text, var(--theme-color-text, #1a1a2e));
-$c-text-muted:    var(--theme-color-neutral-text-muted, var(--theme-color-text-muted, #6b7280));
-$c-text-subtle:   var(--theme-color-neutral-text-subtle, var(--theme-color-text-subtle, #9ca3af));
-$c-primary:       var(--theme-color-brand-primary, var(--theme-color-primary, #030174));
+$c-surface:       var(--theme-color-neutral-surface-alt, var(--theme-color-neutral-surface-alt, #ffffff));
+$c-surface-muted: var(--theme-color-neutral-surface-muted, var(--theme-color-neutral-surface-muted, #e5e7eb));
+$c-border:        var(--theme-color-neutral-border, var(--theme-color-neutral-border, #d1d5db));
+$c-border-strong: var(--theme-color-neutral-border-strong, var(--theme-color-neutral-border-strong, #9ca3af));
+$c-text:          var(--theme-color-neutral-text, var(--theme-color-neutral-text, #1a1a2e));
+$c-text-muted:    var(--theme-color-neutral-text-muted, var(--theme-color-neutral-text-muted, #6b7280));
+$c-text-subtle:   var(--theme-color-neutral-text-subtle, var(--theme-color-neutral-text-subtle, #9ca3af));
+$c-primary:       var(--theme-color-brand-primary, var(--theme-color-brand-primary, #030174));
 $c-focus-ring:    var(--theme-color-focus-ring, rgba(3, 1, 116, 0.35));
 $c-danger:        var(--theme-color-danger, #dc2626);
 $c-danger-soft:   var(--theme-color-danger-soft, #fde8e8);

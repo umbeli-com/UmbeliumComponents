@@ -13,9 +13,9 @@
 // `neutral-` / `brand-` ; on garde l'alias court en second cran de repli pour
 // les apps qui exposent l'autre convention, et un hex en tout dernier recours.
 
-$c-border:      var(--theme-color-neutral-border, var(--theme-color-border, #d1d5db));
-$c-text:        var(--theme-color-neutral-text, var(--theme-color-text, #1a1a2e));
-$c-text-muted:  var(--theme-color-neutral-text-muted, var(--theme-color-text-muted, #6b7280));
+$c-border:      var(--theme-color-neutral-border, var(--theme-color-neutral-border, #d1d5db));
+$c-text:        var(--theme-color-neutral-text, var(--theme-color-neutral-text, #1a1a2e));
+$c-text-muted:  var(--theme-color-neutral-text-muted, var(--theme-color-neutral-text-muted, #6b7280));
 
 // ── Bloc ─────────────────────────────────────────────────────────────────
 .detailed-chart {

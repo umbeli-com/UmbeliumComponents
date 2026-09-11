@@ -10,13 +10,13 @@
 // `neutral-` / `brand-` ; on garde l'alias court en second cran de repli pour
 // les apps qui exposent l'autre convention, et un hex en tout dernier recours.
 
-$c-surface:       var(--theme-color-neutral-surface-alt, var(--theme-color-surface-alt, #ffffff));
-$c-surface-muted: var(--theme-color-neutral-surface-muted, var(--theme-color-surface-muted, #e5e7eb));
-$c-border:        var(--theme-color-neutral-border, var(--theme-color-border, #d1d5db));
-$c-border-strong: var(--theme-color-neutral-border-strong, var(--theme-color-border-strong, #9ca3af));
-$c-text:          var(--theme-color-neutral-text, var(--theme-color-text, #1a1a2e));
-$c-text-muted:    var(--theme-color-neutral-text-muted, var(--theme-color-text-muted, #6b7280));
-$c-primary:       var(--theme-color-brand-primary, var(--theme-color-primary, #030174));
+$c-surface:       var(--theme-color-neutral-surface-alt, var(--theme-color-neutral-surface-alt, #ffffff));
+$c-surface-muted: var(--theme-color-neutral-surface-muted, var(--theme-color-neutral-surface-muted, #e5e7eb));
+$c-border:        var(--theme-color-neutral-border, var(--theme-color-neutral-border, #d1d5db));
+$c-border-strong: var(--theme-color-neutral-border-strong, var(--theme-color-neutral-border-strong, #9ca3af));
+$c-text:          var(--theme-color-neutral-text, var(--theme-color-neutral-text, #1a1a2e));
+$c-text-muted:    var(--theme-color-neutral-text-muted, var(--theme-color-neutral-text-muted, #6b7280));
+$c-primary:       var(--theme-color-brand-primary, var(--theme-color-brand-primary, #030174));
 $c-focus-ring:    var(--theme-color-focus-ring, rgba(3, 1, 116, 0.35));
 
 .language-switcher {

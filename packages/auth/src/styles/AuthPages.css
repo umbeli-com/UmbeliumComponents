@@ -622,8 +622,8 @@ html.dark .auth-page__spinner,
   min-height: 100vh;
   min-height: 100dvh;
   padding: 24px;
-  background: var(--theme-color-bg, #f8fafc);
-  color: var(--theme-color-text-muted, #64748b);
+  background: var(--theme-color-neutral-bg, #f8fafc);
+  color: var(--theme-color-neutral-text-muted, #64748b);
   font-size: 14px;
   text-align: center;
 }
@@ -631,14 +631,14 @@ html.dark .auth-page__spinner,
 .auth-route-guard__spinner {
   width: 28px;
   height: 28px;
-  border: 2px solid var(--theme-color-border, #e2e8f0);
-  border-top-color: var(--theme-color-primary, #4f46e5);
+  border: 2px solid var(--theme-color-neutral-border, #e2e8f0);
+  border-top-color: var(--theme-color-brand-primary, #4f46e5);
   border-radius: 50%;
   animation: auth-route-guard-spin 0.8s linear infinite;
 }
 
 .auth-route-guard__label {
-  color: var(--theme-color-text-muted, #64748b);
+  color: var(--theme-color-neutral-text-muted, #64748b);
 }
 
 @media (prefers-reduced-motion: reduce) {

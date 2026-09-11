@@ -34,5 +34,5 @@ jobs:
 
       # Chaque composant exporté doit avoir du CSS dans le bundle : DetailedChart et
       # LanguageSwitcher ont été livrés sans feuille de style et personne ne l'a vu.
-      - name: Every styled component ships CSS
+      - name: Styles câblées + tokens définis
         run: node scripts/check-styles.mjs

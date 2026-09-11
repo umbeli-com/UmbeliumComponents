@@ -39,10 +39,17 @@
   // surface   : panneau posé sur le fond
   // surface-alt : cartes et modales (le blanc de la suite)
   // surface-muted : zones désactivées / en retrait
+  // #f8f9fb et non #f3f4f6 : ce n'est pas un arbitrage nouveau. L'audit pixel v2
+  // avait déjà tranché (« réf rgb(248,249,251), avant #F3F4F6 », theme.css de
+  // Socialum) et SidebarNav.scss code ce fallback en dur depuis. Dialum et
+  // Monitorum, restés en #f3f4f6, sont les retardataires — ne pas « corriger »
+  // ce token vers l'ancienne valeur en les prenant pour référence.
   --theme-color-neutral-bg: #f8f9fb;
   --theme-color-neutral-surface: #e5e7eb;
   --theme-color-neutral-surface-alt: #ffffff;
-  --theme-color-neutral-surface-muted: #e5e7eb;
+  // Doit RESTER distinct de -surface : les deux portaient #e5e7eb, ce qui rendait
+  // les 4 usages « en retrait » des composants indiscernables d'un panneau normal.
+  --theme-color-neutral-surface-muted: #f3f4f6;
   // Fond applicatif complet (shell) — surchargeable par app.
   // ATTENTION : valeur de `background` (dégradé), PAS une couleur. À consommer
   // via `background:` uniquement — `background-color: var(--theme-app-bg)`
@@ -76,10 +83,17 @@
   --theme-color-success-text: #15803d;
   --theme-color-warning: #d97706;
   --theme-color-warning-soft: #fff1e2;
+  --theme-color-warning-text: #92400e;
   --theme-color-danger: #dc2626;
   --theme-color-danger-soft: #fde8e8;
+  --theme-color-danger-text: #b91c1c;
   --theme-color-info: #2563eb;
   --theme-color-info-soft: #eaf2ff;
+  --theme-color-info-text: #1d4ed8;
+
+  // Voile des modales. Badge et Modal les consommaient sans qu'ils existent :
+  // le repli tenait l'affichage, mais le mode sombre ne suivait pas.
+  --theme-color-overlay: rgba(15, 23, 42, 0.55);
 
   // Focus — anneau dérivé de la marque.
   --theme-color-focus-ring: rgba(3, 1, 116, 0.35);
@@ -98,19 +112,12 @@
   // `--theme-color-shadow-sm` garde son préfixe `-color-` : c'est le nom que
   // SidebarNav (onglet actif du segmented) consomme déjà en production.
   --theme-color-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --theme-color-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.06);
   --theme-color-shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.08);
 
   // ── Rayons ──────────────────────────────────────────────────────────────
   // Reprend settings/_radius.scss de sm à pill, plus xs = 8px (rayon canonique
   // des liens de nav, spec Webum). `$radius-2xl` (28px) n'est repris nulle
   // part dans la suite : pas de token pour lui tant que rien ne le consomme.
-  --theme-radius-xs: 8px;
-  --theme-radius-sm: 12px;
-  --theme-radius-md: 16px;
-  --theme-radius-lg: 20px;
-  --theme-radius-xl: 24px;
-  --theme-radius-pill: 999px;
 }
 
 // ==========================================================================
@@ -159,10 +166,15 @@ html.dark,
   --theme-color-success-text: #86efac;
   --theme-color-warning: #fbbf24;
   --theme-color-warning-soft: rgba(251, 191, 36, 0.14);
+  --theme-color-warning-text: #fcd34d;
   --theme-color-danger: #f87171;
   --theme-color-danger-soft: rgba(248, 113, 113, 0.14);
+  --theme-color-danger-text: #fca5a5;
   --theme-color-info: #60a5fa;
   --theme-color-info-soft: rgba(96, 165, 250, 0.14);
+  --theme-color-info-text: #93c5fd;
+
+  --theme-color-overlay: rgba(2, 6, 23, 0.7);
 
   --theme-color-focus-ring: rgba(124, 140, 255, 0.35);
   --theme-color-focus-ring-strong: rgba(124, 140, 255, 0.55);
@@ -178,7 +190,6 @@ html.dark,
 
   // ── Élévation ───────────────────────────────────────────────────────────
   --theme-color-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
-  --theme-color-shadow-md: 0 6px 18px rgba(3, 8, 20, 0.32);
   --theme-color-shadow-lg: 0 12px 30px rgba(3, 8, 20, 0.4);
 
   // Les rayons ne changent pas avec le thème.
