@@ -112,6 +112,12 @@
   // `--theme-color-shadow-sm` garde son préfixe `-color-` : c'est le nom que
   // SidebarNav (onglet actif du segmented) consomme déjà en production.
   --theme-color-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --theme-color-shadow-md: 0 6px 18px rgba(3, 8, 20, 0.32);
+  // Palier intermédiaire : l'ombre que les apps posaient à la main sur leurs
+  // cartes (--shadow-sm d'Anonymum, .dialum-card-lift). Consommé par
+  // Card elevation="md" ; retiré un temps comme « inutilisé », il a désormais
+  // un consommateur réel.
+  --theme-color-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.06);
   --theme-color-shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.08);
 
   // ── Rayons ──────────────────────────────────────────────────────────────

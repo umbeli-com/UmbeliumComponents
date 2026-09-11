@@ -10,6 +10,11 @@
 // `neutral-` / `brand-` ; on garde l'alias court en second cran de repli pour
 // les apps qui exposent l'autre convention, et un hex en tout dernier recours.
 
+// Ne couvre QUE le variant historique `select`. Le variant `segmented` rend le
+// balisage canonique `.sidebar-nav__switch--lang` / `.sidebar-nav__switch-tab`
+// et tient TOUT son style de `SidebarNav.scss` (@umbeli-com/layout, entrée
+// `@umbeli-com/layout/styles/sidebar.css`) : aucune règle n'est recopiée ici.
+
 $c-surface:       var(--theme-color-neutral-surface-alt, var(--theme-color-neutral-surface-alt, #ffffff));
 $c-surface-muted: var(--theme-color-neutral-surface-muted, var(--theme-color-neutral-surface-muted, #e5e7eb));
 $c-border:        var(--theme-color-neutral-border, var(--theme-color-neutral-border, #d1d5db));

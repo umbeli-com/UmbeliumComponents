@@ -80,3 +80,94 @@
     }
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ajouts additifs — rien au-dessus de cette ligne n'a bougé.
+// Les hauteurs historiques sm/md/lg (32/40/48) sont intouchées : `xs` et `xl`
+// prolongent l'échelle par le bas et par le haut, au pas de 8px.
+// Une app qui veut d'autres hauteurs surcharge chez elle, le paquet ne plie pas.
+// ─────────────────────────────────────────────────────────────────────────────
+
+.button {
+  // ── Tailles ajoutées ──
+  // xs : 24 / 12 / 12px — relevé sur Anonymum `.btn-xs` (padding 12px, font 12px).
+  &--xs {
+    height: 24px;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  // xl : 56 / 32 / 17px — relevé sur Anonymum `.btn-xl` (56px, $space-32, 17px).
+  &--xl {
+    height: 56px;
+    padding: 0 2rem;
+    font-size: 1.0625rem;
+  }
+
+  // ── Variants ajoutés ──
+  // `brand-on-primary` est l'encre canonique posée sur un aplat de marque :
+  // blanche en clair, sombre en foncé — donc lisible sur le rouge des deux
+  // thèmes. `danger-text` sert de survol : plus sombre en clair, plus clair en
+  // foncé, le contraste part dans le bon sens dans les deux cas.
+  &--danger {
+    background-color: var(--theme-color-danger, #dc2626);
+    color: var(--theme-color-brand-on-primary, #ffffff);
+    border: none;
+
+    &:hover:not(:disabled) {
+      background-color: var(--theme-color-danger-text, #b91c1c);
+    }
+  }
+
+  // `link` doit se lire comme du texte : il annule la hauteur et le padding que
+  // lui pose sa classe de taille. Même spécificité que `.button--md`, déclaré
+  // après dans le fichier — c'est l'ordre source qui tranche, pas un `!important`.
+  &--link {
+    height: auto;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    color: var(--theme-color-brand-primary, #030174);
+    text-decoration: none;
+
+    &:hover:not(:disabled) {
+      text-decoration: underline;
+    }
+  }
+
+  // ── Bouton carré (icône seule) ──
+  // Largeur explicitement égale à la hauteur de chaque taille, comme le
+  // `.btn-icon` d'Anonymum, plutôt qu'un `aspect-ratio` qu'un conteneur flex
+  // peut renégocier.
+  &--icon-only {
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  &--icon-only#{&}--xs { width: 24px; }
+  &--icon-only#{&}--sm { width: 32px; }
+  &--icon-only#{&}--md { width: 40px; }
+  &--icon-only#{&}--lg { width: 48px; }
+  &--icon-only#{&}--xl { width: 56px; }
+
+  // ── État de chargement ──
+  // Le spinner emprunte l'encre du bouton : lisible sur l'aplat primaire comme
+  // sur le fond transparent d'un ghost, sans que le paquet ait à connaître la
+  // couleur. Piste vide = arc qui tourne, aucune dépendance à `color-mix`.
+  &__spinner {
+    --spinner-track: transparent;
+    --spinner-head: currentColor;
+  }
+
+  // `loading` implique `disabled` : il faut donc battre `.button:disabled`
+  // (0-2-0) pour dire « attente » plutôt que « refus » — d'où le `:disabled`
+  // accroché ici aussi, et non un `!important`.
+  &--loading:disabled {
+    cursor: progress;
+    // `.button:disabled` pose `opacity: .5`, le gris du refus. Un bouton qui
+    // travaille n'est pas un bouton refusé : sans ça le `cursor: progress`
+    // dit « attente » pendant que la couleur dit « refus », et le spinner
+    // lui-même est rendu à moitié effacé.
+    opacity: 1;
+  }
+}

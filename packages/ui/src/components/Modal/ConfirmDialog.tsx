@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { Modal, type ModalLabels } from './Modal';
+import { Modal, type ModalLabels, type ModalTestIds } from './Modal';
 // Styles are imported separately via @umbeli-com/ui/styles
 
 /**
@@ -16,7 +16,30 @@ import { Modal, type ModalLabels } from './Modal';
  * composant `Button` : ce dernier ne transmet pas de `ref`, et sans ref on ne
  * peut pas poser le focus initial sur l'action. Les classes sont celles de
  * Button.scss, donc le rendu reste strictement identique.
+ *
+ * Migrer un `window.confirm()` casse en silence les specs Playwright qui
+ * l'attrapaient par `page.on('dialog', …)` : le gestionnaire n'est plus
+ * appelé, la promesse ne se résout jamais, le test expire. `testIds` donne aux
+ * specs de quoi viser les boutons — c'est la moitié manquante de la migration.
  */
+
+/**
+ * `data-testid` des points d'accroche. Hérite de ceux de la fenêtre
+ * (`root`, `title`, `close`, `backdrop`) et ajoute les siens.
+ * Aucun défaut : voir `ModalTestIds`.
+ */
+export interface ConfirmTestIds extends ModalTestIds {
+  /**
+   * Sur le bouton qui confirme — celui que remplaçait `dialog.accept()`.
+   * (`close`, hérité, ne sert à rien ici : la confirmation force
+   * `showCloseButton={false}`, il n'y a pas de croix à viser.)
+   */
+  confirm?: string;
+  /** Sur le bouton qui annule — celui que remplaçait `dialog.dismiss()`. */
+  cancel?: string;
+  /** Sur la saisie de sécurité (`typeToConfirm`). */
+  input?: string;
+}
 
 export interface ConfirmRequest {
   title: string;
@@ -27,6 +50,12 @@ export interface ConfirmRequest {
   danger?: boolean;
   /** Si fourni, l'utilisateur doit saisir ce texte exact pour confirmer. */
   typeToConfirm?: string;
+  /**
+   * `data-testid` propres à CETTE question, par-dessus ceux du composant.
+   * Une app qui pose six confirmations depuis un seul `<ConfirmProvider>` peut
+   * ainsi garder un identifiant distinct par question.
+   */
+  testIds?: ConfirmTestIds;
 }
 
 export interface ConfirmLabels extends ModalLabels {
@@ -67,6 +96,8 @@ export interface ConfirmDialogProps {
    */
   onError?: (error: unknown) => void;
   labels?: ConfirmLabels;
+  /** `data-testid` par défaut de toutes les questions ; `request.testIds` prime. */
+  testIds?: ConfirmTestIds;
   className?: string;
 }
 
@@ -76,6 +107,7 @@ export function ConfirmDialog({
   onConfirm,
   onError,
   labels = {},
+  testIds,
   className = '',
 }: ConfirmDialogProps) {
   const [busy, setBusy] = useState(false);
@@ -100,6 +132,10 @@ export function ConfirmDialog({
   }, [isOpen, questionKey, expectedKey]);
 
   const t = { ...defaultConfirmLabels, ...labels };
+  // La question l'emporte sur le réglage global : une app peut nommer
+  // « account-delete-confirm » une confirmation et « billing-cancel-confirm »
+  // la suivante sans changer de fournisseur.
+  const tid: ConfirmTestIds = { ...testIds, ...request?.testIds };
   const canConfirm = !busy && (!needsTyping || typed.trim() === request?.typeToConfirm);
 
   const run = async () => {
@@ -129,6 +165,7 @@ export function ConfirmDialog({
       initialFocusRef={needsTyping ? inputRef : confirmRef}
       title={request?.title}
       labels={labels}
+      testIds={tid}
       className={`umb-confirm${className ? ` ${className}` : ''}`}
       footer={
         <>
@@ -137,6 +174,7 @@ export function ConfirmDialog({
             className="button button--ghost button--sm"
             onClick={onClose}
             disabled={busy}
+            data-testid={tid.cancel}
           >
             {request?.cancelLabel ?? t.cancel}
           </button>
@@ -150,6 +188,7 @@ export function ConfirmDialog({
               void run();
             }}
             disabled={!canConfirm}
+            data-testid={tid.confirm}
           >
             {busy ? t.busy : (request?.confirmLabel ?? t.confirm)}
           </button>
@@ -180,6 +219,7 @@ export function ConfirmDialog({
                 autoCorrect="off"
                 spellCheck={false}
                 disabled={busy}
+                data-testid={tid.input}
               />
             </label>
           )}

@@ -19,6 +19,14 @@
   // jeton (`--theme-color-overlay`) que les apps peuvent surcharger.
   background-color: var(--theme-color-overlay, rgba(0, 0, 0, 0.45));
   animation: umb-modal-backdrop-in 0.14s ease-out;
+
+  // Flou optionnel (`backdropBlur`) : posé par une classe en plus, jamais par
+  // défaut — `backdrop-filter` crée un contexte d'empilement et coûte cher sur
+  // les machines modestes. Le rayon se règle par la variable, 2px sinon.
+  &--blur {
+    backdrop-filter: blur(var(--umb-modal-backdrop-blur, 2px));
+    -webkit-backdrop-filter: blur(var(--umb-modal-backdrop-blur, 2px));
+  }
 }
 
 .umb-modal {
@@ -45,6 +53,9 @@
   &--md { max-width: 640px; }
   &--lg { max-width: 860px; }
   &--xl { max-width: 1120px; }
+  // Aucune limite : la fenêtre prend le voile moins sa marge. Pour une mesure
+  // précise (`min(1100px, 100%)`), passer plutôt `width` / `maxWidth`.
+  &--full { max-width: none; }
 }
 
 .umb-modal__header {
@@ -91,6 +102,16 @@
     outline: 2px solid var(--theme-color-brand-primary, #030174);
     outline-offset: 2px;
   }
+}
+
+// Groupe d'actions de l'en-tête (`headerActions`) : n'existe dans le DOM que
+// si on lui passe quelque chose — sans lui, la croix reste l'enfant direct de
+// l'en-tête, exactement comme avant.
+.umb-modal__header-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
 }
 
 .umb-modal__body {

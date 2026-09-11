@@ -4,6 +4,7 @@ import {
   useEffect,
   useId,
   useRef,
+  type CSSProperties,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
 import { createPortal } from 'react-dom';
@@ -19,9 +20,39 @@ import { X } from 'lucide-react';
  * fait les quatre choses que l'on n'a pas envie de réécrire sept fois : portail
  * dans `<body>`, verrou de défilement empilable, piège à focus, et `Échap` qui
  * ne ferme que la modale du dessus.
+ *
+ * Toutes les options ajoutées après la v1 (`testIds`, `width`/`maxWidth`,
+ * `headerActions`, `backdropBlur`…) sont facultatives ET sans effet tant
+ * qu'elles ne sont pas passées : sans elles, le DOM produit est exactement
+ * celui d'avant, attribut par attribut.
  */
 
-export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
+/** `'full'` : aucune largeur maximale — la fenêtre occupe le voile moins sa marge. */
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
+/**
+ * Longueur CSS libre : un nombre est interprété en pixels, une chaîne est
+ * reprise telle quelle (`'min(1100px, 100%)'`, `'86vh'`, `'18px'`…).
+ */
+export type ModalLength = number | string;
+
+/**
+ * `data-testid` posés sur les points d'accroche de la fenêtre.
+ *
+ * Aucun défaut : un identifiant inventé par le paquet se serait invité dans les
+ * suites des apps déjà en production (collision `strict mode` de Playwright).
+ * Chaque app apporte les siens — ce sont eux qui figurent déjà dans ses specs.
+ */
+export interface ModalTestIds {
+  /** Sur la fenêtre elle-même (l'élément qui porte `role="dialog"`). */
+  root?: string;
+  /** Sur le titre. */
+  title?: string;
+  /** Sur la croix de fermeture. */
+  close?: string;
+  /** Sur le voile — pour cliquer « à côté » sans viser des coordonnées. */
+  backdrop?: string;
+}
 
 export interface ModalLabels {
   /** aria-label du bouton de fermeture. Défaut : « Fermer ». */
@@ -43,12 +74,44 @@ export interface ModalProps {
   size?: ModalSize;
   /** Barre d'actions, rendue collée en bas de la fenêtre. */
   footer?: ReactNode;
+  /**
+   * Actions rendues dans l'en-tête, à gauche de la croix (copier, plein écran,
+   * imprimer…). Sans elles l'en-tête garde exactement sa structure d'origine :
+   * le conteneur d'actions n'est créé que s'il a quelque chose à contenir.
+   */
+  headerActions?: ReactNode;
   /** Clic sur le fond = fermeture (défaut : true). */
   closeOnBackdrop?: boolean;
   /** Échap = fermeture (défaut : true). */
   closeOnEscape?: boolean;
   /** Croix de fermeture dans l'en-tête (défaut : true). */
   showCloseButton?: boolean;
+  /**
+   * Voile flouté. `true` = 2px ; un nombre ou une chaîne fixe le rayon
+   * (`4`, `'2px'`). `undefined`, `false`, `0` et `''` = aucun flou. Défaut :
+   * aucun flou, le voile reste une simple opacité.
+   */
+  backdropBlur?: boolean | ModalLength;
+  /**
+   * Largeur de base (défaut : 100 % du voile moins sa marge). ATTENTION : les
+   * tailles nommées sont des `max-width`, et `max-width` borne toujours
+   * `width` — `width` ne peut donc que RÉTRÉCIR la fenêtre sous `size`, jamais
+   * l'élargir. Pour dépasser la taille nommée, c'est `maxWidth` qu'il faut
+   * poser (ou `size="full"`), seul ou avec `width`.
+   */
+  width?: ModalLength;
+  /** Largeur maximale — remplace celle de `size`. C'est elle qui élargit. */
+  maxWidth?: ModalLength;
+  /** Hauteur imposée : `height={'min(86vh, 100%)'}` pour une fenêtre « atelier ». */
+  height?: ModalLength;
+  /**
+   * Hauteur maximale — remplace `calc(100vh - 48px)`, et aussi le
+   * `calc(100vh - 24px)` du palier mobile (un style inline l'emporte sur la
+   * requête média) : donner une mesure en `vh` plutôt qu'en pixels.
+   */
+  maxHeight?: ModalLength;
+  /** Rayon des coins. Défaut : 16px (feuille de style). */
+  radius?: ModalLength;
   /** `alertdialog` pour une décision bloquante (voir ConfirmDialog). */
   role?: 'dialog' | 'alertdialog';
   /**
@@ -60,7 +123,16 @@ export interface ModalProps {
   container?: HTMLElement | null;
   className?: string;
   labels?: ModalLabels;
+  /** `data-testid` du contrat e2e. Aucun n'est posé tant qu'on n'en donne pas. */
+  testIds?: ModalTestIds;
   children?: ReactNode;
+}
+
+/** `style` acceptant les variables CSS — React ne les type pas nativement. */
+type StyleWithVars = CSSProperties & Record<`--${string}`, string | number>;
+
+function cssLength(value: ModalLength): string {
+  return typeof value === 'number' ? `${value}px` : value;
 }
 
 // ── Verrou de défilement empilable ──────────────────────────────────────────
@@ -120,14 +192,22 @@ export function Modal({
   title,
   size = 'md',
   footer,
+  headerActions,
   closeOnBackdrop = true,
   closeOnEscape = true,
   showCloseButton = true,
+  backdropBlur,
+  width,
+  maxWidth,
+  height,
+  maxHeight,
+  radius,
   role = 'dialog',
   initialFocusRef,
   container,
   className = '',
   labels = {},
+  testIds = {},
   children,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -246,14 +326,54 @@ export function Modal({
 
   const t = { ...defaultModalLabels, ...labels };
   const host = container ?? document.body;
-  const hasHeader = Boolean(title) || showCloseButton;
+  const hasHeader = Boolean(title) || showCloseButton || Boolean(headerActions);
+
+  // Le flou est une option : sans elle, ni classe ni style inline — le voile
+  // reste l'élément à un seul attribut `class` qu'il a toujours été.
+  // Toute valeur vide — absente, `false`, mais aussi `0` ou `''` — laisse le
+  // voile nu : `backdrop-filter: blur(0)` coûterait quand même un contexte
+  // d'empilement et une couche de composition pour zéro pixel de flou.
+  const blurOn = Boolean(backdropBlur);
+  const blurLength: ModalLength | undefined =
+    typeof backdropBlur === 'number' || typeof backdropBlur === 'string'
+      ? backdropBlur
+      : undefined;
+  const backdropStyle: StyleWithVars | undefined =
+    blurOn && blurLength !== undefined
+      ? { '--umb-modal-backdrop-blur': cssLength(blurLength) }
+      : undefined;
+
+  // Les mesures libres passent en style inline, donc au-dessus de `size` : rien
+  // n'est écrit tant qu'on n'en demande pas, et `style` reste alors absent.
+  const dialogStyle: CSSProperties = {};
+  if (width !== undefined) dialogStyle.width = width;
+  if (maxWidth !== undefined) dialogStyle.maxWidth = maxWidth;
+  if (height !== undefined) dialogStyle.height = height;
+  if (maxHeight !== undefined) dialogStyle.maxHeight = maxHeight;
+  if (radius !== undefined) dialogStyle.borderRadius = radius;
+  const hasDialogStyle = Object.keys(dialogStyle).length > 0;
+
+  const closeButton = showCloseButton ? (
+    <button
+      type="button"
+      className="umb-modal__close"
+      onClick={onClose}
+      aria-label={t.close}
+      title={t.close}
+      data-testid={testIds.close}
+    >
+      <X size={16} aria-hidden="true" />
+    </button>
+  ) : null;
 
   return createPortal(
     <div
-      className="umb-modal__backdrop"
+      className={`umb-modal__backdrop${blurOn ? ' umb-modal__backdrop--blur' : ''}`}
       role="presentation"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
+      style={backdropStyle}
+      data-testid={testIds.backdrop}
     >
       <div
         ref={dialogRef}
@@ -263,26 +383,25 @@ export function Modal({
         aria-labelledby={title ? titleId : undefined}
         aria-label={title ? undefined : t.dialog}
         tabIndex={-1}
+        style={hasDialogStyle ? dialogStyle : undefined}
+        data-testid={testIds.root}
       >
         {hasHeader && (
           <div className="umb-modal__header">
             {title ? (
-              <h2 className="umb-modal__title" id={titleId}>
+              <h2 className="umb-modal__title" id={titleId} data-testid={testIds.title}>
                 {title}
               </h2>
             ) : (
               <span className="umb-modal__title" aria-hidden="true" />
             )}
-            {showCloseButton && (
-              <button
-                type="button"
-                className="umb-modal__close"
-                onClick={onClose}
-                aria-label={t.close}
-                title={t.close}
-              >
-                <X size={16} aria-hidden="true" />
-              </button>
+            {headerActions ? (
+              <div className="umb-modal__header-actions">
+                {headerActions}
+                {closeButton}
+              </div>
+            ) : (
+              closeButton
             )}
           </div>
         )}

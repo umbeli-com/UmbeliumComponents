@@ -10,6 +10,11 @@
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
+  // `max-width` et `vertical-align` sont déclarés EXPRÈS, jamais laissés à
+  // l'initiale : `.badge` existe aussi chez Anonymum et Profilum, et une
+  // propriété que le paquet laisse à l'initiale est une propriété que l'app
+  // subit (Anonymum a mesuré la pastille déplacée, puis a dû remettre
+  // `vertical-align: baseline; max-width: none` à la main dans sa feuille).
   max-width: 100%;
   vertical-align: middle;
 }
@@ -73,6 +78,78 @@
 // `text-muted` sur `neutral-surface` ne donne que 3.9:1 en clair (AA exige
 // 4.5:1 pour du 0.7rem) : la teinte par défaut prend l'encre pleine.
 .badge--neutral {
+  background-color: var(--theme-color-neutral-surface, #e5e7eb);
+  color: var(--theme-color-neutral-text, #1a1a2e);
+}
+
+// ── `isolate` : pare-feu contre le `.badge` LOCAL des apps ───────────────
+// Anonymum (`src/styles/components/_table.scss`) et Profilum/frontend
+// (`src/styles/components/_badges.scss`) déclarent `.badge` — et Profilum
+// déclare EN PLUS `.badge--success|--warning|--info|--neutral`, exactement les
+// noms des teintes du paquet. À spécificité égale, la feuille chargée en
+// dernier gagne, et c'est celle de l'app : la pastille du paquet repartait
+// avec le rayon, le padding, l'interlettrage et les couleurs de l'app.
+// Ces règles re-déclarent les valeurs du paquet en (0,2,0) — y compris les
+// propriétés HÉRITÉES qu'une `.badge` d'app pose (`letter-spacing`,
+// `text-transform`), sinon l'isolation reste trouée.
+// Opt-in : une pastille sans `isolate` rend exactement comme avant.
+.badge.badge--isolated {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  max-width: 100%;
+  vertical-align: middle;
+  border: 0;
+  text-decoration: none;
+}
+
+// Les tailles portent le padding et le corps de texte : elles doivent être
+// re-déclarées au même niveau de spécificité que la base isolée.
+.badge--isolated.badge--sm {
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.7rem;
+}
+
+.badge--isolated.badge--md {
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+// Teintes — valeurs identiques aux règles simples ci-dessus, remontées en
+// (0,2,0) parce que `.badge--success` & co. existent aussi côté app.
+.badge--isolated.badge--brand {
+  background-color: var(--theme-color-brand-primary-soft, #e8e7f5);
+  color: var(--theme-color-brand-primary, #030174);
+}
+
+.badge--isolated.badge--success {
+  background-color: var(--theme-color-success-soft, #e7f6ed);
+  color: var(--theme-color-success-text, var(--theme-color-success, #15803d));
+}
+
+.badge--isolated.badge--warning {
+  background-color: var(--theme-color-warning-soft, #fff1e2);
+  color: var(--theme-color-warning-text, var(--theme-color-warning, #b45309));
+}
+
+.badge--isolated.badge--danger {
+  background-color: var(--theme-color-danger-soft, #fde8e8);
+  color: var(--theme-color-danger-text, var(--theme-color-danger, #b91c1c));
+}
+
+.badge--isolated.badge--info {
+  background-color: var(--theme-color-info-soft, #eaf2ff);
+  color: var(--theme-color-info-text, var(--theme-color-info, #2563eb));
+}
+
+.badge--isolated.badge--neutral {
   background-color: var(--theme-color-neutral-surface, #e5e7eb);
   color: var(--theme-color-neutral-text, #1a1a2e);
 }

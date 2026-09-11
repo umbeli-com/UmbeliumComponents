@@ -73,3 +73,159 @@
     padding: 2rem 1rem;
   }
 }
+
+// ── Variante `plain` : l'icône NUE des apps ──────────────────────────────
+// Anonymum rend `.empty-state-icon` (svg 48px, opacity .5), Socialum un
+// `<Calendar size={32} />` nu, Profilum `.empty__icon` : aucune ne veut la
+// pastille. Les règles sont portées par la RACINE `--plain` (spécificité
+// (0,2,0)) pour couvrir aussi la variante resserrée, dont la règle
+// `.empty-state--compact .empty-state__icon` vaut déjà (0,2,0).
+.empty-state--plain .empty-state__icon {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  opacity: var(--empty-state-icon-opacity, 0.5);
+}
+
+// Titre sans le poids d'un titre de page : c'est le `p` 16px/600 d'Anonymum
+// front2 et le `h3` de Profilum, pas le `h2` 1.125rem du panneau plein écran.
+.empty-state--plain .empty-state__title {
+  font-size: 1rem;
+}
+
+// Taille d'icône imposée — écrite UNIQUEMENT quand la prop `iconSize` est
+// fournie (elle pose la classe et la variable ensemble). Sans elle, aucune
+// déclaration de taille n'existe : l'icône garde la sienne, et on évite le
+// `width: auto` qui, sur un `<svg viewBox>` sans dimensions, ferait retomber
+// le navigateur sur la taille par défaut des objets remplacés (300×150).
+.empty-state__icon--sized svg {
+  width: var(--empty-state-icon-size);
+  height: var(--empty-state-icon-size);
+}
+
+// ── `isolate` : pare-feu contre le `.empty-state` LOCAL des apps ─────────
+// `.empty-state` est déclaré par Anonymum (48px/24px), Webum admin
+// (64px/24px) et Servum (80px/0). À spécificité égale, c'est l'ordre des
+// feuilles qui tranche — et la feuille de l'app est importée APRÈS celle du
+// paquet : le composant héritait de paddings qu'il n'a pas choisis. Ces
+// règles re-déclarent les valeurs du paquet en (0,2,0) : l'app peut garder
+// son `.empty-state` pour ses écrans non migrés. Opt-in — une app qui VEUT
+// sa peau (Monitorum `.mo-empty`, Dialum `.dialum-empty-in-card`) ne pose pas
+// `isolate`, et rien ne change pour elle.
+.empty-state.empty-state--isolated {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem 1.5rem;
+  text-align: center;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+}
+
+.empty-state--isolated.empty-state--compact {
+  padding: 2rem 1rem;
+  gap: 0.5rem;
+}
+
+// Le pare-feu ci-dessus ne couvre que la RACINE — or ce n'est pas la racine
+// que les apps stylent, ce sont les ENFANTS, et par leur BALISE :
+//   Webum  `apps/admin/src/styles.css:741`
+//          `.empty-state h2 { font-size: 18px; color: var(--text);
+//                             margin-bottom: 8px; }`
+//   Servum `apps/web/src/styles/main.scss:509`
+//          `.empty-state h2 { font-size: 20px; margin-bottom: 8px; }`
+//          `.empty-state p  { color: …; margin-bottom: 24px; }`
+// Ces sélecteurs valent (0,1,1) et battent donc `.empty-state__title` /
+// `.empty-state__description` (0,1,0) QUEL QUE SOIT l'ordre des feuilles —
+// l'ordre ne départage qu'à spécificité ÉGALE. Sans les règles ci-dessous,
+// `isolate` laissait passer exactement ce qu'il promet d'arrêter : titre à
+// 18px au lieu de 1.125rem, encre de l'app, et un `margin-bottom` parasite
+// qui s'ajoute au `gap` du flex. D'où le `margin: 0` (raccourci, pour couvrir
+// le `margin-bottom` long de l'app) sur le titre ET la description.
+.empty-state--isolated .empty-state__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  border-radius: 999px;
+  background-color: var(--theme-color-neutral-surface, #e5e7eb);
+  color: var(--theme-color-neutral-text-subtle, #9ca3af);
+  opacity: 1;
+}
+
+.empty-state--isolated .empty-state__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--theme-color-neutral-text, #1a1a2e);
+}
+
+.empty-state--isolated .empty-state__description {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+}
+
+.empty-state--isolated .empty-state__action {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+// Les modificateurs doivent repasser DEVANT le pare-feu : `--compact` et
+// `--plain` portent leurs règles en (0,2,0) PLUS HAUT dans le fichier, donc à
+// spécificité égale le pare-feu (0,2,0), écrit plus bas, les écraserait — un
+// `<EmptyState compact isolate />` serait reparti avec la pastille 56px et le
+// titre 1.125rem de la variante pleine. Ces règles valent (0,3,0) : elles
+// passent devant. `--plain` est placé APRÈS `--compact`, comme dans les règles
+// non isolées, pour que `compact + plain` reste sans pastille.
+.empty-state--isolated.empty-state--compact .empty-state__icon {
+  width: 40px;
+  height: 40px;
+}
+
+.empty-state--isolated.empty-state--compact .empty-state__title {
+  font-size: 1rem;
+}
+
+.empty-state--isolated.empty-state--plain .empty-state__icon {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background-color: transparent;
+  color: inherit;
+  opacity: var(--empty-state-icon-opacity, 0.5);
+}
+
+.empty-state--isolated.empty-state--plain .empty-state__title {
+  font-size: 1rem;
+}
+
+// `iconSize` doit lui aussi passer devant le pare-feu, et devant un
+// `.empty-state svg` d'app (0,1,1) : (0,2,1) ici.
+.empty-state--isolated .empty-state__icon--sized svg {
+  width: var(--empty-state-icon-size);
+  height: var(--empty-state-icon-size);
+}
+
+@media (max-width: 480px) {
+  // Sans ces deux lignes, le pare-feu ci-dessus (hors media query, donc
+  // (0,2,0) contre les (0,1,0) d'en bas) gèlerait le padding plein écran sur
+  // mobile : l'isolation aurait cassé le responsive qu'elle devait préserver.
+  .empty-state.empty-state--isolated {
+    padding: 2.5rem 1rem;
+  }
+
+  .empty-state--isolated.empty-state--compact {
+    padding: 2rem 1rem;
+  }
+}

@@ -244,3 +244,34 @@
   0% { opacity: 0; }
   100% { opacity: 1; }
 }
+
+// ── Zone de dépôt + file d'attente ──────────────────────────────────────────
+// N'existe que lorsque le slot `queue` est fourni : sans lui, la zone de dépôt
+// est rendue seule, sans ce conteneur, et rien ne bouge pour les apps en place.
+.drag-drop-upload-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.drag-drop-upload__queue {
+  width: 100%;
+}
+
+// Ligne d'explication optionnelle sous le titre (`labels.subtitle`).
+.drag-drop-upload__subtitle {
+  font-size: 0.875rem;
+  color: var(--theme-color-neutral-text-muted, #6B7280);
+  margin: 0;
+}
+
+// `clickToBrowse` : toute la zone devient la cible. Elle prend alors le focus,
+// donc elle doit le MONTRER — sinon la navigation au clavier se fait à
+// l'aveugle.
+.drag-drop-upload--clickable {
+  &:focus-visible {
+    outline: 2px solid var(--theme-color-brand-primary, #030174);
+    outline-offset: 2px;
+  }
+}

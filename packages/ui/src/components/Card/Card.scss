@@ -23,3 +23,254 @@
     background-color: var(--theme-color-neutral-surface-alt, #F8F9FA);
   }
 }
+
+// ── Ajouts additifs ────────────────────────────────────────────────────────
+// Tout ce qui suit est posé APRÈS le bloc `.card` : à spécificité égale
+// (0,1,0), c'est l'ordre source qui tranche, donc `--no-clip` peut lever
+// l'`overflow` et `--border-*` le trait de la règle raccourcie ci-dessus.
+
+// `padding: 0` — indispensable au composite : le padding vit dans les sections.
+.card--padding-none {
+  padding: 0;
+}
+
+// Fond réellement en retrait. `--muted` reste tel quel (no-op historique
+// qu'on ne corrige pas : quatre apps le passent déjà en production).
+.card--subtle {
+  background-color: var(--theme-color-neutral-surface-muted, #f3f4f6);
+}
+
+// Élévation. `sm` = le token d'ombre de la suite ; `md` = l'ombre que les apps
+// posaient à la main (repli identique au `--shadow-sm` d'Anonymum, si bien que
+// `.anonymium-card-soft` est reproduit au pixel même sans le token.)
+.card--elevation-sm {
+  box-shadow: var(--theme-color-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
+}
+
+.card--elevation-md {
+  box-shadow: var(--theme-color-shadow-md, 0 6px 18px rgba(0, 0, 0, 0.06));
+}
+
+// `--theme-color-shadow-md` N'EXISTE PAS dans tokens.scss (l'échelle s'arrête à
+// `--theme-color-shadow-sm` / `-lg`) : le repli ci-dessus est donc toujours
+// celui du thème CLAIR. Sur une surface sombre, un alpha de .06 ne se voit pas
+// — alors que le `.anonymium-card-soft` qu'on prétend reproduire, lui, vire à
+// `rgba(3, 8, 20, .32)` en sombre (Anonymum/_variables.scss:278). Sans ce bloc,
+// `elevation="md"` n'était fidèle qu'en clair. Les trois sélecteurs sont ceux
+// que tokens.scss liste comme racines sombres de la suite.
+html.dark .card--elevation-md,
+:root[data-theme='dark'] .card--elevation-md,
+[data-theme='dark'] .card--elevation-md {
+  box-shadow: var(--theme-color-shadow-md, 0 6px 18px rgba(3, 8, 20, 0.32));
+}
+
+.card--border-strong {
+  border-color: var(--theme-color-neutral-border-strong, #9ca3af);
+}
+
+// `border: none` et non `transparent` : c'est ce qu'écrivent `.mgr-card--flat`
+// et `.anonymium-card-flat`, géométrie comprise.
+.card--border-none {
+  border: none;
+}
+
+.card--no-clip {
+  overflow: visible;
+}
+
+.card--interactive {
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+
+  &:hover {
+    border-color: var(--theme-color-neutral-border-strong, #9ca3af);
+  }
+
+  // Anneau de focus en `outline`, PAS en `box-shadow` : `box-shadow` est une
+  // propriété unique, donc un anneau posé ainsi EFFACE l'ombre de la carte le
+  // temps du focus — celle de `elevation`, et celle que les apps posent sur la
+  // même racine (`.dialum-card-lift` : `box-shadow: 0 8px 28px …`), d'où un
+  // saut visuel. `outline` se superpose, suit le `border-radius`, n'est pas
+  // rogné par l'`overflow: hidden` de `.card`, et c'est déjà la convention du
+  // paquet (Button, Modal, Toast, Form, DragDropUpload).
+  &:focus-visible {
+    outline: 2px solid var(--theme-color-focus-ring-strong, rgba(3, 1, 116, 0.55));
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card--interactive {
+    transition: none;
+  }
+}
+
+// ── Sections du composite ──────────────────────────────────────────────────
+// En-tête, corps et pied séparés par un filet : la forme que les apps
+// réécrivaient à la main. Mêmes gouttières horizontales partout ; en-tête et
+// pied sont plus serrés verticalement que le corps, comme chez Manager
+// (`px-5 py-4` / `p-5`).
+
+.card__header,
+.card__body,
+.card__footer {
+  min-width: 0;
+}
+
+.card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--theme-color-neutral-border);
+
+  &--no-divider {
+    border-bottom: 0;
+  }
+
+  &--align-start {
+    align-items: flex-start;
+  }
+
+  &--padding-none {
+    padding: 0;
+  }
+
+  &--padding-sm {
+    padding: 0.75rem 1rem;
+  }
+
+  &--padding-md {
+    padding: 1rem 1.25rem;
+  }
+
+  &--padding-lg {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+.card__header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--theme-color-neutral-icon-muted, #6b7280);
+}
+
+.card__header-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.card__header-title {
+  margin: 0;
+  color: var(--theme-color-neutral-text);
+
+  // `sm` = l'en-tête de panneau de Manager (14px/600) ; `md` le défaut de la
+  // suite (15px/600) ; `lg` le `typography-h3` d'Anonymum (24px/700).
+  &--sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+  }
+
+  &--md {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+  }
+
+  &--lg {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+.card__header-subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+}
+
+.card__header-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.card__body {
+  &--padding-none {
+    padding: 0;
+  }
+
+  &--padding-sm {
+    padding: 1rem;
+  }
+
+  &--padding-md {
+    padding: 1.25rem;
+  }
+
+  &--padding-lg {
+    padding: 1.5rem;
+  }
+
+  &--gap-sm,
+  &--gap-md,
+  &--gap-lg {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &--gap-sm {
+    gap: 0.5rem;
+  }
+
+  &--gap-md {
+    gap: 1rem;
+  }
+
+  &--gap-lg {
+    gap: 1.5rem;
+  }
+}
+
+.card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-top: 1px solid var(--theme-color-neutral-border);
+
+  &--no-divider {
+    border-top: 0;
+  }
+
+  &--align-start {
+    justify-content: flex-start;
+  }
+
+  &--align-end {
+    justify-content: flex-end;
+  }
+
+  &--padding-none {
+    padding: 0;
+  }
+
+  &--padding-sm {
+    padding: 0.75rem 1rem;
+  }
+
+  &--padding-md {
+    padding: 1rem 1.25rem;
+  }
+
+  &--padding-lg {
+    padding: 1.25rem 1.5rem;
+  }
+}

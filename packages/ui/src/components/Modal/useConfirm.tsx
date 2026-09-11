@@ -8,7 +8,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ConfirmDialog, type ConfirmLabels, type ConfirmRequest } from './ConfirmDialog';
+import {
+  ConfirmDialog,
+  type ConfirmLabels,
+  type ConfirmRequest,
+  type ConfirmTestIds,
+} from './ConfirmDialog';
 
 /**
  * Confirmations sans passer par le navigateur.
@@ -28,7 +33,14 @@ export type ConfirmFn = (request: ConfirmRequest) => Promise<boolean>;
  * Version locale, sans fournisseur : le composant rend `dialog` lui-même.
  * C'est le chemin de migration direct depuis les `useDialogs()` maison.
  */
-export function useConfirmDialog(labels?: ConfirmLabels): {
+export function useConfirmDialog(
+  labels?: ConfirmLabels,
+  /**
+   * `data-testid` par défaut de toutes les questions posées par ce crochet.
+   * Chaque `confirm({ …, testIds })` peut encore les préciser au cas par cas.
+   */
+  testIds?: ConfirmTestIds,
+): {
   confirm: ConfirmFn;
   dialog: ReactElement;
 } {
@@ -72,6 +84,7 @@ export function useConfirmDialog(labels?: ConfirmLabels): {
       onClose={() => settle(false)}
       onConfirm={() => settle(true)}
       labels={labels}
+      testIds={testIds}
     />
   );
 
@@ -84,11 +97,13 @@ export interface ConfirmProviderProps {
   children: ReactNode;
   /** Libellés par défaut de toutes les confirmations de l'application. */
   labels?: ConfirmLabels;
+  /** `data-testid` par défaut de toutes les confirmations de l'application. */
+  testIds?: ConfirmTestIds;
 }
 
 /** À poser une fois, haut dans l'arbre. Rend la fenêtre partagée. */
-export function ConfirmProvider({ children, labels }: ConfirmProviderProps) {
-  const { confirm, dialog } = useConfirmDialog(labels);
+export function ConfirmProvider({ children, labels, testIds }: ConfirmProviderProps) {
+  const { confirm, dialog } = useConfirmDialog(labels, testIds);
 
   return (
     <ConfirmContext.Provider value={confirm}>

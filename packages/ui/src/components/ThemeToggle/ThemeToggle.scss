@@ -1,3 +1,14 @@
+// ThemeToggle — Component Styles
+//
+// Ne couvre QUE les variants historiques `dropdown` et `toggle`.
+//
+// Le variant `segmented` n'a AUCUN style ici, volontairement : il rend le
+// balisage canonique `.sidebar-nav__switch` / `.sidebar-nav__switch-tab`, dont
+// les règles vivent dans `SidebarNav.scss` (@umbeli-com/layout), livrées par
+// `@umbeli-com/layout/styles/sidebar.css` — déjà importé par toutes les apps
+// qui portent la sidebar canonique. Les recopier ici donnerait deux sources
+// pour un même pixel, donc la dérive garantie.
+
 .theme-toggle {
   display: flex;
   gap: 4px;

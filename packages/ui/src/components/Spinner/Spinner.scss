@@ -44,6 +44,18 @@
   border-width: 3px;
 }
 
+// Diamètre libre (`size={40}`) : la prop pose `--spinner-size` et
+// `--spinner-thickness` en style inline, cette règle les consomme. Les replis
+// reprennent le cran `md`, pour qu'une variable absente ne fasse pas
+// disparaître l'anneau. `--spinner-thickness` est aussi la poignée des apps
+// dont l'anneau maison est plus fin que l'échelle (Profilum : 1.5px sur 16px,
+// UmbeliumManager : 2px sur 40px).
+.spinner--custom .spinner__ring {
+  width: var(--spinner-size, 20px);
+  height: var(--spinner-size, 20px);
+  border-width: var(--spinner-thickness, 2px);
+}
+
 // Libellé lu par les lecteurs d'écran, invisible à l'œil.
 .spinner__label {
   position: absolute;
@@ -68,4 +80,30 @@
   .spinner__ring {
     animation-duration: 2.4s;
   }
+}
+
+// ── `isolate` : pare-feu contre le `.spinner` LOCAL des apps ─────────────
+// Chez Webum admin et Profilum, `.spinner` n'est pas une enveloppe mais
+// L'ANNEAU (20px/2px et 16px/1.5px, `border-radius: 50%`, `animation: spin`).
+// Cette feuille étant chargée après celle du paquet, l'enveloppe du composant
+// héritait d'un second anneau, d'une taille fixe et d'une rotation autour du
+// vrai. On re-déclare ici, en (0,2,0), l'enveloppe telle que le paquet la
+// veut — y compris les propriétés que le paquet laisse sinon à l'initiale,
+// puisque ce sont exactement celles que l'app pose.
+// Opt-in : sans `isolate`, le rendu est celui d'avant, à l'identique.
+.spinner.spinner--isolated {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  vertical-align: middle;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  animation: none;
 }

@@ -12,7 +12,12 @@ export type {
 
 // Utilities
 export { createBillingClient } from './utils/BillingClient';
-export type { BillingClient, BillingClientConfig, SubscriptionStatus } from './utils/BillingClient';
+export type {
+  AppCheckoutOptions, AppCheckoutResult, BillingAccessTokenSource, BillingActionResult,
+  BillingClient, BillingClientConfig, BillingClientLabels, BillingTenant, CancelOptions,
+  RawSubscription, ResumeOptions, SubscriptionPlanDetails, SubscriptionStatus,
+  SubscriptionStatusLike, SubscriptionStatusValue, TenantScopedOptions,
+} from './utils/BillingClient';
 
 export {
   trialDaysLeft,

@@ -90,3 +90,64 @@
 .tabs__content {
   flex: 1;
 }
+
+// ── Barre seule (`renderPanel={false}`) ─────────────────────────────────────
+// Sans panneau, la barre ne doit ni réserver la gouttière du contenu, ni
+// s'étirer sur toute la largeur : sinon impossible de la poser dans un en-tête
+// à côté d'un titre (Anonymum Front3, Monitorum VisionBoard).
+.tabs--no-panel {
+  display: inline-flex;
+
+  .tabs__list {
+    margin-bottom: 0;
+  }
+}
+
+// ── Variante « segmented » ──────────────────────────────────────────────────
+// Bascule compacte : l'onglet actif est une pastille claire posée dans le
+// rail, pas un bloc de couleur de marque. C'est la forme que les apps
+// redessinaient à la main pour un « Texte | Documents » ou un
+// « Trajectoire | Niveaux » qui tient dans un en-tête.
+.tabs--segmented {
+  .tabs__list {
+    gap: 2px;
+    padding: 3px;
+    border-radius: 12px;
+    // `-bg` et non `-surface-alt` : le rail d'un segmented est le fond, la
+    // pastille active est la carte posée dessus (cf. tokens.scss, « fond de
+    // page / fond des segmented »). L'inverse donnerait du blanc sur blanc.
+    background-color: var(--theme-color-neutral-bg, #F8F9FB);
+  }
+
+  .tabs__tab {
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--theme-color-neutral-text-muted, #6B7280);
+  }
+
+  .tabs__tab:hover {
+    color: var(--theme-color-neutral-text, #374151);
+  }
+
+  .tabs__tab--active,
+  .tabs__tab--active:hover {
+    background-color: var(--theme-color-neutral-surface-alt, #FFFFFF);
+    color: var(--theme-color-brand-primary, #030174);
+    // En thème clair, la pastille (#ffffff) se détache seule du rail (#f8f9fb).
+    // En thème SOMBRE les deux tokens se touchent — rail #0f172a, pastille
+    // #111827, soit un rapport de contraste de 1,02:1 : sans ce liseré, la
+    // pastille n'existe plus à l'écran et il ne reste que la couleur du texte
+    // pour dire quel onglet est actif. `inset` et non `border` : la boîte ne
+    // change pas, donc les onglets ne sautent pas d'un pixel à la sélection.
+    box-shadow:
+      inset 0 0 0 1px var(--theme-color-neutral-border, #D1D5DB),
+      0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  .tabs__tab-icon {
+    font-size: 14px;
+  }
+}

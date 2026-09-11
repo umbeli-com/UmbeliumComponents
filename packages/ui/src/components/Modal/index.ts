@@ -1,9 +1,17 @@
-export { Modal, type ModalProps, type ModalSize, type ModalLabels } from './Modal';
+export {
+  Modal,
+  type ModalProps,
+  type ModalSize,
+  type ModalLength,
+  type ModalLabels,
+  type ModalTestIds,
+} from './Modal';
 export {
   ConfirmDialog,
   type ConfirmDialogProps,
   type ConfirmRequest,
   type ConfirmLabels,
+  type ConfirmTestIds,
 } from './ConfirmDialog';
 export {
   ConfirmProvider,
