@@ -13,18 +13,18 @@ import {
   Legend
 } from 'recharts';
 
-interface DataPoint {
+export interface DataPoint {
   name: string;
   [key: string]: string | number;
 }
 
-interface ChartSeries {
+export interface ChartSeries {
   key: string;
   name: string;
   color: string;
 }
 
-interface DetailedChartProps {
+export interface DetailedChartProps {
   data: DataPoint[];
   series: ChartSeries[];
   type?: 'line' | 'area' | 'bar';

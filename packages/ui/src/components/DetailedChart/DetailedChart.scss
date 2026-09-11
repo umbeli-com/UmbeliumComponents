@@ -1,0 +1,131 @@
+// DetailedChart — Component Styles
+//
+// Chrome du graphique détaillé (recharts). Le composant n'émet que trois
+// classes propres : `.detailed-chart`, `__title`, `__container`. Le reste du
+// DOM est produit par recharts ; on ne cible que ce que son style inline laisse
+// libre — typographie de la légende et de l'infobulle, plus le décor SVG des
+// axes (posé en attributs de présentation, donc surclassable). Jamais les
+// couleurs de séries, qui viennent de la prop `series[].color`.
+//
+// Couleurs : JAMAIS de hex en dur dans une valeur — uniquement des tokens de
+// thème. Le mode sombre est piloté par ces variables, donc AUCUN bloc
+// `.dark` / `[data-theme]` ici. Les tokens réels de la suite sont préfixés
+// `neutral-` / `brand-` ; on garde l'alias court en second cran de repli pour
+// les apps qui exposent l'autre convention, et un hex en tout dernier recours.
+
+$c-border:      var(--theme-color-neutral-border, var(--theme-color-border, #d1d5db));
+$c-text:        var(--theme-color-neutral-text, var(--theme-color-text, #1a1a2e));
+$c-text-muted:  var(--theme-color-neutral-text-muted, var(--theme-color-text-muted, #6b7280));
+
+// ── Bloc ─────────────────────────────────────────────────────────────────
+.detailed-chart {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  // ResponsiveContainer mesure son parent : sans `min-width: 0`, le bloc ne
+  // rétrécit jamais dans une grille/flex et le graphique déborde.
+  min-width: 0;
+}
+
+.detailed-chart__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: $c-text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detailed-chart__container {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  // La hauteur est posée en style inline par la prop `height`.
+}
+
+// ── Légende (DOM HTML rendu par recharts) ────────────────────────────────
+// recharts pose `padding`/`margin`/`text-align` en inline sur le <ul> et
+// `display`/`margin-right` sur chaque <li> : on ne les combat pas. La couleur
+// du libellé est celle de la série (inline) — voulu. Reste la typographie.
+.detailed-chart {
+  .recharts-legend-wrapper {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .recharts-legend-item {
+    // Aligne la pastille SVG sur la ligne de base du texte.
+    vertical-align: middle;
+  }
+
+  .recharts-legend-item-text {
+    font-weight: 500;
+    vertical-align: middle;
+  }
+
+  // ── Infobulle (DOM HTML rendu par recharts) ────────────────────────────
+  // La BOÎTE de l'infobulle est hors de portée du CSS d'auteur :
+  // DefaultTooltipContent (recharts 2.15.4) construit
+  //   finalStyle = { margin:0, padding:10, backgroundColor:'#fff',
+  //                  border:'1px solid #ccc', whiteSpace:'nowrap', ...contentStyle }
+  // et le pose EN INLINE sur `.recharts-default-tooltip`. Fond et bordure sont
+  // donc toujours inline — même quand l'app ne passe aucun `contentStyle` —, et
+  // aucune règle CSS ne peut les atteindre sans `!important` (proscrit ici).
+  // Le seul point de réglage est `contentStyle` dans le .tsx, déjà tokenisé.
+  // On ne garde ici QUE ce que l'inline laisse libre : couleur du texte et
+  // typographie.
+  //
+  // NB : `color` n'est jamais posé en inline sur la boîte — c'est cette règle
+  // qui rend l'infobulle lisible en thème sombre (encre claire sur le
+  // `--theme-color-neutral-surface-alt` du `contentStyle`). Une app qui
+  // remplacerait le Tooltip en abandonnant `contentStyle` retomberait sur le
+  // #fff inline de recharts et devrait alors fournir son propre fond.
+  .recharts-tooltip-wrapper {
+    outline: none;
+    z-index: 1;
+  }
+
+  .recharts-default-tooltip {
+    color: $c-text;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .recharts-tooltip-label {
+    // `margin: 0` est posé en inline sur ce <p> (finalLabelStyle) : une marge
+    // d'auteur serait perdue. On respire donc en padding, que recharts ne fixe pas.
+    padding-bottom: 0.35rem;
+    font-weight: 600;
+    color: $c-text-muted;
+  }
+
+  .recharts-tooltip-item-list {
+    list-style: none;
+  }
+
+  .recharts-tooltip-item {
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  // ── Correctif thème sombre (voir rapport) ──────────────────────────────
+  // Le .tsx fige deux couleurs que le consommateur ne peut pas atteindre :
+  //   • `stroke="rgba(0,0,0,0.1)"` sur chaque <CartesianGrid> — invisible sur
+  //     une surface sombre ;
+  //   • `stroke="#7E8594"` sur chaque axe, que CartesianAxis recopie en
+  //     `fill` sur le texte des graduations (`tickProps = { …, stroke: 'none',
+  //     fill: stroke }`) — soit ~4:1 sur le fond sombre, sous le seuil AA.
+  // recharts émet ces valeurs en ATTRIBUTS de présentation SVG, que le CSS
+  // d'auteur surclasse : ces deux règles suffisent, sans `!important`. Elles ne
+  // touchent AUCUNE couleur de série (`series[].color` reste inline sur les
+  // <Line>/<Area>/<Bar>). À supprimer si le .tsx passe un jour les tokens en props.
+  .recharts-cartesian-grid line {
+    stroke: $c-border;
+  }
+
+  .recharts-cartesian-axis-tick-value {
+    fill: $c-text-muted;
+  }
+}

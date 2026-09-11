@@ -1,8 +1,8 @@
 import React from 'react';
 
-type Language = 'fr' | 'en';
+export type Language = 'fr' | 'en';
 
-interface LanguageSwitcherProps {
+export interface LanguageSwitcherProps {
   language: Language;
   onLanguageChange: (lang: Language) => void;
   labels?: {

@@ -1,0 +1,77 @@
+// LanguageSwitcher — Component Styles
+//
+// Le sélecteur reprend trait pour trait le contrôle canonique `.select--md`
+// de Form.scss (même hauteur, même rayon, même anneau de focus) : les deux
+// doivent être indiscernables quand ils cohabitent dans une barre d'outils.
+//
+// Couleurs : JAMAIS de hex en dur dans une valeur — uniquement des tokens de
+// thème. Le mode sombre est piloté par ces variables, donc AUCUN bloc
+// `.dark` / `[data-theme]` ici. Les tokens réels de la suite sont préfixés
+// `neutral-` / `brand-` ; on garde l'alias court en second cran de repli pour
+// les apps qui exposent l'autre convention, et un hex en tout dernier recours.
+
+$c-surface:       var(--theme-color-neutral-surface-alt, var(--theme-color-surface-alt, #ffffff));
+$c-surface-muted: var(--theme-color-neutral-surface-muted, var(--theme-color-surface-muted, #e5e7eb));
+$c-border:        var(--theme-color-neutral-border, var(--theme-color-border, #d1d5db));
+$c-border-strong: var(--theme-color-neutral-border-strong, var(--theme-color-border-strong, #9ca3af));
+$c-text:          var(--theme-color-neutral-text, var(--theme-color-text, #1a1a2e));
+$c-text-muted:    var(--theme-color-neutral-text-muted, var(--theme-color-text-muted, #6b7280));
+$c-primary:       var(--theme-color-brand-primary, var(--theme-color-primary, #030174));
+$c-focus-ring:    var(--theme-color-focus-ring, rgba(3, 1, 116, 0.35));
+
+.language-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.language-switcher__label {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: $c-text;
+}
+
+.language-switcher__select {
+  width: 100%;
+  min-width: 9.5rem;
+  box-sizing: border-box;
+  // Gabarit `.select--md` : jamais sous 16px, sinon Safari iOS zoome au focus.
+  min-height: 44px;
+  padding: 0.6rem 0.8rem;
+  font: inherit;
+  font-size: max(16px, 0.9375rem);
+  color: $c-text;
+  background: $c-surface;
+  border: 1px solid $c-border;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  // On garde le chevron natif : le redessiner imposerait une couleur en dur
+  // dans un data-URI, que le thème sombre ne pourrait pas repeindre.
+
+  &:hover:not(:disabled):not(:focus) {
+    border-color: $c-border-strong;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $c-primary;
+    box-shadow: 0 0 0 3px $c-focus-ring;
+  }
+
+  &:disabled {
+    background: $c-surface-muted;
+    color: $c-text-muted;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  // Les <option> héritent mal du thème sur Windows/Chrome : on les repeint.
+  option {
+    color: $c-text;
+    background: $c-surface;
+  }
+}
