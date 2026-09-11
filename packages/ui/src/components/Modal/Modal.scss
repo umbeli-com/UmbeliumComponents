@@ -1,0 +1,253 @@
+// Modal / ConfirmDialog Component Styles
+//
+// Classes préfixées `umb-` : le composant est rendu dans un portail sous
+// `<body>`, hors de la feuille de style de l'app — or sept applications
+// définissent déjà leur propre `.modal` / `.modal-overlay`. Un nom distinct
+// évite qu'un import global de @umbeli-com/ui/styles ne repeigne les fenêtres
+// maison qui n'ont pas encore migré.
+
+.umb-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100; // au-dessus du tiroir de sidebar (1000/1001)
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  // Voile : seul littéral de couleur du fichier, et il est le repli d'un
+  // jeton (`--theme-color-overlay`) que les apps peuvent surcharger.
+  background-color: var(--theme-color-overlay, rgba(0, 0, 0, 0.45));
+  animation: umb-modal-backdrop-in 0.14s ease-out;
+}
+
+.umb-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  min-width: 0;
+  background-color: var(--theme-color-neutral-surface-alt, #ffffff);
+  border: 1px solid var(--theme-color-neutral-border, #d1d5db);
+  border-radius: 16px;
+  box-shadow: var(--theme-color-shadow-lg, 0 18px 48px rgba(0, 0, 0, 0.22));
+  color: var(--theme-color-neutral-text, #1a1a2e);
+  outline: none;
+  animation: umb-modal-in 0.16s ease-out;
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-color-brand-primary, #030174);
+    outline-offset: 2px;
+  }
+
+  // ── Tailles ──────────────────────────────────────────────────────────────
+  &--sm { max-width: 440px; }
+  &--md { max-width: 640px; }
+  &--lg { max-width: 860px; }
+  &--xl { max-width: 1120px; }
+}
+
+.umb-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--theme-color-neutral-border, #d1d5db);
+}
+
+.umb-modal__title {
+  margin: 0;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--theme-color-neutral-text, #1a1a2e);
+}
+
+.umb-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  line-height: 1;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background-color: var(--theme-color-neutral-bg, #f8f9fb);
+    color: var(--theme-color-neutral-text, #1a1a2e);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-color-brand-primary, #030174);
+    outline-offset: 2px;
+  }
+}
+
+.umb-modal__body {
+  flex: 1;
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.umb-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  border-top: 1px solid var(--theme-color-neutral-border, #d1d5db);
+}
+
+// Champ de saisie rendu par la fenêtre elle-même (confirmation par frappe) :
+// les apps n'ont pas toutes la même classe `.input`.
+.umb-modal__input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--theme-color-neutral-text, #1a1a2e);
+  background-color: var(--theme-color-neutral-bg, #f8f9fb);
+  border: 1px solid var(--theme-color-neutral-border-strong, #9ca3af);
+  border-radius: 8px;
+  outline: none;
+
+  &:focus-visible {
+    border-color: var(--theme-color-brand-primary, #030174);
+    box-shadow: 0 0 0 3px var(--theme-color-focus-ring, rgba(3, 1, 116, 0.35));
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// ── ConfirmDialog ──────────────────────────────────────────────────────────
+
+.umb-confirm {
+  .umb-modal__header {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .umb-modal__body {
+    padding-top: 10px;
+  }
+}
+
+.umb-confirm__content {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.umb-confirm__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--theme-color-danger, #dc2626);
+}
+
+.umb-confirm__text {
+  min-width: 0;
+  flex: 1;
+}
+
+.umb-confirm__body {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+  white-space: pre-line;
+}
+
+.umb-confirm__type-label {
+  display: block;
+  margin-top: 14px;
+  font-size: 0.75rem;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+}
+
+.umb-confirm__type-target {
+  color: var(--theme-color-neutral-text, #1a1a2e);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+// L'action destructrice porte le rouge sémantique, pas la couleur de marque.
+.umb-confirm__action--danger {
+  background-color: var(--theme-color-danger, #dc2626);
+  color: var(--theme-color-brand-on-primary, #ffffff);
+
+  &:hover:not(:disabled),
+  &:active:not(:disabled) {
+    background-color: var(--theme-color-danger, #dc2626);
+    filter: brightness(0.92);
+  }
+
+  &:focus-visible {
+    outline-color: var(--theme-color-danger, #dc2626);
+  }
+}
+
+// ── Animations ─────────────────────────────────────────────────────────────
+
+@keyframes umb-modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes umb-modal-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .umb-modal__backdrop,
+  .umb-modal {
+    animation: none;
+  }
+}
+
+// ── Mobile ─────────────────────────────────────────────────────────────────
+
+@media (max-width: 480px) {
+  .umb-modal__backdrop {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .umb-modal {
+    max-height: calc(100vh - 24px);
+  }
+
+  .umb-modal__header,
+  .umb-modal__footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .umb-modal__body {
+    padding: 16px;
+  }
+
+  .umb-modal__footer .button {
+    flex: 1;
+  }
+}

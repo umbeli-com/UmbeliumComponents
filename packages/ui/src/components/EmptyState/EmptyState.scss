@@ -1,0 +1,75 @@
+// EmptyState Component Styles
+// Panneau « rien ici pour l'instant » (réf. Webum admin .empty-state,
+// Servum .empty-state, Anonymum .empty-state).
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem 1.5rem;
+  text-align: center;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+}
+
+.empty-state--compact {
+  padding: 2rem 1rem;
+  gap: 0.5rem;
+}
+
+.empty-state__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background-color: var(--theme-color-neutral-surface, #e5e7eb);
+  color: var(--theme-color-neutral-text-subtle, #9ca3af);
+
+  .empty-state--compact & {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.empty-state__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--theme-color-neutral-text, #1a1a2e);
+
+  .empty-state--compact & {
+    font-size: 1rem;
+  }
+}
+
+.empty-state__description {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
+}
+
+.empty-state__action {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 480px) {
+  .empty-state {
+    padding: 2.5rem 1rem;
+  }
+
+  // Même spécificité que la règle ci-dessus, donc `--compact` doit se
+  // redéclarer ici : sans ça la variante resserrée devenait PLUS large que
+  // sa valeur nominale sur mobile.
+  .empty-state--compact {
+    padding: 2rem 1rem;
+  }
+}

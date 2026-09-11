@@ -1,0 +1,275 @@
+// Form Primitives — Component Styles
+// .field / .input / .select / .textarea / .checkbox / .form-grid
+//
+// Sept apps redéclaraient ces règles (Scrapium `.scrp-input`, Dialum
+// `.dialum-input`, Webum admin `.input`/`.form-group`, Profilum `.field`…).
+// Source canonique unique : ce fichier.
+//
+// Couleurs : JAMAIS de hex en dur dans une valeur — uniquement des tokens de
+// thème. Le mode sombre est piloté par ces variables, donc AUCUN bloc
+// `.dark` / `[data-theme]` ici. Les tokens réels de la suite sont préfixés
+// `neutral-` / `brand-` ; on garde l'alias court en second cran de repli pour
+// les apps qui exposent l'autre convention, et un hex en tout dernier recours
+// (aligné sur styles/tokens.scss, la palette canonique de la suite).
+
+$c-surface:       var(--theme-color-neutral-surface-alt, var(--theme-color-surface-alt, #ffffff));
+$c-surface-muted: var(--theme-color-neutral-surface-muted, var(--theme-color-surface-muted, #e5e7eb));
+$c-border:        var(--theme-color-neutral-border, var(--theme-color-border, #d1d5db));
+$c-border-strong: var(--theme-color-neutral-border-strong, var(--theme-color-border-strong, #9ca3af));
+$c-text:          var(--theme-color-neutral-text, var(--theme-color-text, #1a1a2e));
+$c-text-muted:    var(--theme-color-neutral-text-muted, var(--theme-color-text-muted, #6b7280));
+$c-text-subtle:   var(--theme-color-neutral-text-subtle, var(--theme-color-text-subtle, #9ca3af));
+$c-primary:       var(--theme-color-brand-primary, var(--theme-color-primary, #030174));
+$c-focus-ring:    var(--theme-color-focus-ring, rgba(3, 1, 116, 0.35));
+$c-danger:        var(--theme-color-danger, #dc2626);
+$c-danger-soft:   var(--theme-color-danger-soft, #fde8e8);
+
+// ── Field ────────────────────────────────────────────────────────────────
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+
+  // Occupe toute la largeur d'une .form-grid (ex-`.scrp-span2` de Scrapium).
+  &--wide {
+    grid-column: 1 / -1;
+  }
+
+  // <Field error> pose aussi `.is-invalid` sur ce conteneur : crochet laissé
+  // volontairement libre pour les apps (le contrôle, lui, est déjà repeint
+  // par le sélecteur `[aria-invalid='true']` plus bas).
+}
+
+.field__label {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: $c-text;
+}
+
+.field__required {
+  margin-left: 0.15rem;
+  color: $c-danger;
+  text-decoration: none;
+  cursor: help;
+}
+
+.field__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: $c-text-muted;
+}
+
+.field__error {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: $c-danger;
+}
+
+// ── Contrôles ────────────────────────────────────────────────────────────
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  font: inherit;
+  color: $c-text;
+  background: $c-surface;
+  border: 1px solid $c-border;
+  border-radius: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+
+  &::placeholder {
+    color: $c-text-subtle;
+    opacity: 1;
+  }
+
+  &:hover:not(:disabled):not(:focus) {
+    border-color: $c-border-strong;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $c-primary;
+    box-shadow: 0 0 0 3px $c-focus-ring;
+  }
+
+  &:disabled {
+    background: $c-surface-muted;
+    color: $c-text-muted;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  // `aria-invalid` est posé par <Field error> ; `.is-invalid` par la prop
+  // `invalid` du contrôle. Les deux mènent au même rendu.
+  &[aria-invalid='true'],
+  &.is-invalid {
+    border-color: $c-danger;
+
+    &:focus {
+      box-shadow: 0 0 0 3px $c-danger-soft;
+    }
+  }
+
+  // Tailles. `md` et `lg` ne descendent jamais sous 16px : en dessous, Safari
+  // iOS zoome sur le focus. `sm` est réservé aux UI denses de bureau.
+  &--sm {
+    min-height: 36px;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.85rem;
+    border-radius: 10px;
+  }
+
+  &--md {
+    min-height: 44px; // minimum confortable au pouce
+    padding: 0.6rem 0.8rem;
+    font-size: max(16px, 0.9375rem);
+  }
+
+  &--lg {
+    min-height: 52px;
+    padding: 0.8rem 1rem;
+    font-size: max(16px, 1rem);
+    border-radius: 14px;
+  }
+}
+
+.select {
+  cursor: pointer;
+  // On garde le chevron natif : le redessiner imposerait une couleur en dur
+  // dans un data-URI, que le thème sombre ne pourrait pas repeindre.
+}
+
+.textarea {
+  display: block;
+  resize: vertical;
+  line-height: 1.55;
+  min-height: 92px;
+
+  &--sm {
+    min-height: 72px;
+  }
+
+  &--lg {
+    min-height: 132px;
+  }
+}
+
+// ── Checkbox ─────────────────────────────────────────────────────────────
+.checkbox {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: $c-text;
+  cursor: pointer;
+
+  &--sm {
+    font-size: 0.8rem;
+  }
+
+  &--lg {
+    font-size: 1rem;
+  }
+
+  &.is-disabled {
+    color: $c-text-muted;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.checkbox__input {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin: 0.12rem 0 0;
+  accent-color: $c-primary;
+  cursor: inherit;
+
+  &:focus-visible {
+    outline: 2px solid $c-primary;
+    outline-offset: 2px;
+  }
+
+  &[aria-invalid='true'],
+  &.is-invalid {
+    outline: 2px solid $c-danger;
+    outline-offset: 2px;
+  }
+}
+
+// Gabarits portés par l'input : un <Checkbox> sans `label` (le cas normal
+// sous <Field>) n'a pas de `<label>` enveloppant sur lequel s'appuyer.
+.checkbox__input--sm {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.checkbox__input--lg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.checkbox__label {
+  min-width: 0;
+}
+
+// ── FormGrid ─────────────────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+
+  &--cols-1 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &--cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  &--cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  &--gap-sm {
+    gap: 0.6rem;
+  }
+
+  &--gap-md {
+    gap: 1rem;
+  }
+
+  &--gap-lg {
+    gap: 1.5rem;
+  }
+}
+
+// Repli responsive : sans lui les champs restent côte à côte sur 160px de
+// large (le bug corrigé dans l'admin Webum).
+@media (max-width: 900px) {
+  .form-grid--cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .form-grid--cols-2,
+  .form-grid--cols-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .field--wide {
+    grid-column: span 1;
+  }
+}
