@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Zap, Trash2 } from 'lucide-react';
 
-export interface ChatMessage {
+export interface AIChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
@@ -18,7 +18,7 @@ export interface WorkspaceContext {
 export interface AIChatPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  messages: ChatMessage[];
+  messages: AIChatMessage[];
   onSendMessage: (message: string) => Promise<void>;
   onClearHistory: () => void;
   isLoading?: boolean;

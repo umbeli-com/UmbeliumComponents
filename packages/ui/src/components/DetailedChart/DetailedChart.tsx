@@ -13,7 +13,7 @@ import {
   Legend
 } from 'recharts';
 
-export interface DataPoint {
+export interface DetailedChartPoint {
   name: string;
   [key: string]: string | number;
 }
@@ -25,7 +25,7 @@ export interface ChartSeries {
 }
 
 export interface DetailedChartProps {
-  data: DataPoint[];
+  data: DetailedChartPoint[];
   series: ChartSeries[];
   type?: 'line' | 'area' | 'bar';
   height?: number;

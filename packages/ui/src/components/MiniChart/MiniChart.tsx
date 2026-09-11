@@ -1,11 +1,11 @@
 
-export interface DataPoint {
+export interface MiniChartPoint {
   label: string;
   value: number;
 }
 
 export interface MiniChartProps {
-  data: DataPoint[];
+  data: MiniChartPoint[];
   type?: 'bar' | 'line';
   height?: number;
   color?: 'primary' | 'secondary' | 'success';

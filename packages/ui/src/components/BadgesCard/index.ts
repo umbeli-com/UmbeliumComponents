@@ -1,2 +1,2 @@
 export { BadgesCard } from './BadgesCard';
-export type { Badge, BadgesCardProps } from './BadgesCard';
+export type { AchievementBadge, BadgesCardProps } from './BadgesCard';

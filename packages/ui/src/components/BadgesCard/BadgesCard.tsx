@@ -1,6 +1,6 @@
 import { Trophy, Flame, Rocket, Star, Heart, Award } from 'lucide-react';
 
-export interface Badge {
+export interface AchievementBadge {
   id: string;
   name: string;
   description: string;
@@ -17,7 +17,7 @@ export interface BadgesCardProps {
   t: (key: string) => string;
 }
 
-const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: number, t: (key: string) => string): Badge[] => {
+const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: number, t: (key: string) => string): AchievementBadge[] => {
   return [
     {
       id: 'first-post',
@@ -76,7 +76,7 @@ const getBadges = (currentStreak: number, totalPosts: number, weeklyGoalMet: num
   ];
 };
 
-const BadgeIcon = ({ icon, unlocked }: { icon: Badge['icon']; unlocked: boolean }) => {
+const BadgeIcon = ({ icon, unlocked }: { icon: AchievementBadge['icon']; unlocked: boolean }) => {
   const color = unlocked ? '#eab308' : '#9ca3af';
   switch (icon) {
     case 'trophy': return <Trophy size={24} color={color} />;

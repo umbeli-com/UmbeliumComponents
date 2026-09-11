@@ -1,2 +1,2 @@
 export { AIChatPanel } from './AIChatPanel';
-export type { ChatMessage, WorkspaceContext, AIChatPanelProps } from './AIChatPanel';
+export type { AIChatMessage, WorkspaceContext, AIChatPanelProps } from './AIChatPanel';

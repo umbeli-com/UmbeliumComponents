@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, ArrowRight } from 'lucide-react';
 
-export interface ChatMessage {
+export interface OnboardingMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp?: string;
@@ -26,7 +26,7 @@ export interface OnboardingChatProps {
   workspaceName: string;
   onComplete: (data: OnboardingData) => void;
   onContinue: () => void;
-  onSendMessage: (message: string, chatHistory: ChatMessage[], language: 'fr' | 'en') => Promise<{
+  onSendMessage: (message: string, chatHistory: OnboardingMessage[], language: 'fr' | 'en') => Promise<{
     message: string;
     isComplete: boolean;
     extractedData: OnboardingData | null;
@@ -58,7 +58,7 @@ export function OnboardingChat({
   translations = {}
 }: OnboardingChatProps) {
   const t = { ...defaultTranslations, ...translations };
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<OnboardingMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -114,7 +114,7 @@ export function OnboardingChat({
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
 
-    const userMessage: ChatMessage = {
+    const userMessage: OnboardingMessage = {
       role: 'user',
       content: inputValue.trim(),
       timestamp: new Date().toISOString(),
@@ -129,7 +129,7 @@ export function OnboardingChat({
     try {
       const response = await onSendMessage(userMessage.content, messages, language);
       
-      const assistantMessage: ChatMessage = {
+      const assistantMessage: OnboardingMessage = {
         role: 'assistant',
         content: response.message,
         timestamp: new Date().toISOString(),
