@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 
-interface AppShellProps {
+export interface AppShellProps {
   children: ReactNode;
   sidebar: ReactNode;
   topbar: ReactNode | ((props: { onMenuClick: () => void }) => ReactNode);

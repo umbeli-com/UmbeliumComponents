@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 // Styles are imported separately via @umbeli-com/ui/styles
 
-interface CardProps {
+export interface CardProps {
   children: ReactNode;
   className?: string;
   padding?: 'sm' | 'md' | 'lg';

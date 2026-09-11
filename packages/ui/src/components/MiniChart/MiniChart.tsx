@@ -1,10 +1,10 @@
 
-interface DataPoint {
+export interface DataPoint {
   label: string;
   value: number;
 }
 
-interface MiniChartProps {
+export interface MiniChartProps {
   data: DataPoint[];
   type?: 'bar' | 'line';
   height?: number;

@@ -1,14 +1,14 @@
 import { useState, ReactNode } from 'react';
 // Styles are imported separately via @umbeli-com/ui/styles
 
-interface Tab {
+export interface Tab {
   id: string;
   label: string;
   icon?: ReactNode;
   content: ReactNode;
 }
 
-interface TabsProps {
+export interface TabsProps {
   tabs: Tab[];
   defaultTab?: string;
   onChange?: (tabId: string) => void;

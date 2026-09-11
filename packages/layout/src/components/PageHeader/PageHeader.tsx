@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 // Styles are imported separately via @umbeli-com/layout/styles
 
-interface PageHeaderProps {
+export interface PageHeaderProps {
   title: string;
   subtitle?: string;
   period?: string;

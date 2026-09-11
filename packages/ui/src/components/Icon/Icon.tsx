@@ -185,7 +185,7 @@ const iconMap: Record<string, LucideIcon> = {
   'film-outline': Film,
 };
 
-interface IconProps {
+export interface IconProps {
   name?: string;
   size?: number | string;
   color?: string;

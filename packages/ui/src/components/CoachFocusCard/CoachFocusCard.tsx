@@ -1,6 +1,6 @@
-import { Button } from '@umbeli-com/ui';
+import { Button } from '../Button';
 
-interface CoachFocusCardProps {
+export interface CoachFocusCardProps {
   title: string;
   message: string;
   actionLabel?: string;

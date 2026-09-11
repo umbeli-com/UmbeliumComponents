@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-interface CalendarEvent {
+export interface CalendarEvent {
   id: string | number;
   title: string;
   date: Date;
@@ -8,7 +8,7 @@ interface CalendarEvent {
   status?: 'scheduled' | 'draft' | 'published';
 }
 
-interface CalendarBoardProps {
+export interface CalendarBoardProps {
   events: CalendarEvent[];
   onEventClick?: (event: CalendarEvent) => void;
   onDateClick?: (date: Date) => void;

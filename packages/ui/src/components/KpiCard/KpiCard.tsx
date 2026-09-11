@@ -1,7 +1,7 @@
-import { Icon } from '@umbeli-com/ui';
+import { Icon } from '../Icon';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
-interface KpiCardProps {
+export interface KpiCardProps {
   label: string;
   value: string | number;
   icon?: string;

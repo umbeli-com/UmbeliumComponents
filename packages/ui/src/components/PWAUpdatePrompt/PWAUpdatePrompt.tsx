@@ -1,6 +1,6 @@
 import { Button } from '../Button';
 
-interface PWAUpdatePromptProps {
+export interface PWAUpdatePromptProps {
   isVisible: boolean;
   onUpdate: () => void;
   onDismiss: () => void;

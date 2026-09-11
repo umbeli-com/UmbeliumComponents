@@ -13,7 +13,7 @@ import {
   X
 } from 'lucide-react';
 
-interface Workspace {
+export interface Workspace {
   id: string;
   name: string;
   slug?: string;
@@ -23,9 +23,9 @@ interface Workspace {
 /** Icône de nav : signature structurelle (size/className) plutôt que
  *  LucideIcon — découple la VERSION de lucide-react du package de celle de
  *  l'app consommatrice (leurs types de ref divergent entre versions). */
-type NavIcon = ComponentType<{ size?: number | string; className?: string }>;
+export type NavIcon = ComponentType<{ size?: number | string; className?: string }>;
 
-interface NavItem {
+export interface NavItem {
   path: string;
   label: string;
   icon: NavIcon;
@@ -55,7 +55,7 @@ export interface SidebarMobile {
   closeLabel?: string;
 }
 
-interface SidebarNavProps {
+export interface SidebarNavProps {
   // ── Workspaces (optionnel — l'en-tête n'apparaît que si fournis) ──
   workspaces?: Workspace[];
   currentWorkspace?: Workspace | null;

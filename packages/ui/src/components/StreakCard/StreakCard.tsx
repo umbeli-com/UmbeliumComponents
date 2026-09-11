@@ -1,6 +1,6 @@
 import { Flame, Trophy, Rocket } from 'lucide-react';
 
-interface StreakCardProps {
+export interface StreakCardProps {
   currentStreak: number;
   longestStreak: number;
   postsThisWeek: number;

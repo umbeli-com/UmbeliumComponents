@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, ArrowRight } from 'lucide-react';
 
-interface ChatMessage {
+export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp?: string;
@@ -21,7 +21,7 @@ export interface OnboardingData {
   unique_value_proposition?: string;
 }
 
-interface OnboardingChatProps {
+export interface OnboardingChatProps {
   workspaceId: string;
   workspaceName: string;
   onComplete: (data: OnboardingData) => void;

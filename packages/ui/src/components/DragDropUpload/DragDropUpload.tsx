@@ -1,8 +1,8 @@
 import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { Upload } from 'lucide-react';
-import { Button } from '@umbeli-com/ui';
+import { Button } from '../Button';
 
-interface DragDropUploadProps {
+export interface DragDropUploadProps {
   onFileSelect: (file: File) => void;
   accept?: string;
   maxSizeMB?: number;

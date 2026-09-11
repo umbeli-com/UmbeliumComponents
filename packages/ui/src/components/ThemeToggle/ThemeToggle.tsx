@@ -1,7 +1,7 @@
 import { Moon, Sun, Monitor } from 'lucide-react';
 import { Button } from '../Button';
 
-interface ThemeToggleProps {
+export interface ThemeToggleProps {
   variant?: 'dropdown' | 'toggle';
   size?: 'sm' | 'md';
   theme: 'light' | 'dark' | 'system';

@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Menu, Bell, Zap } from 'lucide-react';
 
-interface TopbarProps {
+export interface TopbarProps {
   onMenuClick?: () => void;
   onAICoachClick?: () => void;
   isAICoachOpen?: boolean;

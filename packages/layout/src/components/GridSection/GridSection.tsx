@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 // Styles are imported separately via @umbeli-com/layout/styles
 
-interface GridSectionProps {
+export interface GridSectionProps {
   children: ReactNode;
   title?: string;
   columns?: number;

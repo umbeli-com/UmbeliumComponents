@@ -1,7 +1,7 @@
-import { Icon } from '@umbeli-com/ui';
+import { Icon } from '../Icon';
 import { Check, Circle, CircleDot } from 'lucide-react';
 
-interface ActionItem {
+export interface ActionItem {
   id: string | number;
   title: string;
   description?: string;
@@ -10,7 +10,7 @@ interface ActionItem {
   icon?: string;
 }
 
-interface ActionListProps {
+export interface ActionListProps {
   items: ActionItem[];
   onItemClick?: (item: ActionItem) => void;
   emptyMessage?: string;

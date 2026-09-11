@@ -1,6 +1,6 @@
 import { Trophy, Flame, Rocket, Star, Heart, Award } from 'lucide-react';
 
-interface Badge {
+export interface Badge {
   id: string;
   name: string;
   description: string;
@@ -10,7 +10,7 @@ interface Badge {
   maxProgress?: number;
 }
 
-interface BadgesCardProps {
+export interface BadgesCardProps {
   currentStreak: number;
   totalPosts: number;
   weeklyGoalMet: number;

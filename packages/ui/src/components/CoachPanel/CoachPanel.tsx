@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-interface CoachPanelProps {
+export interface CoachPanelProps {
   message: string;
   why?: string;
   actions?: Array<{
