@@ -120,28 +120,50 @@ import '@umbeli-com/layout/styles';
 
 ## Synchronisation vers les apps (vendoring)
 
-Les apps NE consomment PAS ce repo directement : chacune embarque une copie
-`dist-only` du package (`"@umbeli-com/auth": "file:vendor/umbeli-components/auth"`).
-Après un changement ici :
+Les apps NE consomment PAS ce repo depuis le registry : chacune embarque une copie du
+package (`"@umbeli-com/auth": "file:vendor/umbeli-components/auth"`), pour que
+`docker build` n'ait pas besoin d'un token GitHub Packages. Il y a **41 copies réparties
+dans 9 apps**.
+
+Tant que la recopie était un `rsync` manuel, les copies dérivaient sans bruit — plusieurs
+apps tournaient encore sur un `dist` d'avril. C'est maintenant scripté :
 
 ```bash
-# 1. Builder le package modifié
-cd packages/<pkg> && npm run build
-
-# 2. Rsync le dist vers CHAQUE copie vendorisée
-#    Emplacements connus (2026-08) :
-#    Anonymum/vendor/umbeli-components/<pkg>
-#    Dialum/vendor/umbeli-components/<pkg>
-#    Monitorum/vendor/umbeli-components/<pkg>
-#    Scrapium/vendor/umbeli-components/<pkg>
-#    Webum/apps/admin/vendor/umbeli-components/<pkg>
-#    Socialum/components/<pkg>   (⚠️ Socialum sert le SRC de son package layout)
-rsync -a --delete packages/<pkg>/dist/ <app>/vendor/umbeli-components/<pkg>/dist/
-
-# 3. Committer le repo de CHAQUE app synchronisée
+pnpm vendor:list    # la carte : qui embarque quoi, sous quelle forme
+pnpm vendor:check   # ne touche à rien, sort en 1 si une copie a dérivé
+pnpm vendor:sync    # build + pousse la source canonique dans chaque copie
 ```
 
-Noesium consomme les packages en workspace pnpm (pas de vendor).
+`vendor:sync` découvre les copies en parcourant la suite (pas de liste en dur : une
+nouvelle app est prise en compte toute seule), reconstruit les packages, puis recopie :
+
+| | ce qui est recopié |
+|---|---|
+| copie `dist` (la majorité) | `dist/`, `styles.d.ts` |
+| copie `src+dist` (Noesium en workspace pnpm, Socialum, UmbeliumManager) | `src/`, `dist/`, `styles.d.ts` |
+| `package.json` | seulement la **forme** : `version`, `exports`, `main`, `module`, `types`, `files`, `peerDependencies` |
+
+Les **dépendances d'une copie ne sont jamais écrasées** : une copie vendorisée en déclare
+volontairement moins que le canon (react, lucide-react… viennent de l'app hôte au moment du
+bundling), et recopier une dep interne y installerait `"@umbeli-com/ui": "workspace:^"`
+dans un contexte `file:` sans workspace, ce qui casse net l'install.
+
+Filtres utiles : `pnpm vendor:sync -- --package ui --app Webum --dry-run`.
+
+Après un `vendor:sync`, **committer le repo de chaque app touchée** — les copies sont
+suivies par git dans chaque app.
+
+### Versions et publication
+
+`publish.yml` saute un package dont la version existe déjà sur le registry. C'est correct,
+mais c'était silencieux : les cinq packages sont restés en `1.0.0` pendant des dizaines de
+commits de features, le job passait au vert **sans rien livrer**. Le release échoue
+maintenant explicitement quand le `src/` d'un package a bougé depuis son dernier bump :
+
+```bash
+node scripts/check-versions.mjs               # que faut-il bumper ?
+node scripts/check-versions.mjs --bump minor  # bumper les packages concernés
+```
 
 ## Développement
 
@@ -172,13 +194,21 @@ Les design tokens (couleurs, typography, spacing, etc.) sont définis dans `@umb
 
 ## Ajouter un nouveau composant
 
-1. Créer le dossier dans `packages/ui/src/components/NomComposant/`
-2. Créer les fichiers:
-   - `NomComposant.tsx` - Composant React
-   - `NomComposant.scss` - Styles
-   - `index.ts` - Export
-3. Exporter dans `packages/ui/src/components/index.ts`
-4. Ajouter le style dans `packages/ui/src/styles/index.scss`
+1. Créer `packages/<pkg>/src/components/NomComposant/` avec :
+   - `NomComposant.tsx` — le composant. **Il n'importe jamais son propre `.scss`**, et
+     jamais `@umbeli-com/<son propre package>` (un import auto-référent casse le build des
+     apps ; quatre composants en souffraient).
+   - `NomComposant.scss` — les styles. Uniquement des `var(--theme-color-*)` avec fallback,
+     jamais de hex en dur : c'est ce qui fait marcher le mode sombre sans bloc dédié.
+   - `index.ts` — réexporte le composant **et ses types de props**.
+2. Exporter dans `packages/<pkg>/src/components/index.ts`.
+3. Ajouter `@use '../components/NomComposant/NomComposant';` dans
+   `packages/<pkg>/src/styles/index.scss` — sinon le composant est livré sans style.
+   `node scripts/check-styles.mjs` (aussi lancé en CI) refuse une feuille orpheline.
+4. Bumper la version du package (voir ci-dessus), puis `pnpm vendor:sync`.
+
+Toute chaîne visible par l'utilisateur doit être surchargeable via une prop `labels` /
+`translations`, avec le français par défaut.
 
 ## License
 

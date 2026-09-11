@@ -9,8 +9,12 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r --parallel dev",
-    "lint": "pnpm -r lint",
-    "clean": "pnpm -r clean"
+    "lint": "eslint packages/*/src",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean",
+    "vendor:sync": "node scripts/sync-vendor.mjs",
+    "vendor:check": "node scripts/sync-vendor.mjs --check",
+    "vendor:list": "node scripts/vendor-list.mjs"
   },
   "devDependencies": {
     "typescript": "^5.3.3"
