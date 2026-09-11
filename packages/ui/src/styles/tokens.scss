@@ -1,0 +1,185 @@
+// ==========================================================================
+// Theme Tokens - Palette canonique de la suite Umbelium
+// ==========================================================================
+//
+// Source unique des `--theme-color-*` consommés par TOUS les paquets
+// @umbeli-com/* (ui, layout, billing, auth). Réconcilie les palettes
+// jusqu'ici dupliquées dans chaque app (Socialum, Dialum, Monitorum,
+// Scrapium, UmbeliumManager, Noesium, Anonymum) — valeurs de référence
+// Webum admin (pixel-audit 2026-08 gelé) :
+//   accent #030174 · accent-light #e8e7f5 · text #1a1a2e · bg #f8f9fb
+//
+// Deux points d'entrée :
+//   1. SCSS  — `@use '@umbeli-com/ui/src/styles/tokens';` (via styles/index.scss)
+//      (copies vendorisées de type `src` uniquement : `files` ne publie que dist)
+//   2. CSS   — `import '@umbeli-com/ui/styles/tokens.css';` → dist/styles/tokens.css
+//      L'extension est OBLIGATOIRE : le motif d'exports `"./styles/*":
+//      "./dist/styles/*"` substitue littéralement, donc `.../styles/tokens`
+//      pointerait sur un `dist/styles/tokens` qui n'existe pas.
+//
+// Le mode sombre est piloté par TROIS sélecteurs, tous en usage dans la
+// suite (cf. packages/auth/src/styles/AuthPages.css) :
+//   `html.dark`  (Socialum, Dialum, Monitorum, Scrapium, Anonymum)
+//   `:root[data-theme='dark']`  (UmbeliumManager, Scrapium)
+//   `[data-theme='dark']` nu — AuthPages.css cible `[data-theme='dark']
+//      .auth-page` sans `:root` : sans ce sélecteur, un thème porté par un
+//      wrapper (et non par <html>) repeindrait les pages auth en sombre
+//      pendant que les tokens, eux, resteraient clairs.
+// Un composant tokenisé sur ces variables n'a donc AUCUN bloc sombre à écrire.
+//
+// Une app peut surcharger n'importe quel token après cet import (Scrapium
+// remonte son bleu #1f55b6, Noesium sa palette sombre par défaut) : les
+// one-offs d'app ne vivent PAS ici.
+
+:root {
+  color-scheme: light;
+
+  // ── Surfaces ────────────────────────────────────────────────────────────
+  // bg        : fond de page / fond des segmented (réf Webum --bg)
+  // surface   : panneau posé sur le fond
+  // surface-alt : cartes et modales (le blanc de la suite)
+  // surface-muted : zones désactivées / en retrait
+  --theme-color-neutral-bg: #f8f9fb;
+  --theme-color-neutral-surface: #e5e7eb;
+  --theme-color-neutral-surface-alt: #ffffff;
+  --theme-color-neutral-surface-muted: #e5e7eb;
+  // Fond applicatif complet (shell) — surchargeable par app.
+  // ATTENTION : valeur de `background` (dégradé), PAS une couleur. À consommer
+  // via `background:` uniquement — `background-color: var(--theme-app-bg)`
+  // (ex. l'utilitaire Tailwind `bg-[var(--theme-app-bg)]`) est invalide et
+  // rend le fond transparent.
+  --theme-app-bg: linear-gradient(180deg, #ffffff 0%, #eef0ff 100%);
+
+  // ── Texte & icônes ──────────────────────────────────────────────────────
+  // text : encre canonique #1a1a2e (le gris-900 Tailwind #111827 était une dérive)
+  --theme-color-neutral-text: #1a1a2e;
+  --theme-color-neutral-text-muted: #6b7280;
+  --theme-color-neutral-text-subtle: #9ca3af;
+  --theme-color-neutral-icon: #1f2937;
+  --theme-color-neutral-icon-muted: #6b7280;
+
+  // ── Bordures ────────────────────────────────────────────────────────────
+  --theme-color-neutral-border: #d1d5db;
+  --theme-color-neutral-border-strong: #9ca3af;
+
+  // ── Marque ──────────────────────────────────────────────────────────────
+  // primary-soft = --accent-light Webum #e8e7f5 (#e7e8ff / #eef0ff dérivaient)
+  --theme-color-brand-primary: #030174;
+  --theme-color-brand-primary-soft: #e8e7f5;
+  --theme-color-brand-primary-hover: #02015a;
+  --theme-color-brand-primary-active: #010142;
+  --theme-color-brand-on-primary: #ffffff;
+
+  // ── États sémantiques ───────────────────────────────────────────────────
+  --theme-color-success: #16a34a;
+  --theme-color-success-soft: #e7f6ed;
+  --theme-color-success-text: #15803d;
+  --theme-color-warning: #d97706;
+  --theme-color-warning-soft: #fff1e2;
+  --theme-color-danger: #dc2626;
+  --theme-color-danger-soft: #fde8e8;
+  --theme-color-info: #2563eb;
+  --theme-color-info-soft: #eaf2ff;
+
+  // Focus — anneau dérivé de la marque.
+  --theme-color-focus-ring: rgba(3, 1, 116, 0.35);
+  --theme-color-focus-ring-strong: rgba(3, 1, 116, 0.55);
+
+  // ── Sidebar (consommés par @umbeli-com/layout SidebarNav) ───────────────
+  --theme-color-sidebar-bg: #ffffff;
+  --theme-color-sidebar-surface: #f8f9fb;
+  --theme-color-sidebar-border: #e5e7eb;
+  --theme-color-sidebar-item: #1a1a2e;
+  --theme-color-sidebar-item-muted: #6b7280;
+  --theme-color-sidebar-item-active-bg: #e8e7f5;
+  --theme-color-sidebar-item-active-text: #030174;
+
+  // ── Élévation ───────────────────────────────────────────────────────────
+  // `--theme-color-shadow-sm` garde son préfixe `-color-` : c'est le nom que
+  // SidebarNav (onglet actif du segmented) consomme déjà en production.
+  --theme-color-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --theme-color-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.06);
+  --theme-color-shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.08);
+
+  // ── Rayons ──────────────────────────────────────────────────────────────
+  // Reprend settings/_radius.scss de sm à pill, plus xs = 8px (rayon canonique
+  // des liens de nav, spec Webum). `$radius-2xl` (28px) n'est repris nulle
+  // part dans la suite : pas de token pour lui tant que rien ne le consomme.
+  --theme-radius-xs: 8px;
+  --theme-radius-sm: 12px;
+  --theme-radius-md: 16px;
+  --theme-radius-lg: 20px;
+  --theme-radius-xl: 24px;
+  --theme-radius-pill: 999px;
+}
+
+// ==========================================================================
+// Mode sombre
+// ==========================================================================
+
+// `[data-theme='dark']` nu couvre un thème scopé à un wrapper (le sélecteur
+// sur lequel AuthPages.css s'appuie) ; `:root[data-theme='dark']` est conservé
+// pour sa spécificité supérieure quand l'attribut est bien sur <html>. Pas de
+// symétrique `[data-theme='light']` : un îlot clair DANS un document sombre
+// n'existe nulle part dans la suite et exigerait de dupliquer toute la palette.
+html.dark,
+:root[data-theme='dark'],
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  // ── Surfaces ────────────────────────────────────────────────────────────
+  --theme-color-neutral-bg: #0f172a;
+  --theme-color-neutral-surface: #172033;
+  --theme-color-neutral-surface-alt: #111827;
+  --theme-color-neutral-surface-muted: #1a2436;
+  --theme-app-bg: radial-gradient(circle at top, #14203a 0%, #0b1220 55%, #09101b 100%);
+
+  // ── Texte & icônes ──────────────────────────────────────────────────────
+  --theme-color-neutral-text: #f8fafc;
+  --theme-color-neutral-text-muted: #94a3b8;
+  --theme-color-neutral-text-subtle: #64748b;
+  --theme-color-neutral-icon: #e2e8f0;
+  --theme-color-neutral-icon-muted: #94a3b8;
+
+  // ── Bordures ────────────────────────────────────────────────────────────
+  --theme-color-neutral-border: #243045;
+  --theme-color-neutral-border-strong: #41526f;
+
+  // ── Marque ──────────────────────────────────────────────────────────────
+  // Le navy #030174 est illisible sur fond sombre : on remonte au périwinkle.
+  --theme-color-brand-primary: #7c8cff;
+  --theme-color-brand-primary-soft: rgba(124, 140, 255, 0.14);
+  --theme-color-brand-primary-hover: #99a5ff;
+  --theme-color-brand-primary-active: #6b7dff;
+  --theme-color-brand-on-primary: #0b1020;
+
+  // ── États sémantiques ───────────────────────────────────────────────────
+  --theme-color-success: #4ade80;
+  --theme-color-success-soft: rgba(74, 222, 128, 0.14);
+  --theme-color-success-text: #86efac;
+  --theme-color-warning: #fbbf24;
+  --theme-color-warning-soft: rgba(251, 191, 36, 0.14);
+  --theme-color-danger: #f87171;
+  --theme-color-danger-soft: rgba(248, 113, 113, 0.14);
+  --theme-color-info: #60a5fa;
+  --theme-color-info-soft: rgba(96, 165, 250, 0.14);
+
+  --theme-color-focus-ring: rgba(124, 140, 255, 0.35);
+  --theme-color-focus-ring-strong: rgba(124, 140, 255, 0.55);
+
+  // ── Sidebar ─────────────────────────────────────────────────────────────
+  --theme-color-sidebar-bg: #0b1220;
+  --theme-color-sidebar-surface: #131d31;
+  --theme-color-sidebar-border: #1f2a40;
+  --theme-color-sidebar-item: #e2e8f0;
+  --theme-color-sidebar-item-muted: #94a3b8;
+  --theme-color-sidebar-item-active-bg: rgba(124, 140, 255, 0.16);
+  --theme-color-sidebar-item-active-text: #dbe4ff;
+
+  // ── Élévation ───────────────────────────────────────────────────────────
+  --theme-color-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --theme-color-shadow-md: 0 6px 18px rgba(3, 8, 20, 0.32);
+  --theme-color-shadow-lg: 0 12px 30px rgba(3, 8, 20, 0.4);
+
+  // Les rayons ne changent pas avec le thème.
+}

@@ -1,6 +1,9 @@
 // Umbeli UI Component Styles
 // Import this file in your application to include all component styles
 
+// Design tokens de la suite — DOIT rester en premier, tout le reste les consomme.
+@use 'tokens';
+
 // Component styles
 @use '../components/Button/Button';
 @use '../components/Card/Card';
@@ -20,3 +23,11 @@
 @use '../components/OnboardingChat/OnboardingChat';
 @use '../components/ThemeToggle/ThemeToggle';
 @use '../components/PWAUpdatePrompt/PWAUpdatePrompt';
+@use '../components/Toast/Toast';
+@use '../components/Modal/Modal';
+@use '../components/Badge/Badge';
+@use '../components/EmptyState/EmptyState';
+@use '../components/Spinner/Spinner';
+@use '../components/Form/Form';
+@use '../components/DetailedChart/DetailedChart';
+@use '../components/LanguageSwitcher/LanguageSwitcher';
