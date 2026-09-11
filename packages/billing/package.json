@@ -1,6 +1,6 @@
 {
   "name": "@umbeli-com/billing",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Billing and payment components for Umbeli SaaS applications",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,6 +16,16 @@
       "types": "./dist/utils/BillingClient.d.ts",
       "import": "./dist/utils/BillingClient.js",
       "default": "./dist/utils/BillingClient.js"
+    },
+    "./trial": {
+      "types": "./dist/utils/trial.d.ts",
+      "import": "./dist/utils/trial.js",
+      "default": "./dist/utils/trial.js"
+    },
+    "./context": {
+      "types": "./dist/context/index.d.ts",
+      "import": "./dist/context/index.js",
+      "default": "./dist/context/index.js"
     },
     "./subscription-gate": {
       "types": "./dist/components/SubscriptionGate/index.d.ts",
@@ -44,26 +54,28 @@
   ],
   "scripts": {
     "build": "tsc && npm run build:styles",
+    "typecheck": "tsc --noEmit --composite false --declaration false --declarationMap false",
     "build:styles": "sass src/styles:dist/styles --style=compressed --silence-deprecation=import",
     "clean": "rm -rf dist",
     "lint": "eslint src --ext .ts,.tsx"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "lucide-react": ">=0.300.0"
   },
   "dependencies": {
     "@umbeli-com/ui": "workspace:^",
     "@stripe/stripe-js": "^8.6.0",
     "@stripe/react-stripe-js": "^5.4.1",
-    "lucide-react": "^0.315.0",
     "react-ionicons": "^4.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "sass": "^1.70.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "lucide-react": "^0.315.0"
   },
   "publishConfig": {
     "access": "public",
