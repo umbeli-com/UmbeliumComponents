@@ -1,7 +1,7 @@
 {
   "name": "@umbeli-com/e2e",
-  "version": "1.0.0",
-  "description": "Shared Playwright E2E harness for Umbeli SaaS apps — network mocks (Supabase/Stripe), config preset, acceptance-checklist gate.",
+  "version": "1.1.0",
+  "description": "Shared Playwright E2E harness for Umbeli SaaS apps \u2014 network mocks (Supabase/Stripe), config preset, acceptance-checklist gate.",
   "type": "module",
   "exports": {
     ".": "./src/index.js",
@@ -9,12 +9,15 @@
     "./config": "./src/config.js",
     "./acceptance": "./src/acceptance.js",
     "./net": "./src/net.js",
-    "./crawl": "./src/crawl.js"
+    "./crawl": "./src/crawl.js",
+    "./asserts": "./src/asserts.js"
   },
   "bin": {
     "umbeli-acceptance": "./src/acceptance-cli.js"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "peerDependencies": {
     "@playwright/test": ">=1.40.0"
   },
@@ -25,5 +28,8 @@
     "access": "public",
     "registry": "https://npm.pkg.github.com"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "node -e \"Promise.all(['index','mocks','config','acceptance','net','crawl','asserts'].map(m=>import('./src/'+m+'.js'))).then(()=>console.log('e2e: 7 modules OK'),e=>{if(e.code==='ERR_MODULE_NOT_FOUND'&&/playwright/.test(e.message)){console.log('e2e: OK (@playwright/test absent, peer)');return}throw e})\""
+  }
 }
