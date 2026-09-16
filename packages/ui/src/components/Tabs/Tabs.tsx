@@ -17,6 +17,30 @@ import { useState, ReactNode } from 'react';
  * Le panneau est optionnel (`renderPanel={false}`) : une barre d'onglets qui
  * ne pilote pas la boîte juste en dessous — parce que le contenu vit dans une
  * autre zone de la page — reste un onglet, pas un composant à réécrire.
+ *
+ * Restait le CHROME, et c'est lui qui bloquait la dernière adoption : le
+ * comportement convenait, l'apparence non. Trois leviers, tous facultatifs,
+ * rendent la barre transparente à la peau de l'app :
+ *
+ * - `variant="bare"` : le composant ne pose plus AUCUNE de ses classes (ni
+ *   `.tabs`, ni `.tabs__list`, ni `.tabs__tab`…). Il ne reste que le
+ *   comportement — sélection, rôles ARIA, `data-testid` — et les classes que
+ *   l'app fournit. Aucun fond, aucune bordure, aucun `padding`, aucune marge,
+ *   aucun `box-shadow` d'onglet actif ne peut donc s'inviter.
+ * - `renderRoot={false}` : pas de `<div class="tabs">` autour de la barre.
+ *   La barre EST la racine, et c'est elle qui reçoit `className` — une app
+ *   dont la barre porte `margin-left: auto` pour se pousser à droite peut
+ *   enfin poser cette classe sur l'élément qui se pousse, sans hériter au
+ *   passage du fond/de la bordure/du `padding` d'une classe de liste.
+ * - `activeClassName` : les apps marquent l'onglet actif avec LEUR classe
+ *   (`.is-active` presque partout) ; le composant la pose en plus — ou à la
+ *   place, en `bare`.
+ *
+ * Et le rôle ARIA se choisit (`listRole` / `tabRole`) : le même commutateur
+ * compact est tantôt un `tablist`, tantôt un `radiogroup` (Anonymum
+ * DocumentsPanel : qualité de rendu standard/haute). Un `radiogroup` dont les
+ * boutons annoncent `role="tab"` ment au lecteur d'écran ; l'app n'avait
+ * alors d'autre choix que de réécrire la barre.
  */
 
 /** Chaînes lues/affichées, surchargeables. Français par défaut. */
@@ -44,6 +68,43 @@ export interface Tab {
   testId?: string;
 }
 
+/**
+ * Apparence. `bare` = NU : aucune classe du paquet n'est posée, nulle part.
+ * C'est la seule valeur qui ne peint rien ; les trois autres sont inchangées.
+ */
+export type TabsVariant = 'default' | 'pills' | 'segmented' | 'bare';
+
+/** Rôle ARIA de la barre. `null` = aucun attribut `role`. */
+export type TabsListRole = 'tablist' | 'radiogroup' | 'group';
+
+/** Rôle ARIA d'un onglet. `null` = aucun attribut `role`. */
+export type TabsTabRole = 'tab' | 'radio' | 'button';
+
+// Le rôle des boutons se DÉDUIT de celui de la barre : c'est la paire qui a un
+// sens pour un lecteur d'écran (`tablist`/`tab`, `radiogroup`/`radio`). Un
+// simple `group` ne contraint rien : ses enfants restent des boutons.
+const TAB_ROLE_FOR_LIST: Record<TabsListRole, TabsTabRole | null> = {
+  tablist: 'tab',
+  radiogroup: 'radio',
+  group: null,
+};
+
+/**
+ * L'attribut qui dit « c'est celui-ci », par rôle. Chaque famille a le sien :
+ * `aria-selected` n'existe pas sur un `radio`, `aria-checked` n'existe pas sur
+ * un `tab`. Sans rôle explicite, il reste `aria-current`, valable partout et
+ * posé sur le seul élément actif.
+ */
+function selectionAttribute(
+  role: TabsTabRole | null,
+  isActive: boolean,
+): Record<string, boolean | 'true'> | null {
+  if (role === 'tab') return { 'aria-selected': isActive };
+  if (role === 'radio') return { 'aria-checked': isActive };
+  if (role === 'button') return { 'aria-pressed': isActive };
+  return isActive ? { 'aria-current': 'true' } : null;
+}
+
 export interface TabsProps {
   tabs: Tab[];
   /** Onglet ouvert au montage, régime NON CONTRÔLÉ. Ignoré si `activeTab`. */
@@ -56,20 +117,70 @@ export interface TabsProps {
   activeTab?: string;
   onChange?: (tabId: string) => void;
   /** `segmented` = bascule compacte façon interrupteur (Anonymum
-   *  `.f2docs-switch`, Monitorum `.mo-display-toggle`). */
-  variant?: 'default' | 'pills' | 'segmented';
+   *  `.f2docs-switch`, Monitorum `.mo-display-toggle`).
+   *  `bare` = NU : aucune classe du paquet, donc aucune peinture — l'app
+   *  habille la barre entièrement avec les siennes. */
+  variant?: TabsVariant;
   /** Rendre la boîte de contenu sous la barre. Défaut : `true` (historique).
    *  `false` ⇒ la barre est seule, l'app place le contenu où elle veut. */
   renderPanel?: boolean;
+  /**
+   * Rendre la racine `<div class="tabs">` autour de la barre. Défaut : `true`
+   * (historique). `false` ⇒ la barre EST la racine : `className` atterrit sur
+   * ELLE, et c'est elle qui porte `testId`. Indispensable quand la classe de
+   * l'app place la barre (`margin-left: auto`, `align-self`…) : sur la racine
+   * la mise en place fonctionne mais le fond/la bordure/le `padding` de cette
+   * même classe font alors un second cadre autour du premier.
+   *
+   * À N'UTILISER QU'AVEC `variant="bare"`. Les variantes peintes accrochent
+   * TOUTES leurs règles à la racine (`.tabs--segmented .tabs__list`,
+   * `.tabs--default .tabs__tab--active`, `.tabs--no-panel .tabs__list`), et
+   * cette racine n'existe plus ici : il ne reste que les règles de base de
+   * `.tabs__list` / `.tabs__tab` — donc la pilule par défaut (fond, bordure,
+   * `padding: 4px`) ET le `margin-bottom: 24px` que `.tabs--no-panel` était
+   * seul à annuler. C'est l'inverse du résultat recherché. Aucune combinaison
+   * de classes ne peut rattraper ça côté composant : un sélecteur descendant
+   * sans ancêtre ne s'applique pas.
+   */
+  renderRoot?: boolean;
   className?: string;
   /** Classe posée sur la barre elle-même (`.tabs__list`) — utile quand la
-   *  barre doit se placer dans un en-tête (`margin-left: auto`…). */
+   *  barre doit se placer dans un en-tête (`margin-left: auto`…).
+   *  Avec `renderRoot={false}`, `className` s'y ajoute. */
   listClassName?: string;
+  /** Classe posée sur CHAQUE onglet, en plus de `.tabs__tab`. */
+  tabClassName?: string;
+  /** Classe posée sur l'onglet ACTIF, en plus de `.tabs__tab--active` — et
+   *  seule à le marquer en `bare`. Les apps utilisent presque toutes
+   *  `.is-active` ; le paquet n'a pas à leur imposer son nom. */
+  activeClassName?: string;
   /** Classe posée sur le panneau (`.tabs__content`). */
   panelClassName?: string;
+  /**
+   * Attribut `type` des boutons d'onglet. Défaut : AUCUN attribut — c'est ce
+   * que le composant a toujours rendu. Les barres écrites à la main dans les
+   * apps posent, elles, `type="button"` ; sans ce réglage, adopter le
+   * composant DANS un `<form>` transformerait un changement d'onglet en envoi
+   * du formulaire (`type` vaut `submit` par défaut en HTML).
+   */
+  tabType?: 'button' | 'submit' | 'reset';
+  /**
+   * Rôle ARIA de la barre. Défaut : `'tablist'` (historique). `'radiogroup'`
+   * pour un choix exclusif qui n'ouvre pas de panneau (une qualité de rendu,
+   * un niveau de zoom…). `null` : aucun attribut `role`.
+   */
+  listRole?: TabsListRole | null;
+  /**
+   * Rôle ARIA de chaque onglet. Déduit de `listRole` quand il n'est pas
+   * fourni (`tablist`→`tab`, `radiogroup`→`radio`, `group`→aucun). L'attribut
+   * de sélection suit le rôle : `aria-selected`, `aria-checked`,
+   * `aria-pressed`, ou `aria-current` sur l'actif quand il n'y a pas de rôle.
+   */
+  tabRole?: TabsTabRole | null;
   /** Posé en `data-testid` sur la racine ; la barre et le panneau reçoivent
    *  alors `<testId>-list` et `<testId>-panel`. Les onglets, eux, portent
-   *  leur propre `Tab.testId` — les apps ont des noms non dérivables. */
+   *  leur propre `Tab.testId` — les apps ont des noms non dérivables.
+   *  Sans racine (`renderRoot={false}`), c'est la barre qui porte `testId`. */
   testId?: string;
   labels?: TabsLabels;
 }
@@ -81,9 +192,15 @@ export function Tabs({
   onChange,
   variant = 'default',
   renderPanel = true,
+  renderRoot = true,
   className = '',
   listClassName = '',
+  tabClassName = '',
+  activeClassName = '',
   panelClassName = '',
+  tabType,
+  listRole = 'tablist',
+  tabRole,
   testId,
   labels,
 }: TabsProps) {
@@ -103,43 +220,109 @@ export function Tabs({
 
   const activeContent = tabs.find(tab => tab.id === currentTab)?.content;
 
+  // ── Classes ───────────────────────────────────────────────────────────────
   // Les chaînes de classes gardent la forme historique au caractère près quand
   // les nouvelles props sont à leur défaut : chaque modificateur ajouté porte
-  // son propre espace de tête, donc il n'insère rien quand il est absent.
-  return (
+  // son propre espace de tête, donc il n'insère rien quand il est absent. En
+  // `bare`, il ne reste que ce que l'app fournit — et quand elle ne fournit
+  // rien, l'attribut `class` n'est pas écrit du tout.
+  const bare = variant === 'bare';
+
+  const rootClass = bare
+    ? className
+    : `tabs tabs--${variant}${renderPanel ? '' : ' tabs--no-panel'}${className ? ` ${className}` : ''}`;
+
+  // Sans racine, la barre en tient lieu : `className` la rejoint, devant
+  // `listClassName` (l'ordre d'écriture ne change rien en CSS, il rend juste
+  // le DOM lisible : classe de l'app d'abord).
+  const listOwn = renderRoot
+    ? listClassName
+    : [className, listClassName].filter(Boolean).join(' ');
+  const listClass = bare ? listOwn : `tabs__list${listOwn ? ` ${listOwn}` : ''}`;
+
+  const tabClassFor = (isActive: boolean) => {
+    const extra = `${tabClassName ? ` ${tabClassName}` : ''}${
+      isActive && activeClassName ? ` ${activeClassName}` : ''
+    }`;
+    if (bare) return extra.slice(1);
+    return `tabs__tab ${isActive ? 'tabs__tab--active' : ''}${extra}`;
+  };
+
+  const panelClass = bare
+    ? panelClassName
+    : `tabs__content${panelClassName ? ` ${panelClassName}` : ''}`;
+
+  // ── Rôles ARIA ────────────────────────────────────────────────────────────
+  const resolvedTabRole: TabsTabRole | null =
+    tabRole !== undefined ? tabRole : listRole !== null ? TAB_ROLE_FOR_LIST[listRole] : null;
+  // Un `tabpanel` n'a de sens qu'en face d'un `tablist` : hors de ce régime le
+  // panneau redevient une simple boîte.
+  const panelRole = listRole === 'tablist' ? 'tabpanel' : null;
+
+  // Sans racine, c'est la barre qui porte l'identifiant de test : elle EST la
+  // racine. Le suffixe `-list` n'existe que lorsqu'il y a les deux éléments à
+  // distinguer.
+  const listTestId = testId === undefined ? undefined : renderRoot ? `${testId}-list` : testId;
+
+  const list = (
     <div
-      className={`tabs tabs--${variant}${renderPanel ? '' : ' tabs--no-panel'}${className ? ` ${className}` : ''}`}
-      {...(testId !== undefined ? { 'data-testid': testId } : null)}
+      {...(listClass ? { className: listClass } : null)}
+      {...(listRole !== null ? { role: listRole } : null)}
+      {...(t.tablist !== undefined ? { 'aria-label': t.tablist } : null)}
+      {...(listTestId !== undefined ? { 'data-testid': listTestId } : null)}
     >
-      <div
-        className={`tabs__list${listClassName ? ` ${listClassName}` : ''}`}
-        role="tablist"
-        {...(t.tablist !== undefined ? { 'aria-label': t.tablist } : null)}
-        {...(testId !== undefined ? { 'data-testid': `${testId}-list` } : null)}
-      >
-        {tabs.map(tab => (
+      {tabs.map(tab => {
+        const isActive = currentTab === tab.id;
+        const buttonClass = tabClassFor(isActive);
+        return (
           <button
             key={tab.id}
-            className={`tabs__tab ${currentTab === tab.id ? 'tabs__tab--active' : ''}`}
+            {...(tabType !== undefined ? { type: tabType } : null)}
+            {...(buttonClass ? { className: buttonClass } : null)}
             onClick={() => handleTabClick(tab.id)}
-            role="tab"
-            aria-selected={currentTab === tab.id}
+            {...(resolvedTabRole !== null ? { role: resolvedTabRole } : null)}
+            {...selectionAttribute(resolvedTabRole, isActive)}
             {...(tab.testId !== undefined ? { 'data-testid': tab.testId } : null)}
           >
-            {tab.icon && <span className="tabs__tab-icon">{tab.icon}</span>}
-            <span className="tabs__tab-label">{tab.label}</span>
+            {tab.icon && (
+              <span {...(bare ? null : { className: 'tabs__tab-icon' })}>{tab.icon}</span>
+            )}
+            <span {...(bare ? null : { className: 'tabs__tab-label' })}>{tab.label}</span>
           </button>
-        ))}
-      </div>
-      {renderPanel && (
-        <div
-          className={`tabs__content${panelClassName ? ` ${panelClassName}` : ''}`}
-          role="tabpanel"
-          {...(testId !== undefined ? { 'data-testid': `${testId}-panel` } : null)}
-        >
-          {activeContent}
-        </div>
-      )}
+        );
+      })}
+    </div>
+  );
+
+  const panel = renderPanel ? (
+    <div
+      {...(panelClass ? { className: panelClass } : null)}
+      {...(panelRole !== null ? { role: panelRole } : null)}
+      {...(testId !== undefined ? { 'data-testid': `${testId}-panel` } : null)}
+    >
+      {activeContent}
+    </div>
+  ) : null;
+
+  // Pas de racine : la barre (et le panneau, s'il est demandé) remontent tels
+  // quels dans le flux du parent — aucune boîte intermédiaire pour hériter
+  // d'un fond ou décaler une mise en page.
+  if (!renderRoot) {
+    return (
+      <>
+        {list}
+        {panel}
+      </>
+    );
+  }
+
+  return (
+    <div
+      {...(rootClass ? { className: rootClass } : null)}
+      {...(testId !== undefined ? { 'data-testid': testId } : null)}
+    >
+      {list}
+      {panel}
     </div>
   );
 }

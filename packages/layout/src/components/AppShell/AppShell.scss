@@ -36,7 +36,7 @@
   left: 0;
   height: 100vh;
   height: 100dvh;
-  width: 240px;
+  width: var(--umb-app-shell-sidebar-width, 240px);
   z-index: 100;
   transition: width 0.2s ease, transform 0.2s ease;
 
@@ -54,7 +54,7 @@
 
 .umb-app-shell__main {
   flex: 1;
-  margin-left: 240px;
+  margin-left: var(--umb-app-shell-sidebar-width, 240px);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -109,5 +109,127 @@
     @media (min-width: 1024px) {
       margin-right: 400px;
     }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AJOUTS OPT-IN — rien de ce qui suit ne s'applique sans une prop nouvelle.
+//
+// Tout vit sous `.umb-app-shell--grid` / `.umb-app-shell--collapsed`, deux
+// modificateurs que le composant n'émet QUE si `layout="grid"` / `collapsed`
+// sont passés. Une app déjà en place (Dialum, Socialum, UmbeliumManager,
+// Scrapium) n'en pose aucun : aucun de ces sélecteurs ne matche chez elle, la
+// cascade y est donc identique au caractère près.
+//
+// C'est aussi pourquoi ces règles ont le droit d'empiler deux classes
+// (`.umb-app-shell--grid > .umb-app-shell__sidebar`), ce que l'en-tête de ce
+// fichier interdit sur les sélecteurs de base : la spécificité ne monte que
+// dans une branche où les surcharges locales de Socialum n'existent pas.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Contenu « à nu » (prop `contentUnstyled`) ──────────────────────────────
+// Classe SÉPARÉE, pas une surcharge : `.umb-app-shell__content` n'est alors
+// pas émise du tout, donc aucune guerre de spécificité avec la classe de
+// l'app — c'est ce qui permet à un padding CONDITIONNEL de survivre (Webum :
+// `.main-content:has(.editor-split)` et `body.has-publish-bar .main-content`,
+// qu'aucune valeur en ligne ne saurait reproduire). Ne reste ici que le
+// comportement de boîte ; padding, max-width, largeur et centrage sont à
+// l'app.
+.umb-app-shell__content--bare {
+  flex: 1;
+}
+
+// ── Rail replié (prop `collapsed`), moteur flex ────────────────────────────
+.umb-app-shell--collapsed > .umb-app-shell__sidebar {
+  width: var(--umb-app-shell-collapsed-width, 56px);
+
+  // MÊME PIÈGE que le `margin-left` du bloc suivant, et il mordait ici :
+  // ce sélecteur (0,2,0) passe devant le `width: 85vw` mobile de
+  // `.umb-app-shell__sidebar` (0,1,0), qui vit dans une media query mais ne
+  // gagne pas pour autant. Mesuré à 500×800 avant correction : le TIROIR
+  // tombait à 56px de large au lieu de 320 (85vw plafonné) — libellés de nav
+  // rognés, tiroir inutilisable. « Replié » est une notion de DESKTOP : sous
+  // 768px la sidebar est un tiroir, plein ou fermé. On rejoue donc les
+  // métriques du tiroir, exactement comme le `margin-left: 0` d'en dessous.
+  @media (max-width: 767px) {
+    width: 85vw;
+    max-width: 320px;
+  }
+}
+
+.umb-app-shell--collapsed > .umb-app-shell__main {
+  margin-left: var(--umb-app-shell-collapsed-width, 56px);
+
+  // Ce sélecteur (0,2,0) passerait devant le `margin-left: 0` mobile de
+  // `.umb-app-shell__main` (0,1,0) : on le rejoue.
+  @media (max-width: 767px) {
+    margin-left: 0;
+  }
+}
+
+// ── Variante GRILLE (prop `layout="grid"`) ─────────────────────────────────
+// Moteur de Webum (`apps/admin/src/styles.css` `.app-shell`) et de Profilum
+// (`styles/_base.scss`) : deux colonnes, le rail replié change la PREMIÈRE
+// piste au lieu de déplacer le contenu. Même spécificité que
+// `.umb-app-shell { display: flex }` — c'est l'ordre (ce bloc est plus bas
+// dans le fichier) qui tranche.
+.umb-app-shell--grid {
+  display: grid;
+  // `minmax(0, 1fr)` et non `1fr` : une piste `1fr` a pour minimum `auto`, et
+  // un enfant large (tableau, canvas, éditeur) fait alors déborder la page.
+  grid-template-columns: var(--umb-app-shell-sidebar-width, 240px) minmax(0, 1fr);
+  transition: grid-template-columns 0.2s ease;
+}
+
+.umb-app-shell--grid.umb-app-shell--collapsed {
+  grid-template-columns: var(--umb-app-shell-collapsed-width, 56px) minmax(0, 1fr);
+}
+
+// Le conteneur d'aside du mode flex redevient une simple colonne de grille :
+// c'est l'enfant (SidebarNav, ou la sidebar maison) qui porte sa surface, son
+// épinglage et sa largeur. Les valeurs annulées ici incluent celles de la
+// media query ≤767px du mode flex (transform/width/box-shadow), sinon la
+// colonne partirait hors écran sur mobile.
+.umb-app-shell--grid > .umb-app-shell__sidebar {
+  position: static;
+  width: auto;
+  max-width: none;
+  height: auto;
+  z-index: auto;
+  transform: none;
+  box-shadow: none;
+}
+
+.umb-app-shell--grid > .umb-app-shell__main {
+  margin-left: 0;
+  // Colonne de grille rétractable — même raison que le `minmax(0, 1fr)`.
+  min-width: 0;
+  // Le `min-height: 100vh` du mode flex est ici NUISIBLE : la piste de grille
+  // dimensionne déjà la colonne, et sur mobile (barre du tiroir en ligne 1 +
+  // contenu en ligne 2) il rendait la page 100vh PLUS la hauteur de la barre,
+  // soit une quarantaine de pixels de défilement fantôme. Mesuré : 840px de
+  // haut pour un écran de 800 — Webum, lui, tombait juste à 760.
+  min-height: 0;
+}
+
+// ≤768px : une seule colonne. Le seuil est celui de SidebarNav (768, pas 767)
+// — c'est lui qui décide quand le rail devient un tiroir, et la grille doit
+// basculer au même pixel.
+//
+// Les lignes sont EXPLICITES (réf. Webum) : sans elles, le `min-height: 100vh`
+// de la coquille est réparti entre la barre mobile et le contenu, et la barre
+// enfle jusqu'à ~40 % de l'écran sur une page courte. Le tiroir et son
+// backdrop sont `position: fixed` ou `display: none` : ils ne sont pas des
+// items de grille et ne consomment aucune ligne.
+@media (max-width: 768px) {
+  .umb-app-shell--grid,
+  .umb-app-shell--grid.umb-app-shell--collapsed {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: start;
+  }
+
+  .umb-app-shell--grid > .umb-app-shell__main {
+    margin-left: 0;
   }
 }

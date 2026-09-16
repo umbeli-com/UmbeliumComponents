@@ -11,4 +11,7 @@ export type {
   CardSectionPadding,
   CardBodyGap,
   CardHeaderTitleSize,
+  CardHeaderTitleTag,
+  CardHeaderAlign,
+  CardHeaderSpacing,
 } from './Card';

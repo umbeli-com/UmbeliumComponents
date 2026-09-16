@@ -25,16 +25,112 @@ import { GoogleOAuthButton } from '../GoogleOAuthButton';
      · le bascule de mode est un <button> dont le nom accessible est
        exactement « Créer un compte » / « Se connecter » ;
      · l'erreur de validation locale sort dans .auth-page__error.
+
+   ── TRANSPARENCE À LA PEAU DE L'APP (ajouts 2026-09, tous OPTIONNELS) ───────
+   Le rendu par défaut ne bouge pas d'un pixel ; ces échappatoires existent
+   pour que le comportement soit adoptable SANS hériter du chrome :
+
+     · `modeToggleHref` / `renderModeToggle` : la bascule de mode devient une
+       ANCRE (role=link, deep-link ?mode= ouvrable en nouvel onglet) — ou du
+       markup entièrement fourni par l'app. `renderModeToggle` REMPLACE le
+       pied `<p class="auth-page__footer">`, il ne s'y ajoute pas (à la
+       différence de `footer`, qui reste un ajout EN DESSOUS).
+     · `forgotPasswordMode="inline"` : « Mot de passe oublié ? » envoie le
+       mail avec l'email déjà saisi SANS changer d'écran (UX Dialum / Webum /
+       Socialum) au lieu de basculer vers le mode `'forgot'`.
+     · `resetRedirectTo` : URL de retour du lien de réinitialisation,
+       transmise au handler — les apps sans route /auth/reset-password
+       renvoient vers /auth/callback.
+     · `signUpFields` : masque firstName / lastName / confirmPassword pour les
+       apps dont l'inscription n'a que 2 champs (Servum).
+     · `classNames` + `showCard` : renomme ou retire le chrome du package.
+     · `authFormLabelsEn` : la copie anglaise complète, prête à passer en
+       `labels`.
    ══════════════════════════════════════════════════════════════════════════ */
 
+/** ⚠️ Union FIGÉE : des apps en font des `Record<AuthFormMode, …>` (Monitorum),
+ *  y ajouter une valeur casserait leur typage. L'« oubli en ligne » est donc
+ *  une OPTION (`forgotPasswordMode`), pas un mode de plus. */
 export type AuthFormMode = 'signin' | 'signup' | 'forgot';
 
-/** Charge utile d'inscription — `firstName`/`lastName` sont déjà trimés. */
+/** Charge utile d'inscription — `firstName`/`lastName` sont déjà trimés
+ *  (chaîne vide quand le champ est masqué via `signUpFields`). */
 export interface AuthSignUpPayload {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
+}
+
+/** Deuxième argument de `onForgotPassword` — ignorable (une fonction
+ *  `(email) => …` reste assignable). */
+export interface AuthForgotPasswordOptions {
+  /** `resetRedirectTo` tel quel : à passer en `redirectTo` de
+   *  `resetPasswordForEmail`. `undefined` = l'app décide (et
+   *  `useAuth().resetPassword` retombe sur `getResetPasswordUrl()`). */
+  redirectTo?: string;
+  /** `true` quand l'envoi vient du bouton EN LIGNE (l'écran ne change pas) —
+   *  permet une copie de confirmation différente de celle du mode dédié. */
+  inline: boolean;
+}
+
+/** Ce que reçoit `renderModeToggle` pour rebâtir le pied à sa main. */
+export interface AuthFormModeToggle {
+  /** Mode affiché actuellement. */
+  mode: AuthFormMode;
+  /** Mode vers lequel bascule le contrôle (`'signup'` depuis la connexion,
+   *  `'signin'` depuis l'inscription ET depuis l'écran d'oubli). */
+  target: AuthFormMode;
+  /** Amorce du pied (« Pas encore de compte ? ») — `''` en mode `'forgot'`. */
+  prompt: string;
+  /** Libellé du contrôle (« Créer un compte », « Se connecter », …). */
+  label: string;
+  /** `modeToggleHref(target)` s'il est fourni, sinon `undefined`. */
+  href?: string;
+  /** `busy` du formulaire : à reporter sur le contrôle rendu. */
+  busy: boolean;
+  /** Bascule le mode (remet la validation locale à zéro et replace le focus
+   *  dans le formulaire, comme le bouton du package). */
+  switchTo: (mode: AuthFormMode) => void;
+  /** Classe canonique du pied, déjà passée par `classNames`. */
+  footerClassName: string;
+  /** Classe canonique du lien accentué, déjà passée par `classNames`. */
+  linkClassName: string;
+}
+
+/** Champs d'inscription affichés. Tout est à `true` par défaut : le
+ *  formulaire à 5 champs de la suite ne bouge pas. */
+export interface AuthSignUpFields {
+  /** @default true */
+  firstName?: boolean;
+  /** @default true */
+  lastName?: boolean;
+  /** @default true — à `false`, la validation « mots de passe identiques »
+   *  ne s'exécute plus (il n'y a plus rien à comparer). */
+  confirmPassword?: boolean;
+}
+
+/** Classes émises par le formulaire. Passer `''` retire la classe sans
+ *  retirer l'élément ; `undefined` garde le défaut du package. */
+export interface AuthFormClassNames {
+  card: string;
+  divider: string;
+  form: string;
+  error: string;
+  info: string;
+  row: string;
+  field: string;
+  label: string;
+  input: string;
+  hint: string;
+  forgot: string;
+  /** Lien discret (« Mot de passe oublié ? »). */
+  link: string;
+  /** Lien accentué (bascule de mode). */
+  linkAccent: string;
+  terms: string;
+  submit: string;
+  footer: string;
 }
 
 /** Copie canonique FR de la suite. Chaque chaîne est surchargeable via
@@ -57,6 +153,12 @@ export interface AuthFormLabels {
   confirmPassword: string;
   confirmPasswordPlaceholder: string;
   forgotPassword: string;
+  /** Libellé du lien « Mot de passe oublié ? » pendant l'envoi EN LIGNE
+   *  (`forgotPasswordMode="inline"` uniquement). */
+  forgotPasswordBusy: string;
+  /** Erreur locale quand on clique « Mot de passe oublié ? » EN LIGNE sans
+   *  avoir saisi d'email. */
+  forgotEmailRequired: string;
   /** Suffixe des libellés de champs requis (passer '' pour le retirer). */
   requiredMark: string;
   signInSubmit: string;
@@ -87,7 +189,12 @@ export interface AuthFormProps {
   onModeChange: (mode: AuthFormMode) => void;
   onSignIn: (email: string, password: string) => void | Promise<void>;
   onSignUp: (payload: AuthSignUpPayload) => void | Promise<void>;
-  onForgotPassword: (email: string) => void | Promise<void>;
+  /** Le 2e argument est OPTIONNEL côté implémentation : un handler
+   *  `(email) => …` écrit avant `resetRedirectTo` reste valide. */
+  onForgotPassword: (
+    email: string,
+    options: AuthForgotPasswordOptions,
+  ) => void | Promise<void>;
   /** Omis → pas de bouton Google. Le standard de la suite est de le fournir
    *  (pas d'accès invité, OAuth Google présent). */
   onGoogle?: () => void | Promise<void>;
@@ -101,12 +208,61 @@ export interface AuthFormProps {
   minPasswordLength?: number;
   /** Mention CGU rendue au-dessus du bouton en mode inscription. */
   termsNotice?: ReactNode;
-  /** Contenu libre sous le pied de bascule (ex. « Retour à l'accueil »). */
+  /** Contenu libre sous le pied de bascule (ex. « Retour à l'accueil »).
+   *  AJOUTE un bloc — pour REMPLACER le pied, voir `renderModeToggle`. */
   footer?: ReactNode;
   /** Préfixe des id/htmlFor — à ne changer QUE si deux formulaires coexistent
    *  sur la page : les specs E2E de la suite ciblent #email / #password. */
   idPrefix?: string;
   labels?: Partial<AuthFormLabels>;
+
+  // ── Transparence (tout est optionnel, défaut = rendu historique) ──────────
+
+  /**
+   * Rend la bascule de mode en ANCRE (`role=link`) plutôt qu'en `<button>`,
+   * avec cette `href` — le clic garde la bascule en place (preventDefault),
+   * mais le lien reste lisible et ouvrable dans un nouvel onglet.
+   *
+   * Réf. Dialum/Anonymum/Scrapium : `(target) => \`?mode=${target}\``, ciblé
+   * par `getByRole('link', { name: /^Créer un compte$/i })`.
+   *
+   * Seul le clic gauche NU est intercepté : ⌘/Ctrl/⇧/⌥-clic et clic non
+   * primaire laissent le navigateur ouvrir l'onglet/la fenêtre (l'app doit
+   * donc savoir lire `?mode=` au chargement).
+   *
+   * Comme l'ancre de référence, elle n'est PAS désactivée pendant `busy`
+   * (un `<a>` n'a pas d'état `disabled`).
+   */
+  modeToggleHref?: (target: AuthFormMode) => string;
+  /**
+   * REMPLACE tout le pied de bascule (`<p class="auth-page__footer">…</p>`)
+   * par ce que l'app rend — un `<Link>` de router, deux paragraphes, rien du
+   * tout (`null`). Prioritaire sur `modeToggleHref`.
+   */
+  renderModeToggle?: (toggle: AuthFormModeToggle) => ReactNode;
+  /**
+   * `'screen'` (défaut) : « Mot de passe oublié ? » bascule vers le mode
+   * `'forgot'`, qui a son propre écran et son propre submit.
+   * `'inline'` : le lien envoie le mail avec l'email DÉJÀ SAISI et l'écran de
+   * connexion ne bouge pas (UX Dialum / Webum / Socialum). Le libellé passe à
+   * `labels.forgotPasswordBusy` le temps de la promesse ; un email vide sort
+   * `labels.forgotEmailRequired` dans `.auth-page__error`.
+   */
+  forgotPasswordMode?: 'screen' | 'inline';
+  /**
+   * URL de retour du lien de réinitialisation, transmise au handler dans
+   * `options.redirectTo` — elle PREND LE PAS sur le `/auth/reset-password`
+   * de `getResetPasswordUrl()`, que six apps ne routent pas (le lien y
+   * tomberait sur la page de vente). Typiquement `getAuthCallbackUrl()`.
+   */
+  resetRedirectTo?: string;
+  /** Champs affichés à l'inscription (défaut : les 5 champs de la suite). */
+  signUpFields?: AuthSignUpFields;
+  /** Rend la carte `.auth-page__card` autour du formulaire. Passer `false`
+   *  quand l'app fournit son propre chrome. @default true */
+  showCard?: boolean;
+  /** Surcharge des classes émises (`''` = aucune classe). */
+  classNames?: Partial<AuthFormClassNames>;
 }
 
 const defaultLabels: AuthFormLabels = {
@@ -124,6 +280,9 @@ const defaultLabels: AuthFormLabels = {
   confirmPassword: 'Confirmer le mot de passe',
   confirmPasswordPlaceholder: '••••••••',
   forgotPassword: 'Mot de passe oublié ?',
+  forgotPasswordBusy: 'Envoi...',
+  forgotEmailRequired:
+    'Entrez d\'abord votre email ci-dessus, puis cliquez sur « Mot de passe oublié ? ».',
   requiredMark: ' *',
   signInSubmit: 'Se connecter',
   signInSubmitBusy: 'Connexion...',
@@ -139,6 +298,71 @@ const defaultLabels: AuthFormLabels = {
   passwordMismatch: 'Les mots de passe ne correspondent pas',
   passwordTooShort: 'Le mot de passe doit contenir au moins {min} caractères',
 };
+
+/** Copie ANGLAISE complète (Servum, Noesium EN…) : `labels={authFormLabelsEn}`
+ *  suffit, aucune chaîne du formulaire ne reste en français. */
+export const authFormLabelsEn: AuthFormLabels = {
+  google: 'Continue with Google',
+  or: 'or',
+  firstName: 'First name',
+  firstNamePlaceholder: 'Jane',
+  lastName: 'Last name',
+  lastNamePlaceholder: 'Doe',
+  email: 'Email',
+  emailPlaceholder: 'you@example.com',
+  password: 'Password',
+  passwordPlaceholder: '••••••••',
+  passwordHint: 'At least {min} characters',
+  confirmPassword: 'Confirm password',
+  confirmPasswordPlaceholder: '••••••••',
+  forgotPassword: 'Forgot password?',
+  forgotPasswordBusy: 'Sending...',
+  forgotEmailRequired: 'Enter your email above first, then click “Forgot password?”.',
+  requiredMark: ' *',
+  signInSubmit: 'Sign in',
+  signInSubmitBusy: 'Signing in...',
+  signUpSubmit: 'Create account',
+  signUpSubmitBusy: 'Creating...',
+  forgotSubmit: 'Send the link',
+  forgotSubmitBusy: 'Sending...',
+  noAccountPrompt: 'Need an account? ',
+  createAccountAction: 'Sign up',
+  haveAccountPrompt: 'Already have an account? ',
+  signInAction: 'Sign in',
+  backToSignIn: 'Back to sign in',
+  passwordMismatch: 'Passwords do not match',
+  passwordTooShort: 'Password must be at least {min} characters',
+};
+
+const defaultClassNames: AuthFormClassNames = {
+  card: 'auth-page__card',
+  divider: 'auth-page__divider',
+  form: 'auth-page__form',
+  error: 'auth-page__error',
+  info: 'auth-page__info',
+  row: 'auth-page__row',
+  field: 'auth-page__field',
+  label: 'auth-page__label',
+  input: 'auth-page__input',
+  hint: 'auth-page__hint',
+  forgot: 'auth-page__forgot',
+  link: 'auth-page__link',
+  linkAccent: 'auth-page__link auth-page__link--accent',
+  terms: 'auth-page__terms',
+  submit: 'auth-page__submit',
+  footer: 'auth-page__footer',
+};
+
+/** `''` est une valeur VOULUE (retirer la classe) ; seul `undefined` retombe
+ *  sur le défaut du package. */
+function mergeClassNames(overrides: Partial<AuthFormClassNames>): AuthFormClassNames {
+  const merged = { ...defaultClassNames };
+  (Object.keys(merged) as (keyof AuthFormClassNames)[]).forEach((key) => {
+    const value = overrides[key];
+    if (typeof value === 'string') merged[key] = value;
+  });
+  return merged;
+}
 
 interface AuthFormValues {
   firstName: string;
@@ -171,11 +395,21 @@ export function AuthForm({
   footer,
   idPrefix = '',
   labels = {},
+  modeToggleHref,
+  renderModeToggle,
+  forgotPasswordMode = 'screen',
+  resetRedirectTo,
+  signUpFields,
+  showCard = true,
+  classNames = {},
 }: AuthFormProps) {
   const [values, setValues] = useState<AuthFormValues>(emptyValues);
   /** Erreur produite ICI (validation locale ou promesse rejetée par le
    *  parent). Prioritaire sur `error` : c'est la plus récente. */
   const [localError, setLocalError] = useState<string | null>(null);
+  /** Envoi EN LIGNE en cours : le parent ne bascule pas `busy` puisqu'il n'y a
+   *  pas de changement d'écran — le lien porte lui-même son état. */
+  const [inlineForgotBusy, setInlineForgotBusy] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
   /** Armé par nos propres boutons de bascule : un changement de mode venu du
    *  parent (deep-link ?mode=, retour en connexion après inscription) ne doit
@@ -183,11 +417,15 @@ export function AuthForm({
   const claimFocusRef = useRef(false);
 
   const t = { ...defaultLabels, ...labels };
+  const c = mergeClassNames(classNames);
   const isSignUp = mode === 'signup';
   const isForgot = mode === 'forgot';
   const withMin = (text: string) => text.replace('{min}', String(minPasswordLength));
   const fieldId = (name: string) => `${idPrefix}${name}`;
   const shownError = localError ?? error;
+  const showFirstName = signUpFields?.firstName ?? true;
+  const showLastName = signUpFields?.lastName ?? true;
+  const showConfirmPassword = signUpFields?.confirmPassword ?? true;
 
   // Un changement de mode repart d'une ardoise propre côté validation locale.
   useEffect(() => {
@@ -221,10 +459,37 @@ export function AuthForm({
       setValues((prev) => ({ ...prev, [key]: value }));
     };
 
-  const switchMode = (next: AuthFormMode) => () => {
+  const switchMode = (next: AuthFormMode) => {
     setLocalError(null);
     claimFocusRef.current = true;
     onModeChange(next);
+  };
+
+  const onSwitchMode = (next: AuthFormMode) => () => switchMode(next);
+
+  /** « Mot de passe oublié ? » EN LIGNE : on envoie le mail sans quitter
+   *  l'écran de connexion. Le message de succès appartient au parent (`info`) ;
+   *  seul l'échec local (email vide, promesse rejetée) sort d'ici. */
+  const sendForgotInline = () => {
+    setLocalError(null);
+
+    const email = values.email.trim();
+    if (!email) {
+      setLocalError(t.forgotEmailRequired);
+      return;
+    }
+
+    const returned = onForgotPassword(email, { redirectTo: resetRedirectTo, inline: true });
+    if (!returned) return;
+
+    setInlineForgotBusy(true);
+    Promise.resolve(returned)
+      .catch((err: unknown) => {
+        setLocalError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        setInlineForgotBusy(false);
+      });
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -234,12 +499,12 @@ export function AuthForm({
     const email = values.email.trim();
 
     if (isForgot) {
-      run(onForgotPassword(email));
+      run(onForgotPassword(email, { redirectTo: resetRedirectTo, inline: false }));
       return;
     }
 
     if (isSignUp) {
-      if (values.password !== values.confirmPassword) {
+      if (showConfirmPassword && values.password !== values.confirmPassword) {
         setLocalError(t.passwordMismatch);
         return;
       }
@@ -251,8 +516,10 @@ export function AuthForm({
         onSignUp({
           email,
           password: values.password,
-          firstName: values.firstName.trim(),
-          lastName: values.lastName.trim(),
+          // Un champ masqué ne doit jamais remonter une valeur résiduelle
+          // (l'app peut basculer `signUpFields` après une première saisie).
+          firstName: showFirstName ? values.firstName.trim() : '',
+          lastName: showLastName ? values.lastName.trim() : '',
         }),
       );
       return;
@@ -273,194 +540,268 @@ export function AuthForm({
         ? t.signInSubmitBusy
         : t.signInSubmit;
 
-  return (
+  const firstNameField = (
+    <div className={c.field}>
+      <label htmlFor={fieldId('firstName')} className={c.label}>
+        {t.firstName}
+        {t.requiredMark}
+      </label>
+      <input
+        id={fieldId('firstName')}
+        type="text"
+        value={values.firstName}
+        onChange={setField('firstName')}
+        className={c.input}
+        placeholder={t.firstNamePlaceholder}
+        autoComplete="given-name"
+        required
+        disabled={busy}
+      />
+    </div>
+  );
+
+  const lastNameField = (
+    <div className={c.field}>
+      <label htmlFor={fieldId('lastName')} className={c.label}>
+        {t.lastName}
+        {t.requiredMark}
+      </label>
+      <input
+        id={fieldId('lastName')}
+        type="text"
+        value={values.lastName}
+        onChange={setField('lastName')}
+        className={c.input}
+        placeholder={t.lastNamePlaceholder}
+        autoComplete="family-name"
+        required
+        disabled={busy}
+      />
+    </div>
+  );
+
+  /** Les deux champs → la rangée 1fr 1fr historique ; un seul → pleine
+   *  largeur (la grille laisserait une colonne vide) ; aucun → rien. */
+  const nameFields =
+    showFirstName && showLastName ? (
+      <div className={c.row}>
+        {firstNameField}
+        {lastNameField}
+      </div>
+    ) : showFirstName ? (
+      firstNameField
+    ) : showLastName ? (
+      lastNameField
+    ) : null;
+
+  const body = (
     <>
-      <div className="auth-page__card">
-        {/* Pas d'OAuth sur l'écran « mot de passe oublié » : il n'y a rien à
-            connecter, juste un email à envoyer. */}
-        {onGoogle && !isForgot ? (
-          <>
-            <GoogleOAuthButton
-              onClick={() => {
-                setLocalError(null);
-                run(onGoogle());
-              }}
-              disabled={busy}
-              label={t.google}
-            />
-            <div className="auth-page__divider">
-              <span>{t.or}</span>
-            </div>
-          </>
+      {/* Pas d'OAuth sur l'écran « mot de passe oublié » : il n'y a rien à
+          connecter, juste un email à envoyer. */}
+      {onGoogle && !isForgot ? (
+        <>
+          <GoogleOAuthButton
+            onClick={() => {
+              setLocalError(null);
+              run(onGoogle());
+            }}
+            disabled={busy}
+            label={t.google}
+          />
+          <div className={c.divider}>
+            <span>{t.or}</span>
+          </div>
+        </>
+      ) : null}
+
+      <form ref={formRef} onSubmit={handleSubmit} className={c.form} aria-busy={busy}>
+        {shownError ? (
+          <div className={c.error} role="alert">
+            {shownError}
+          </div>
         ) : null}
 
-        <form ref={formRef} onSubmit={handleSubmit} className="auth-page__form" aria-busy={busy}>
-          {shownError ? (
-            <div className="auth-page__error" role="alert">
-              {shownError}
-            </div>
-          ) : null}
+        {info ? (
+          <div className={c.info} role="status">
+            {info}
+          </div>
+        ) : null}
 
-          {info ? (
-            <div className="auth-page__info" role="status">
-              {info}
-            </div>
-          ) : null}
+        {isSignUp ? nameFields : null}
 
-          {isSignUp ? (
-            <div className="auth-page__row">
-              <div className="auth-page__field">
-                <label htmlFor={fieldId('firstName')} className="auth-page__label">
-                  {t.firstName}
-                  {t.requiredMark}
-                </label>
-                <input
-                  id={fieldId('firstName')}
-                  type="text"
-                  value={values.firstName}
-                  onChange={setField('firstName')}
-                  className="auth-page__input"
-                  placeholder={t.firstNamePlaceholder}
-                  autoComplete="given-name"
-                  required
-                  disabled={busy}
-                />
-              </div>
+        <div className={c.field}>
+          <label htmlFor={fieldId('email')} className={c.label}>
+            {t.email}
+            {t.requiredMark}
+          </label>
+          <input
+            id={fieldId('email')}
+            type="email"
+            value={values.email}
+            onChange={setField('email')}
+            className={c.input}
+            placeholder={t.emailPlaceholder}
+            autoComplete="email"
+            required
+            disabled={busy}
+          />
+        </div>
 
-              <div className="auth-page__field">
-                <label htmlFor={fieldId('lastName')} className="auth-page__label">
-                  {t.lastName}
-                  {t.requiredMark}
-                </label>
-                <input
-                  id={fieldId('lastName')}
-                  type="text"
-                  value={values.lastName}
-                  onChange={setField('lastName')}
-                  className="auth-page__input"
-                  placeholder={t.lastNamePlaceholder}
-                  autoComplete="family-name"
-                  required
-                  disabled={busy}
-                />
-              </div>
-            </div>
-          ) : null}
-
-          <div className="auth-page__field">
-            <label htmlFor={fieldId('email')} className="auth-page__label">
-              {t.email}
+        {!isForgot ? (
+          <div className={c.field}>
+            <label htmlFor={fieldId('password')} className={c.label}>
+              {t.password}
               {t.requiredMark}
             </label>
             <input
-              id={fieldId('email')}
-              type="email"
-              value={values.email}
-              onChange={setField('email')}
-              className="auth-page__input"
-              placeholder={t.emailPlaceholder}
-              autoComplete="email"
+              id={fieldId('password')}
+              type="password"
+              value={values.password}
+              onChange={setField('password')}
+              className={c.input}
+              placeholder={t.passwordPlaceholder}
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
+              required
+              disabled={busy}
+              // minLength seulement à l'inscription : en CONNEXION, un compte
+              // existant doit pouvoir se connecter quel que soit son mot de passe.
+              minLength={isSignUp ? minPasswordLength : undefined}
+              aria-describedby={isSignUp ? fieldId('password-hint') : undefined}
+            />
+            {isSignUp ? (
+              <span id={fieldId('password-hint')} className={c.hint}>
+                {withMin(t.passwordHint)}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+
+        {isSignUp && showConfirmPassword ? (
+          <div className={c.field}>
+            <label htmlFor={fieldId('confirmPassword')} className={c.label}>
+              {t.confirmPassword}
+              {t.requiredMark}
+            </label>
+            <input
+              id={fieldId('confirmPassword')}
+              type="password"
+              value={values.confirmPassword}
+              onChange={setField('confirmPassword')}
+              className={c.input}
+              placeholder={t.confirmPasswordPlaceholder}
+              autoComplete="new-password"
               required
               disabled={busy}
             />
           </div>
+        ) : null}
 
-          {!isForgot ? (
-            <div className="auth-page__field">
-              <label htmlFor={fieldId('password')} className="auth-page__label">
-                {t.password}
-                {t.requiredMark}
-              </label>
-              <input
-                id={fieldId('password')}
-                type="password"
-                value={values.password}
-                onChange={setField('password')}
-                className="auth-page__input"
-                placeholder={t.passwordPlaceholder}
-                autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                required
-                disabled={busy}
-                // minLength seulement à l'inscription : en CONNEXION, un compte
-                // existant doit pouvoir se connecter quel que soit son mot de passe.
-                minLength={isSignUp ? minPasswordLength : undefined}
-                aria-describedby={isSignUp ? fieldId('password-hint') : undefined}
-              />
-              {isSignUp ? (
-                <span id={fieldId('password-hint')} className="auth-page__hint">
-                  {withMin(t.passwordHint)}
-                </span>
-              ) : null}
-            </div>
-          ) : null}
-
-          {isSignUp ? (
-            <div className="auth-page__field">
-              <label htmlFor={fieldId('confirmPassword')} className="auth-page__label">
-                {t.confirmPassword}
-                {t.requiredMark}
-              </label>
-              <input
-                id={fieldId('confirmPassword')}
-                type="password"
-                value={values.confirmPassword}
-                onChange={setField('confirmPassword')}
-                className="auth-page__input"
-                placeholder={t.confirmPasswordPlaceholder}
-                autoComplete="new-password"
-                required
-                disabled={busy}
-              />
-            </div>
-          ) : null}
-
-          {!isSignUp && !isForgot ? (
-            <div className="auth-page__forgot">
-              <button
-                type="button"
-                className="auth-page__link"
-                onClick={switchMode('forgot')}
-                disabled={busy}
-              >
-                {t.forgotPassword}
-              </button>
-            </div>
-          ) : null}
-
-          {isSignUp && termsNotice ? (
-            <p className="auth-page__terms">{termsNotice}</p>
-          ) : null}
-
-          <button type="submit" className="auth-page__submit" disabled={busy}>
-            {submitLabel}
-          </button>
-        </form>
-      </div>
-
-      <p className="auth-page__footer">
-        {isForgot ? (
-          <button
-            type="button"
-            className="auth-page__link auth-page__link--accent"
-            onClick={switchMode('signin')}
-            disabled={busy}
-          >
-            {t.backToSignIn}
-          </button>
-        ) : (
-          <>
-            {isSignUp ? t.haveAccountPrompt : t.noAccountPrompt}
+        {!isSignUp && !isForgot ? (
+          <div className={c.forgot}>
             <button
               type="button"
-              className="auth-page__link auth-page__link--accent"
-              onClick={switchMode(isSignUp ? 'signin' : 'signup')}
-              disabled={busy}
+              className={c.link}
+              onClick={
+                forgotPasswordMode === 'inline' ? sendForgotInline : onSwitchMode('forgot')
+              }
+              disabled={busy || inlineForgotBusy}
             >
-              {isSignUp ? t.signInAction : t.createAccountAction}
+              {inlineForgotBusy ? t.forgotPasswordBusy : t.forgotPassword}
             </button>
-          </>
-        )}
-      </p>
+          </div>
+        ) : null}
+
+        {isSignUp && termsNotice ? <p className={c.terms}>{termsNotice}</p> : null}
+
+        <button type="submit" className={c.submit} disabled={busy}>
+          {submitLabel}
+        </button>
+      </form>
+    </>
+  );
+
+  const toggleTarget: AuthFormMode = isSignUp || isForgot ? 'signin' : 'signup';
+  const togglePrompt = isForgot ? '' : isSignUp ? t.haveAccountPrompt : t.noAccountPrompt;
+  const toggleLabel = isForgot
+    ? t.backToSignIn
+    : isSignUp
+      ? t.signInAction
+      : t.createAccountAction;
+  const toggleHref = modeToggleHref?.(toggleTarget);
+
+  /** `<button>` par défaut (contrat historique) ; `<a>` dès que
+   *  `modeToggleHref` est fourni — `role=link`, deep-link ouvrable. */
+  const toggleControl =
+    toggleHref === undefined ? (
+      <button
+        type="button"
+        className={c.linkAccent}
+        onClick={onSwitchMode(toggleTarget)}
+        disabled={busy}
+      >
+        {toggleLabel}
+      </button>
+    ) : (
+      // Ancre : ?mode= reste lisible et ouvrable en nouvel onglet, le clic
+      // bascule en place sans rechargement (réf. Dialum/Anonymum).
+      <a
+        href={toggleHref}
+        className={c.linkAccent}
+        onClick={(event) => {
+          // ⚠️ On n'intercepte QUE le clic gauche nu. Un clic avec modificateur
+          // (⌘/Ctrl/⇧/⌥) ou avec un autre bouton, c'est « ouvrir dans un
+          // nouvel onglet / une nouvelle fenêtre » : un preventDefault
+          // inconditionnel annulerait cette ouverture ET basculerait quand même
+          // l'onglet courant — les deux à la fois. C'est exactement ce que
+          // `modeToggleHref` promet de préserver.
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) {
+            return;
+          }
+          event.preventDefault();
+          switchMode(toggleTarget);
+        }}
+      >
+        {toggleLabel}
+      </a>
+    );
+
+  const modeToggle = renderModeToggle ? (
+    renderModeToggle({
+      mode,
+      target: toggleTarget,
+      prompt: togglePrompt,
+      label: toggleLabel,
+      href: toggleHref,
+      busy,
+      switchTo: switchMode,
+      footerClassName: c.footer,
+      linkClassName: c.linkAccent,
+    })
+  ) : (
+    <p className={c.footer}>
+      {isForgot ? (
+        toggleControl
+      ) : (
+        <>
+          {togglePrompt}
+          {toggleControl}
+        </>
+      )}
+    </p>
+  );
+
+  return (
+    <>
+      {showCard ? <div className={c.card}>{body}</div> : body}
+
+      {modeToggle}
 
       {footer}
     </>

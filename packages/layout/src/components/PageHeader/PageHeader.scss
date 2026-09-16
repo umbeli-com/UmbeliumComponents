@@ -6,44 +6,117 @@
 // ces deux apps ne pouvait importer `layout/styles`. Seules les classes
 // préfixées sont stylées ici ; le composant émet aussi les historiques (voir
 // AppShell.scss pour le raisonnement complet sur la cascade).
+//
+// ── Tokens ──────────────────────────────────────────────────────────────────
+// Deuxième blocage mesuré : même préfixée, la feuille IMPOSAIT sa typographie
+// et son chrome. À spécificité égale (0,1,0) avec `.page-header__title` de
+// Profilum, c'est l'ordre source qui tranche — donc rien à faire sans
+// `!important`. Chaque valeur passe maintenant par une variable CSS dont le
+// REPLI EST LA VALEUR D'HIER : token non posé ⇒ valeur calculée identique.
+//
+//   Racine    --umb-page-header-direction        column
+//             --umb-page-header-direction-md     row        (≥768px)
+//             --umb-page-header-wrap             nowrap
+//             --umb-page-header-align            normal
+//             --umb-page-header-align-md         center     (≥768px)
+//             --umb-page-header-justify          normal
+//             --umb-page-header-justify-md       space-between (≥768px)
+//             --umb-page-header-gap              1rem
+//             --umb-page-header-margin-bottom    1.5rem
+//   Contenu   --umb-page-header-content-gap      0.25rem
+//   Titre     --umb-page-header-title-size       2rem
+//             --umb-page-header-title-weight     700
+//             --umb-page-header-title-color      → --theme-color-neutral-text
+//             --umb-page-header-title-line-height 1.2
+//             --umb-page-header-title-tracking   -0.025em
+//   Sous-titre --umb-page-header-subtitle-size    1rem
+//             --umb-page-header-subtitle-color   → --theme-color-neutral-text-muted
+//             --umb-page-header-subtitle-measure none   (mesure, ex. 54ch)
+//   Méta      --umb-page-header-meta-gap         1rem
+//             --umb-page-header-actions-gap      0.75rem
+//
+// `normal` / `nowrap` / `none` sont les valeurs INITIALES des propriétés
+// concernées, mais « valeur initiale » ne veut PAS dire « sans effet » : une
+// déclaration participe à la cascade, l'absence de déclaration non. Quatre
+// propriétés sont NEUVES ici (`flex-wrap`, `align-items` et `justify-content`
+// hors media query, `max-width` sur le sous-titre) : les poser à (0,1,0)
+// écraserait un `p { max-width: 65ch }` d'une app (spécificité (0,0,1), donc
+// perdant à TOUT ordre de source) et battrait un `.page-header { flex-wrap:
+// wrap }` chargé avant la feuille — exactement le `.page-header` de Webum
+// (styles.css:387) et de Profilum (_layout.scss:42).
+//
+// Elles vivent donc dans un `:where()`, de spécificité ZÉRO : n'importe quelle
+// règle d'app les bat, à n'importe quel ordre. C'est le seul écrivain de ces
+// quatre propriétés, donc le token reste effectif quand l'app se tait — et le
+// comportement de cascade redevient STRICTEMENT celui d'avant l'élargissement
+// (aucune déclaration = perdant face à tout le monde). Les déclarations qui
+// existaient déjà gardent leur (0,1,0) d'origine, elles.
+//
+// Pour une reprise en main totale du titre, préférer la prop `unstyledTitle`
+// (la classe `umb-page-header__title` n'est alors pas émise du tout).
+//
+// Exemple — Webum reproduit son `.page-header` (styles.css:387) avec 4 tokens :
+//   .page-header { --umb-page-header-direction: row;
+//                  --umb-page-header-wrap: wrap;
+//                  --umb-page-header-align: center;
+//                  --umb-page-header-justify: space-between; }
 
 .umb-page-header {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  flex-direction: var(--umb-page-header-direction, column);
+  gap: var(--umb-page-header-gap, 1rem);
+  margin-bottom: var(--umb-page-header-margin-bottom, 1.5rem);
 
   @media (min-width: 768px) {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: var(--umb-page-header-direction-md, row);
+    align-items: var(--umb-page-header-align-md, center);
+    justify-content: var(--umb-page-header-justify-md, space-between);
   }
+}
+
+// Les TROIS propriétés neuves de la racine, à spécificité zéro (voir l'en-tête).
+// Sans token posé elles valent la valeur initiale, donc le rendu d'hier ; avec
+// une règle d'app en face, l'app gagne — comme quand rien n'était déclaré.
+// `align-items` / `justify-content` restent surchargés à (0,1,0) par la media
+// query ci-dessus au-delà de 768px, exactement comme avant.
+:where(.umb-page-header) {
+  flex-wrap: var(--umb-page-header-wrap, nowrap);
+  align-items: var(--umb-page-header-align, normal);
+  justify-content: var(--umb-page-header-justify, normal);
 }
 
 .umb-page-header__content {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--umb-page-header-content-gap, 0.25rem);
 }
 
 .umb-page-header__title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--theme-color-neutral-text, var(--theme-color-neutral-text, #1a1a2e));
-  line-height: 1.2;
-  letter-spacing: -0.025em;
+  font-size: var(--umb-page-header-title-size, 2rem);
+  font-weight: var(--umb-page-header-title-weight, 700);
+  color: var(--umb-page-header-title-color, var(--theme-color-neutral-text, #1a1a2e));
+  line-height: var(--umb-page-header-title-line-height, 1.2);
+  letter-spacing: var(--umb-page-header-title-tracking, -0.025em);
 }
 
 .umb-page-header__subtitle {
-  font-size: 1rem;
-  color: var(--theme-color-neutral-text-muted, var(--theme-color-neutral-text-muted, #7E8594));
+  font-size: var(--umb-page-header-subtitle-size, 1rem);
+  color: var(--umb-page-header-subtitle-color, var(--theme-color-neutral-text-muted, #7E8594));
   margin: 0;
+}
+
+// Mesure de lecture : Profilum pose `maxWidth: '54ch'` en inline sur ses
+// sous-titres (Contacts.jsx:141, Billing.jsx:73). Propriété NEUVE, donc à
+// spécificité zéro : un `p { max-width: 65ch }` d'app (0,0,1) continue de
+// gagner, comme quand la feuille ne déclarait rien du tout.
+:where(.umb-page-header__subtitle) {
+  max-width: var(--umb-page-header-subtitle-measure, none);
 }
 
 .umb-page-header__meta {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--umb-page-header-meta-gap, 1rem);
 }
 
 .umb-page-header__period {
@@ -69,5 +142,19 @@
 .umb-page-header__actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--umb-page-header-actions-gap, 0.75rem);
+}
+
+// ── Ajouts additifs ─────────────────────────────────────────────────────────
+// Posés APRÈS les règles ci-dessus : à spécificité supérieure (0,2,0), le
+// modificateur peut corriger `.umb-page-header__content`. Sans la prop
+// `flatActions`, ces sélecteurs n'existent nulle part dans le DOM.
+
+// `flatActions` : actions et période en enfants DIRECTS, sans `__meta`. La
+// racine n'étant plus en `space-between` sur deux blocs mais sur trois, le
+// contenu pousse le reste à droite lui-même. `min-width: 0` autorise l'ellipse
+// du titre (Webum EntryEdit.tsx:104) — un item flex ne rétrécit pas sans ça.
+.umb-page-header--flat-actions > .umb-page-header__content {
+  margin-right: auto;
+  min-width: 0;
 }

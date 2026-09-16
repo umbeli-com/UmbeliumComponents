@@ -24,6 +24,19 @@ import { Button } from '../Button';
  * `validate` — une app qui accepte des PDF/DOCX, ou qui veut voir les
  * fichiers refusés pour les afficher en erreur dans SA file, n'a plus à
  * contourner le composant.
+ *
+ * Reste l'APPARENCE. Le duo « ou » + « Parcourir les fichiers » était rendu
+ * d'office : une zone dont TOUTE la surface est cliquable (`clickToBrowse`)
+ * affiche alors un bouton qui refait ce que fait déjà le moindre clic, et
+ * c'est ce bouton en trop qui a fait refuser le composant. `showBrowseButton`
+ * l'enlève — le duo entier, car un « ou » qui n'introduit plus rien ne veut
+ * plus rien dire.
+ *
+ * Et la peau se rend à l'app : `classNames` nomme chaque partie, `unstyled`
+ * retire les classes du paquet. Sans quoi une règle du paquet peut battre
+ * celle de l'app à la spécificité — `.drag-drop-upload:hover:not(.is-loading)
+ * :not(.is-drag-over)` pèse (0,3,0) contre (0,2,0) pour un `.ma-zone:hover` :
+ * l'app posait sa classe et gardait quand même le survol du paquet.
  */
 
 /** Chaînes affichées, surchargeables. Français par défaut. */
@@ -52,6 +65,48 @@ export interface DragDropUploadLabels {
   errorSize?: (maxSize: string) => string;
   /** Lot tronqué par `maxFiles`. */
   errorTooMany?: (maxFiles: number) => string;
+}
+
+/**
+ * Classes posées sur chaque partie, en plus (ou à la place, avec `unstyled`)
+ * de celles du paquet. Même forme que `testIds` : les apps nomment leurs
+ * parties comme elles veulent (`f2docs-drop__title`…), ces noms ne se
+ * dérivent pas les uns des autres.
+ */
+export interface DragDropUploadClassNames {
+  /** Le conteneur `drag-drop-upload-shell` (n'existe qu'avec le slot `queue`). */
+  shell?: string;
+  /** Le bloc centré dans la zone (`drag-drop-upload__content`). */
+  content?: string;
+  /** L'enveloppe de l'icône. */
+  icon?: string;
+  /** Le bloc titre + sous-titre + bouton. */
+  text?: string;
+  /** Le titre (« Glissez vos fichiers ici »). */
+  title?: string;
+  /** La ligne d'explication (`labels.subtitle`). */
+  subtitle?: string;
+  /** Le « ou » entre le titre et le bouton. */
+  divider?: string;
+  /** La ligne des formats acceptés. */
+  meta?: string;
+  /** Le message d'erreur de validation. */
+  error?: string;
+  /** Le conteneur du slot `queue`. */
+  queue?: string;
+  /**
+   * Classe de l'état « on survole avec un fichier ». S'AJOUTE à `is-drag-over`
+   * tant que la peau du paquet est posée ; la REMPLACE en `unstyled`. Sans
+   * elle, c'est `is-drag-over` seule, comme avant.
+   */
+  dragOver?: string;
+  /**
+   * Classe de l'état « envoi/conversion en cours ». Même règle que `dragOver` :
+   * en plus de `is-loading` avec la peau du paquet, à sa place en `unstyled`.
+   * Sans quoi `.drag-drop-upload.is-loading` ne s'appliquerait plus et la zone
+   * resterait cliquable et survolable pendant l'envoi.
+   */
+  loading?: string;
 }
 
 /** `data-testid` posés sur les points d'ancrage. Les apps ont des noms non
@@ -90,6 +145,24 @@ export interface DragDropUploadProps {
   /** Cliquer (ou Entrée/Espace) n'importe où dans la zone ouvre le sélecteur,
    *  pas seulement le bouton. Défaut `false` : le comportement historique. */
   clickToBrowse?: boolean;
+  /**
+   * Afficher le « ou » et le bouton « Parcourir les fichiers ». Défaut :
+   * `true` (historique). `false` ⇒ ni l'un ni l'autre — la zone n'a plus
+   * qu'un titre, et c'est elle qu'on clique (`clickToBrowse`).
+   */
+  showBrowseButton?: boolean;
+  /**
+   * NU : le composant ne pose plus SES classes de peau (`drag-drop-upload`,
+   * `…__content`, `…__icon-wrapper`, `…__title`, `…__subtitle`,
+   * `…__divider`, `…__meta`, `…__error`, `…__text-wrapper`, la coquille et la
+   * file). Il ne reste que `className` / `classNames` et les classes d'état.
+   * Deux exceptions VOLONTAIRES : l'`<input>` garde `…__input` (c'est lui qui
+   * le cache, pas une peau), et les sous-arbres de progression/succès gardent
+   * les leurs — sans équivalent côté app, ils disparaîtraient à l'écran.
+   */
+  unstyled?: boolean;
+  /** Classes de l'app, partie par partie. */
+  classNames?: DragDropUploadClassNames;
   /** Extensions acceptées (« .pdf », « .docx »…). Remplace la liste média par
    *  défaut. `[]` = aucun filtrage par extension. */
   allowedExtensions?: string[];
@@ -156,6 +229,9 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   maxFiles,
   queue,
   clickToBrowse = false,
+  showBrowseButton = true,
+  unstyled = false,
+  classNames,
   allowedExtensions,
   validate,
   icon,
@@ -184,6 +260,31 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   // ne doit pas effacer le raccourci `testId`.
   const ids: DragDropUploadTestIds = { ...testIds, root: testIds?.root ?? testId };
   const maxSizeLabel = maxSizeMB >= 1024 ? `${(maxSizeMB / 1024).toFixed(0)}GB` : `${maxSizeMB}MB`;
+
+  // Classe d'une partie : celle du paquet (sauf en `unstyled`), puis celle de
+  // l'app. Vide ⇒ l'attribut `class` n'est pas écrit du tout, plutôt qu'un
+  // `class=""` qui salirait le DOM.
+  const cn = classNames ?? {};
+  const skin = (own: string, app?: string): string => {
+    const base = unstyled ? '' : own;
+    if (!app) return base;
+    return base ? `${base} ${app}` : app;
+  };
+  // Classe d'ÉTAT : même règle que les autres parties. Tant que la peau du
+  // paquet est posée, la classe de l'app s'AJOUTE à celle du paquet — elle ne
+  // la remplace pas. La remplacer décrocherait les règles d'état du paquet de
+  // la peau qu'on a justement gardée : `.drag-drop-upload.is-loading` porte
+  // `pointer-events: none` / `cursor: not-allowed` / l'opacité, et
+  // `:hover:not(.is-loading):not(.is-drag-over)` continuerait d'éclairer la
+  // zone PENDANT l'envoi. C'est en `unstyled` — là où plus aucune règle du
+  // paquet ne s'applique — que la classe de l'app prend toute la place.
+  const stateClass = (own: string, app?: string): string => {
+    if (!app) return own;
+    return unstyled ? app : `${own} ${app}`;
+  };
+  const dragOverClass = stateClass('is-drag-over', cn.dragOver);
+  const loadingClass = stateClass('is-loading', cn.loading);
+  const skinAttr = (value: string) => (value ? { className: value } : null);
 
   // Message d'extension refusée. Sans `allowedExtensions` NI `labels.errorType`,
   // c'est le littéral historique, au caractère près. Dès que l'app fournit sa
@@ -310,9 +411,18 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
 
   const isProcessing = isLoading || isConverting;
 
+  // `unstyled` : plus de classe du paquet sur la racine — donc plus non plus
+  // de `drag-drop-upload--clickable`, qui ne portait que le liseré de focus du
+  // paquet. C'est l'app qui montre le focus, comme elle montre tout le reste.
+  const rootClass = unstyled
+    ? [isDragOver ? dragOverClass : '', isProcessing ? loadingClass : '', className]
+        .filter(Boolean)
+        .join(' ')
+    : `drag-drop-upload ${isDragOver ? dragOverClass : ''} ${isProcessing ? loadingClass : ''} ${className}${clickToBrowse ? ' drag-drop-upload--clickable' : ''}`;
+
   const dropZone = (
     <div
-      className={`drag-drop-upload ${isDragOver ? 'is-drag-over' : ''} ${isProcessing ? 'is-loading' : ''} ${className}${clickToBrowse ? ' drag-drop-upload--clickable' : ''}`}
+      {...(rootClass ? { className: rootClass } : null)}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -355,7 +465,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
         {...(ids.input !== undefined ? { 'data-testid': ids.input } : null)}
       />
 
-      <div className="drag-drop-upload__content">
+      <div {...skinAttr(skin('drag-drop-upload__content', cn.content))}>
         {isConverting ? (
           <div className="drag-drop-upload__loader drag-drop-upload__converting">
             <div className="drag-drop-upload__progress-container">
@@ -394,38 +504,43 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
           </div>
         ) : (
           <>
-            <div className="drag-drop-upload__icon-wrapper">
+            <div {...skinAttr(skin('drag-drop-upload__icon-wrapper', cn.icon))}>
               {icon ?? <Upload size={48} />}
             </div>
 
-            <div className="drag-drop-upload__text-wrapper">
-              <p className="drag-drop-upload__title">
+            <div {...skinAttr(skin('drag-drop-upload__text-wrapper', cn.text))}>
+              <p {...skinAttr(skin('drag-drop-upload__title', cn.title))}>
                 {multiple ? t.titleMultiple : t.title}
               </p>
               {t.subtitle !== undefined && (
-                <p className="drag-drop-upload__subtitle">{t.subtitle}</p>
+                <p {...skinAttr(skin('drag-drop-upload__subtitle', cn.subtitle))}>{t.subtitle}</p>
               )}
-              <p className="drag-drop-upload__divider">
-                {t.or}
-              </p>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleButtonClick}
-                type="button"
-                testId={ids.browse}
-              >
-                {t.browse}
-              </Button>
+              {/* Le « ou » et le bouton forment un tout : ils partent ensemble. */}
+              {showBrowseButton && (
+                <>
+                  <p {...skinAttr(skin('drag-drop-upload__divider', cn.divider))}>
+                    {t.or}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleButtonClick}
+                    type="button"
+                    testId={ids.browse}
+                  >
+                    {t.browse}
+                  </Button>
+                </>
+              )}
             </div>
 
-            <div className="drag-drop-upload__meta">
+            <div {...skinAttr(skin('drag-drop-upload__meta', cn.meta))}>
               {t.formats(maxSizeLabel)}
             </div>
 
             {error && (
               <div
-                className="drag-drop-upload__error"
+                {...skinAttr(skin('drag-drop-upload__error', cn.error))}
                 {...(ids.error !== undefined ? { 'data-testid': ids.error } : null)}
               >
                 {error}
@@ -446,10 +561,10 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   if (queue === undefined || queue === null || queue === false) return dropZone;
 
   return (
-    <div className="drag-drop-upload-shell">
+    <div {...skinAttr(skin('drag-drop-upload-shell', cn.shell))}>
       {dropZone}
       <div
-        className="drag-drop-upload__queue"
+        {...skinAttr(skin('drag-drop-upload__queue', cn.queue))}
         {...(ids.queue !== undefined ? { 'data-testid': ids.queue } : null)}
       >
         {queue}

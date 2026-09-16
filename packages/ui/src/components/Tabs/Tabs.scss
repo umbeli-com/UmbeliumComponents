@@ -151,3 +151,11 @@
     font-size: 14px;
   }
 }
+
+// ── Variante « bare » (NUE) ─────────────────────────────────────────────────
+// Rien ici, et c'est VOLONTAIRE : `variant="bare"` ne pose aucune classe dans
+// le DOM (ni `.tabs`, ni `.tabs__list`, ni `.tabs__tab`, ni les enveloppes
+// d'icône/libellé). Une règle `.tabs--bare { … }` ne s'appliquerait donc à
+// rien, et toute règle écrite ici reviendrait à réintroduire par la feuille de
+// style le chrome que la variante existe précisément pour retirer. La barre
+// n'a que les classes de l'app : c'est elle, et elle seule, qui la peint.

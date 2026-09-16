@@ -275,3 +275,12 @@
     outline-offset: 2px;
   }
 }
+
+// ── `showBrowseButton={false}` / `unstyled` ─────────────────────────────────
+// Aucune règle, et c'est VOLONTAIRE.
+// - Sans le duo « ou » + bouton, il ne reste que le titre (et l'éventuel
+//   sous-titre) dans `.drag-drop-upload__text-wrapper` : le `gap` de 0.5rem
+//   n'a plus qu'un intervalle à tenir, rien à corriger.
+// - `unstyled` ne pose plus les classes de ce fichier : une règle écrite ici
+//   pour ce mode ne s'appliquerait à rien — et si elle s'appliquait, elle
+//   réintroduirait le chrome que le mode existe pour retirer.

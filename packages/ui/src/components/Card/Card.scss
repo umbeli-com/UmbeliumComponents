@@ -131,6 +131,38 @@ html.dark .card--elevation-md,
     align-items: flex-start;
   }
 
+  // Exactement ce que `.card__footer` écrit dans sa règle de base. Posé ici en
+  // modificateur (et non dans la base de `.card__header`) pour que le rendu
+  // historique — `display: flex` + `gap: .75rem`, SANS répartition — ne bouge
+  // pas d'un pixel. N'agit que sur l'axe horizontal : `align-items: center` de
+  // la base reste en place, ce qui donne le `@include flex-between` d'Anonymum
+  // (`_mixins.scss:191-195`) à l'identique.
+  //
+  // Sans répartition, l'en-tête rendu par `children` (un libellé + une action,
+  // la forme des six panneaux `.anonymium-card`) collait ses deux enfants : la
+  // gouttière valait `gap: .75rem`, pas l'espace restant.
+  &--align-between {
+    justify-content: space-between;
+  }
+
+  // Air SOUS l'en-tête, pour la carte à padding unique dont l'en-tête est
+  // séparé du corps par du vide et non par un filet (`divider={false}`).
+  // `md` = 20px = le `margin-bottom: $space-20` de `.anonymium-card-header`
+  // (`Anonymum/src/styles/components/_card.scss:14`), au pixel.
+  // Aucun défaut : sans la prop `spacing`, aucune de ces classes n'est émise,
+  // donc l'en-tête garde sa marge nulle historique.
+  &--spacing-sm {
+    margin-bottom: 0.75rem;
+  }
+
+  &--spacing-md {
+    margin-bottom: 1.25rem;
+  }
+
+  &--spacing-lg {
+    margin-bottom: 1.5rem;
+  }
+
   &--padding-none {
     padding: 0;
   }
@@ -167,6 +199,21 @@ html.dark .card--elevation-md,
 
   // `sm` = l'en-tête de panneau de Manager (14px/600) ; `md` le défaut de la
   // suite (15px/600) ; `lg` le `typography-h3` d'Anonymum (24px/700).
+  //
+  // Il N'Y A PAS de `&--inherit` ici, et c'est le but : `titleSize="inherit"`
+  // n'émet AUCUNE de ces trois classes, donc le paquet n'écrit ni `font-size`,
+  // ni `line-height`, ni `font-weight`, ni `letter-spacing` sur le titre. La
+  // classe passée en `titleClassName` est alors la seule à les déclarer et
+  // gagne quel que soit l'ordre des feuilles — une règle absente ne peut pas
+  // être battue. (Écrire `font: inherit` aurait fait l'inverse : le paquet
+  // aurait écrasé la typographie de l'app dès qu'il est chargé en dernier.)
+  //
+  // `color` reste déclaré par la base `.card__header-title` : à spécificité
+  // égale (0,1,0), c'est l'ordre des feuilles qui tranche — et la convention de
+  // la suite charge le paquet AVANT l'app (`Anonymum/src/main.tsx` : `import
+  // '@umbeli-com/ui/styles'` puis `import './styles/index.scss'`), donc la
+  // couleur de l'app gagne. Si une app inversait cet ordre, elle hériterait de
+  // `--theme-color-neutral-text`, qui reste une couleur du thème.
   &--sm {
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -200,6 +247,29 @@ html.dark .card--elevation-md,
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+}
+
+// `justify-content: space-between` ne répartit que l'espace LIBRE. Or l'en-tête
+// n'en laisse aucun dès qu'on utilise `title`/`subtitle` ou `actions` :
+//   · `.card__header-text` est en `flex: 1` — il absorbe tout ce qui reste ;
+//   · `.card__header-actions` est en `margin-left: auto` — et une marge `auto`
+//     consomme l'espace libre AVANT que `justify-content` n'entre en jeu
+//     (CSS Flexbox §8.1).
+// Sans les deux règles ci-dessous, `align="between"` était donc un NO-OP
+// SILENCIEUX dans toute composition autre que l'en-tête rendu par `children`
+// seuls : à trois enfants (texte + children + actions), la marge `auto` collait
+// `children` au texte au lieu de répartir. On neutralise les deux absorbeurs,
+// mais UNIQUEMENT sous la classe opt-in.
+//
+// Spécificité (0,2,0) > (0,1,0) des deux règles ci-dessus, et le sélecteur
+// EXIGE `card__header--align-between` : un en-tête qui ne passe pas
+// `align="between"` ne peut pas les matcher. Rendu historique intact.
+.card__header--align-between > .card__header-text {
+  flex: 0 1 auto;
+}
+
+.card__header--align-between > .card__header-actions {
+  margin-left: 0;
 }
 
 .card__body {

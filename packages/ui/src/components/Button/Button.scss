@@ -171,3 +171,131 @@
     opacity: 1;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ajouts additifs — 2e vague : rendre le bouton TRANSPARENT à la peau de l'app.
+// Rien au-dessus de cette ligne n'a bougé. Toutes les règles qui suivent sont
+// soit de NOUVELLES classes (aucune n'était rendue hier), soit un sélecteur
+// qui ne peut pas matcher un `<button>` (`a.button`). Le rendu par défaut est
+// donc inchangé par construction.
+// ─────────────────────────────────────────────────────────────────────────────
+
+.button {
+  // ── `ghost-plain` : le fantôme SANS cadre ──
+  // `.button--ghost` (plus haut) pose `border: 1px solid neutral-surface` + une
+  // encre neutre. Le `.btn-ghost` d'Anonymum
+  // (`src/styles/components/_button.scss:60-68`) est l'inverse : transparent,
+  // `border: none`, encre de marque, survol sur le teint de marque. Les deux
+  // cohabitent — `ghost` n'a pas bougé.
+  &--ghost-plain {
+    background-color: transparent;
+    color: var(--theme-color-brand-primary, #030174);
+    border: none;
+
+    // `:not([aria-disabled])` en plus de `:not(:disabled)` : un lien désactivé
+    // (cf. `as`/`href`) n'a pas de `:disabled` à opposer au survol.
+    &:hover:not(:disabled):not([aria-disabled='true']) {
+      background-color: var(--theme-color-brand-primary-soft, #e8e7f5);
+    }
+  }
+
+  // ── Typographie : le paquet cesse d'imposer ──
+  // `.button` pose `font-family: 'Manrope', sans-serif` et `font-weight: 500`.
+  // Anonymum hérite la police de la page (`src/styles/_reset.scss:19`) et écrit
+  // ses boutons en 600 (`$font-weight-semibold`) : adopter le composant
+  // repeignait 75 boutons. Même spécificité (0,1,0) que la base, déclaré APRÈS
+  // dans le fichier — c'est l'ordre source qui tranche, pas un `!important`.
+  &--inherit-font {
+    font-family: inherit;
+    font-weight: inherit;
+  }
+
+  // Graisse demandée (`inheritFont={600}`), posée en variable inline par la
+  // prop, exactement comme le diamètre libre du Spinner. Déclarée APRÈS
+  // `--inherit-font`, à spécificité égale : la graisse explicite l'emporte sur
+  // l'héritage. Le repli reprend la valeur historique du paquet, pour qu'une
+  // variable absente ne fasse pas maigrir le bouton.
+  &--custom-weight {
+    font-weight: var(--button-font-weight, 500);
+  }
+
+  // ── Hauteur libre ──
+  // Anonymum : `$button-height: 52px` (`src/styles/_variables.scss:98`) sur le
+  // `.btn` sans classe de taille ; l'échelle du paquet vaut 24/32/40/48/56, donc
+  // 52 n'existait pas. Déclarée après TOUTES les classes de taille ET après
+  // `--link` (qui remet `height: auto`) : à spécificité égale (0,1,0), une
+  // hauteur demandée gagne. `sm`/`md`/`lg` restent à 32/40/48 quand la prop est
+  // absente — cette classe n'existe alors pas dans le balisage.
+  &--custom-height {
+    height: var(--button-height, 40px);
+  }
+
+  // Carré : la largeur suit la hauteur libre. (0,2,0), comme les largeurs par
+  // cran juste au-dessus, et déclarée après — elle gagne.
+  &--icon-only#{&}--custom-height {
+    width: var(--button-height, 40px);
+  }
+
+  // ── État « inerte » d'un élément qui n'est pas un `<button>` ──
+  // Un `<a>`/`<Link>` n'a pas de `:disabled` : `disabled`/`loading` y sont
+  // traduits en `aria-disabled="true"` côté TSX. Ces deux règles lui donnent
+  // l'apparence que `.button:disabled` donne au bouton. Elles ne peuvent pas
+  // toucher le rendu historique : le composant ne posait jamais `aria-disabled`.
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // Même raisonnement que `--loading:disabled` plus haut : un lien qui travaille
+  // n'est pas un lien refusé.
+  &--loading[aria-disabled='true'] {
+    cursor: progress;
+    opacity: 1;
+  }
+
+  // ── Le survol doit se taire, lui aussi ──
+  // Les survols historiques sont gardés par `:not(:disabled)` — une garde qu'un
+  // `<a>` ne peut PAS opposer : il n'a pas de `:disabled`. Sans les règles qui
+  // suivent, un lien inerte affichait `cursor: not-allowed` et `opacity: .5`
+  // tout en s'allumant sous le curseur (et en se soulignant, pour `link`) : le
+  // curseur disait « refus », la couleur disait « clique-moi ».
+  // `.button--primary[aria-disabled='true']:hover` pèse (0,3,0), exactement
+  // comme `.button--primary:hover:not(:disabled)`, et est déclaré plus bas :
+  // il gagne sans `!important`. Chaque règle réaffirme la couleur DE REPOS du
+  // variant, pas une couleur nouvelle.
+  // `ghost-plain` n'est pas là : il porte déjà sa propre garde
+  // `:not([aria-disabled='true'])` sur son survol.
+  // Ces sélecteurs ne peuvent pas toucher le rendu historique : le composant
+  // n'a jamais posé `aria-disabled` sur un `<button>`.
+  &--primary[aria-disabled='true']:hover,
+  &--primary[aria-disabled='true']:active {
+    background-color: var(--theme-color-brand-primary, #030174);
+  }
+
+  &--secondary[aria-disabled='true']:hover {
+    background-color: var(--theme-color-neutral-surface-alt, #F8F9FA);
+  }
+
+  &--ghost[aria-disabled='true']:hover {
+    background-color: transparent;
+  }
+
+  &--danger[aria-disabled='true']:hover {
+    background-color: var(--theme-color-danger, #dc2626);
+  }
+
+  &--link[aria-disabled='true']:hover {
+    text-decoration: none;
+  }
+}
+
+// ── Le bouton rendu en `<a>` ──
+// Un `<button>` n'est jamais souligné ; un `<a>` l'est par la feuille de l'UA.
+// Sans ça, `<Button href>` / `<Button as={Link}>` arrivait souligné là où le
+// `.btn` des apps pose `text-decoration: none` (Anonymum `_button.scss:14`).
+// Sélecteur de TYPE : il ne peut pas matcher l'élément historique.
+// `.button--link:hover` (0,2,0) reste au-dessus de `a.button` (0,1,1), donc le
+// variant `link` garde son soulignement au survol.
+a.button {
+  text-decoration: none;
+}

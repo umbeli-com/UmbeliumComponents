@@ -25,6 +25,15 @@ import { X } from 'lucide-react';
  * `headerActions`, `backdropBlur`…) sont facultatives ET sans effet tant
  * qu'elles ne sont pas passées : sans elles, le DOM produit est exactement
  * celui d'avant, attribut par attribut.
+ *
+ * La PEAU, elle, se règle PAR INSTANCE : couleur du voile, `padding` de
+ * l'en-tête/du corps/du pied, taille du titre et du texte, plus une classe par
+ * partie. Une app n'adopte pas la fenêtre « atelier » d'un écran au prix de
+ * repeindre ses confirmations : passer par les jetons de thème
+ * (`--theme-color-overlay`…) aurait changé toutes les fenêtres de l'app d'un
+ * coup, y compris celles — déjà migrées — qui n'avaient rien demandé. Chaque
+ * réglage part donc en variable CSS posée sur CETTE fenêtre, et la feuille de
+ * style garde sa valeur d'origine en repli : sans réglage, rien ne bouge.
  */
 
 /** `'full'` : aucune largeur maximale — la fenêtre occupe le voile moins sa marge. */
@@ -112,6 +121,39 @@ export interface ModalProps {
   maxHeight?: ModalLength;
   /** Rayon des coins. Défaut : 16px (feuille de style). */
   radius?: ModalLength;
+  /**
+   * Couleur du voile, POUR CETTE FENÊTRE (`'rgba(15, 23, 42, 0.55)'`,
+   * `'var(--color-overlay)'`…). Défaut : `--theme-color-overlay`, le jeton de
+   * la suite. À préférer STRICTEMENT au jeton quand une seule fenêtre doit
+   * changer : redéfinir `--theme-color-overlay` repeindrait aussi les
+   * confirmations déjà adoptées ailleurs dans l'app.
+   */
+  overlayColor?: string;
+  /**
+   * `padding` de l'en-tête. Défaut : `16px 20px` (et `16px 16px` sous 480px).
+   * Une valeur donnée vaut aussi sur mobile — c'est la fenêtre qui décide.
+   */
+  headerPadding?: ModalLength;
+  /** `padding` du corps. Défaut : `20px` (et `16px` sous 480px). */
+  bodyPadding?: ModalLength;
+  /** `padding` du pied. Défaut : `12px 20px` (et `12px 16px` sous 480px). */
+  footerPadding?: ModalLength;
+  /** `font-size` du titre. Défaut : `1rem`. Un nombre = des pixels ; pour une
+   *  mesure relative, passer la chaîne (`'0.85rem'`). */
+  titleSize?: ModalLength;
+  /** `font-size` du corps. Défaut : `0.875rem`. */
+  bodyFontSize?: ModalLength;
+  /** Classe posée sur le voile, en plus de `.umb-modal__backdrop`. */
+  backdropClassName?: string;
+  /** Classe posée sur l'en-tête, en plus de `.umb-modal__header` — pour ce
+   *  qu'aucune mesure ne couvre (un fond, une bordure, une ombre). */
+  headerClassName?: string;
+  /** Classe posée sur le titre, en plus de `.umb-modal__title`. */
+  titleClassName?: string;
+  /** Classe posée sur le corps, en plus de `.umb-modal__body`. */
+  bodyClassName?: string;
+  /** Classe posée sur le pied, en plus de `.umb-modal__footer`. */
+  footerClassName?: string;
   /** `alertdialog` pour une décision bloquante (voir ConfirmDialog). */
   role?: 'dialog' | 'alertdialog';
   /**
@@ -202,6 +244,17 @@ export function Modal({
   height,
   maxHeight,
   radius,
+  overlayColor,
+  headerPadding,
+  bodyPadding,
+  footerPadding,
+  titleSize,
+  bodyFontSize,
+  backdropClassName = '',
+  headerClassName = '',
+  titleClassName = '',
+  bodyClassName = '',
+  footerClassName = '',
   role = 'dialog',
   initialFocusRef,
   container,
@@ -338,19 +391,39 @@ export function Modal({
     typeof backdropBlur === 'number' || typeof backdropBlur === 'string'
       ? backdropBlur
       : undefined;
+  // Le voile ne porte de `style` que si on lui a demandé quelque chose : sans
+  // flou ET sans couleur propre, l'attribut reste absent, comme avant.
+  const backdropVars: StyleWithVars = {};
+  if (blurOn && blurLength !== undefined) {
+    backdropVars['--umb-modal-backdrop-blur'] = cssLength(blurLength);
+  }
+  if (overlayColor !== undefined) backdropVars['--umb-modal-overlay'] = overlayColor;
   const backdropStyle: StyleWithVars | undefined =
-    blurOn && blurLength !== undefined
-      ? { '--umb-modal-backdrop-blur': cssLength(blurLength) }
-      : undefined;
+    Object.keys(backdropVars).length > 0 ? backdropVars : undefined;
 
   // Les mesures libres passent en style inline, donc au-dessus de `size` : rien
   // n'est écrit tant qu'on n'en demande pas, et `style` reste alors absent.
-  const dialogStyle: CSSProperties = {};
+  const dialogStyle: StyleWithVars = {};
   if (width !== undefined) dialogStyle.width = width;
   if (maxWidth !== undefined) dialogStyle.maxWidth = maxWidth;
   if (height !== undefined) dialogStyle.height = height;
   if (maxHeight !== undefined) dialogStyle.maxHeight = maxHeight;
   if (radius !== undefined) dialogStyle.borderRadius = radius;
+  // Les mesures de peau voyagent en variables CSS posées sur la fenêtre :
+  // l'en-tête, le corps et le pied en héritent, et la règle de style garde sa
+  // valeur d'origine en repli. Une seule fenêtre est donc touchée, et
+  // seulement sur ce qu'on lui a demandé.
+  if (headerPadding !== undefined) {
+    dialogStyle['--umb-modal-header-padding'] = cssLength(headerPadding);
+  }
+  if (bodyPadding !== undefined) dialogStyle['--umb-modal-body-padding'] = cssLength(bodyPadding);
+  if (footerPadding !== undefined) {
+    dialogStyle['--umb-modal-footer-padding'] = cssLength(footerPadding);
+  }
+  if (titleSize !== undefined) dialogStyle['--umb-modal-title-size'] = cssLength(titleSize);
+  if (bodyFontSize !== undefined) {
+    dialogStyle['--umb-modal-body-font-size'] = cssLength(bodyFontSize);
+  }
   const hasDialogStyle = Object.keys(dialogStyle).length > 0;
 
   const closeButton = showCloseButton ? (
@@ -368,7 +441,9 @@ export function Modal({
 
   return createPortal(
     <div
-      className={`umb-modal__backdrop${blurOn ? ' umb-modal__backdrop--blur' : ''}`}
+      className={`umb-modal__backdrop${blurOn ? ' umb-modal__backdrop--blur' : ''}${
+        backdropClassName ? ` ${backdropClassName}` : ''
+      }`}
       role="presentation"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
@@ -387,13 +462,25 @@ export function Modal({
         data-testid={testIds.root}
       >
         {hasHeader && (
-          <div className="umb-modal__header">
+          <div className={`umb-modal__header${headerClassName ? ` ${headerClassName}` : ''}`}>
             {title ? (
-              <h2 className="umb-modal__title" id={titleId} data-testid={testIds.title}>
+              <h2
+                className={`umb-modal__title${titleClassName ? ` ${titleClassName}` : ''}`}
+                id={titleId}
+                data-testid={testIds.title}
+              >
                 {title}
               </h2>
             ) : (
-              <span className="umb-modal__title" aria-hidden="true" />
+              // Cale qui tient la place du titre absent (elle pousse la croix à
+              // droite). Elle porte `.umb-modal__title`, donc elle porte aussi
+              // `titleClassName` : une classe d'app qui règle une largeur, un
+              // `flex` ou une police ferait sinon sauter la mise en page d'une
+              // fenêtre sans titre par rapport à la même fenêtre avec titre.
+              <span
+                className={`umb-modal__title${titleClassName ? ` ${titleClassName}` : ''}`}
+                aria-hidden="true"
+              />
             )}
             {headerActions ? (
               <div className="umb-modal__header-actions">
@@ -406,9 +493,15 @@ export function Modal({
           </div>
         )}
 
-        <div className="umb-modal__body">{children}</div>
+        <div className={`umb-modal__body${bodyClassName ? ` ${bodyClassName}` : ''}`}>
+          {children}
+        </div>
 
-        {footer && <div className="umb-modal__footer">{footer}</div>}
+        {footer && (
+          <div className={`umb-modal__footer${footerClassName ? ` ${footerClassName}` : ''}`}>
+            {footer}
+          </div>
+        )}
       </div>
     </div>,
     host,
