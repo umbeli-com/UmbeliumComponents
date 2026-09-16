@@ -1,6 +1,13 @@
 // PageHeader Component Styles
+//
+// Préfixe `umb-` : `.page-header` est la classe la plus collisionnée de la
+// suite — Webum en a 6 règles maison et Profilum la réécrit à la main dans
+// neuf pages. Tant que la feuille du paquet ciblait `.page-header`, aucune de
+// ces deux apps ne pouvait importer `layout/styles`. Seules les classes
+// préfixées sont stylées ici ; le composant émet aussi les historiques (voir
+// AppShell.scss pour le raisonnement complet sur la cascade).
 
-.page-header {
+.umb-page-header {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -13,13 +20,13 @@
   }
 }
 
-.page-header__content {
+.umb-page-header__content {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.page-header__title {
+.umb-page-header__title {
   font-size: 2rem;
   font-weight: 700;
   color: var(--theme-color-neutral-text, var(--theme-color-neutral-text, #1a1a2e));
@@ -27,19 +34,19 @@
   letter-spacing: -0.025em;
 }
 
-.page-header__subtitle {
+.umb-page-header__subtitle {
   font-size: 1rem;
   color: var(--theme-color-neutral-text-muted, var(--theme-color-neutral-text-muted, #7E8594));
   margin: 0;
 }
 
-.page-header__meta {
+.umb-page-header__meta {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.page-header__period {
+.umb-page-header__period {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -49,17 +56,17 @@
   border-radius: 100px;
 }
 
-.page-header__period-icon {
+.umb-page-header__period-icon {
   font-size: 0.875rem;
 }
 
-.page-header__period-text {
+.umb-page-header__period-text {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--theme-color-neutral-text, var(--theme-color-neutral-text, #1a1a2e));
 }
 
-.page-header__actions {
+.umb-page-header__actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;

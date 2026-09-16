@@ -9,6 +9,11 @@ export interface GridSectionProps {
   className?: string;
 }
 
+/**
+ * Double classe (historique + `umb-`), modificateur `--gap-*` inclus : la
+ * gouttière est portée par `.umb-grid-section--gap-X .umb-grid-section__grid`,
+ * donc les deux doivent être émises ensemble. Voir GridSection.scss.
+ */
 export function GridSection({ 
   children, 
   title, 
@@ -17,10 +22,12 @@ export function GridSection({
   className = '' 
 }: GridSectionProps) {
   return (
-    <section className={`grid-section grid-section--gap-${gap} ${className}`}>
-      {title && <h2 className="grid-section__title">{title}</h2>}
+    <section
+      className={`grid-section umb-grid-section grid-section--gap-${gap} umb-grid-section--gap-${gap} ${className}`}
+    >
+      {title && <h2 className="grid-section__title umb-grid-section__title">{title}</h2>}
       <div 
-        className="grid-section__grid"
+        className="grid-section__grid umb-grid-section__grid"
         style={{ 
           gridTemplateColumns: `repeat(${columns}, 1fr)` 
         }}

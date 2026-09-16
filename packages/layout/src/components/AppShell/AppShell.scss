@@ -1,13 +1,36 @@
 // AppShell Component Styles
-// Note: Base app-shell styles should be defined in the consuming app
-// This provides component-specific overrides if needed
+//
+// PRÉFIXE `umb-` — pourquoi.
+// Les classes génériques `.app-shell*` entraient en collision avec celles que
+// les apps possèdent déjà : Webum refusait d'importer `layout/styles` pour
+// cette raison exacte (cf. le commentaire de son main.tsx), Scrapium a aussi
+// son propre `.app-shell`. La FEUILLE ne cible donc plus que `.umb-app-shell*`
+// (même convention que `.umb-modal`/`.umb-toast` dans @umbeli-com/ui).
+//
+// Le COMPOSANT, lui, continue d'émettre les DEUX classes (`app-shell` ET
+// `umb-app-shell`). C'est ce qui rend le changement invisible pour l'existant :
+//   • Socialum surcharge `.app-shell__*` depuis son `_app-shell.scss` local —
+//     la classe historique reste dans le markup, ses règles s'appliquent encore
+//     et, à spécificité égale (1 classe ici comme là) et à ordre d'import
+//     inchangé, elles gagnent toujours ;
+//   • Dialum et UmbeliumManager n'ont AUCUNE règle `.app-shell` locale et
+//     dépendent à 100 % de cette feuille — elle les sert via `.umb-app-shell` ;
+//   • leurs suites Playwright ciblent `.app-shell__sidebar`,
+//     `.app-shell__content`, `.app-shell__overlay` : ces sélecteurs matchent
+//     toujours.
+// Ne JAMAIS ajouter de classe au sélecteur (ex. `.umb-app-shell.umb-app-shell`)
+// ni l'imbriquer sous une racine : ça ferait passer le paquet devant les
+// surcharges locales de Socialum, donc changerait son rendu.
+//
+// Les classes d'état (`is-open`, `is-visible`, `chat-open`) restent NUES : elles
+// ne sont jamais seules dans un sélecteur, et les tests e2e les assertent.
 
-.app-shell {
+.umb-app-shell {
   display: flex;
   min-height: 100vh;
 }
 
-.app-shell__sidebar {
+.umb-app-shell__sidebar {
   position: fixed;
   top: 0;
   left: 0;
@@ -29,7 +52,7 @@
   }
 }
 
-.app-shell__main {
+.umb-app-shell__main {
   flex: 1;
   margin-left: 240px;
   display: flex;
@@ -42,13 +65,13 @@
   }
 }
 
-.app-shell__topbar {
+.umb-app-shell__topbar {
   position: sticky;
   top: 0;
   z-index: 50;
 }
 
-.app-shell__content {
+.umb-app-shell__content {
   flex: 1;
   padding: 1.5rem;
   max-width: 1400px;
@@ -60,7 +83,7 @@
   }
 }
 
-.app-shell__overlay {
+.umb-app-shell__overlay {
   display: none;
   position: fixed;
   inset: 0;
@@ -81,8 +104,8 @@
 }
 
 // Chat panel adjustment
-.app-shell.chat-open {
-  .app-shell__main {
+.umb-app-shell.chat-open {
+  .umb-app-shell__main {
     @media (min-width: 1024px) {
       margin-right: 400px;
     }

@@ -1,6 +1,12 @@
 // Topbar Component Styles
+//
+// Préfixe `umb-` : même règle que le reste du paquet (voir AppShell.scss).
+// `.topbar` est nommément cité par le main.tsx de Webum parmi les classes qui
+// l'empêchaient d'importer la feuille complète. Le composant émet les deux
+// jeux de classes — les suites Playwright de Dialum ciblent
+// `.topbar__menu-btn`, ce sélecteur doit continuer de matcher.
 
-.topbar {
+.umb-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -14,12 +20,12 @@
   }
 }
 
-.topbar__left {
+.umb-topbar__left {
   display: flex;
   align-items: center;
 }
 
-.topbar__menu-btn {
+.umb-topbar__menu-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,13 +48,13 @@
   }
 }
 
-.topbar__center {
+.umb-topbar__center {
   flex: 1;
   display: flex;
   justify-content: center;
 }
 
-.topbar__ai-cta {
+.umb-topbar__ai-cta {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -79,7 +85,7 @@
   }
 
   @media (max-width: 400px) {
-    .topbar__ai-cta-text {
+    .umb-topbar__ai-cta-text {
       display: none;
     }
     padding: 0.625rem;
@@ -87,16 +93,16 @@
   }
 }
 
-.topbar__ai-cta-icon {
+.umb-topbar__ai-cta-icon {
   display: flex;
   align-items: center;
 }
 
-.topbar__ai-cta-text {
+.umb-topbar__ai-cta-text {
   white-space: nowrap;
 }
 
-.topbar__ai-cta-shortcut {
+.umb-topbar__ai-cta-shortcut {
   padding: 0.125rem 0.5rem;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
@@ -108,13 +114,13 @@
   }
 }
 
-.topbar__right {
+.umb-topbar__right {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.topbar__action-btn {
+.umb-topbar__action-btn {
   display: flex;
   align-items: center;
   justify-content: center;

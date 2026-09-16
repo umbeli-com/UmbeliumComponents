@@ -1,6 +1,11 @@
-// Entrée CSS « sidebar seule » — pour les apps qui possèdent déjà leur propre
-// shell/page-header (ex. Webum) et ne veulent QUE la sidebar canonique sans
-// risquer de collision avec leurs classes (.app-shell, .page-header, .topbar…).
+// Entrée CSS « sidebar seule ».
+// Historiquement le contournement des apps qui possédaient déjà leur propre
+// shell/page-header (Webum, Profilum, Monitorum, Anonymum) : l'index complet
+// leur aurait écrasé `.app-shell` / `.page-header` / `.topbar`.
+// Ce n'est PLUS nécessaire — les classes du paquet sont préfixées `umb-`, donc
+// `@umbeli-com/layout/styles` est sans collision. Cette entrée reste valable
+// pour qui ne veut vraiment que la sidebar (et les imports existants marchent
+// tels quels), mais ce n'est plus un pis-aller.
 // Import côté app : `@umbeli-com/layout/styles/sidebar.css`.
 
 @use '../components/SidebarNav/SidebarNav';

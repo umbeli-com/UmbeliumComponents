@@ -10,6 +10,11 @@ export interface TopbarProps {
   rightContent?: ReactNode;
 }
 
+/**
+ * Double classe (historique + `umb-`) : la feuille ne style que la préfixée.
+ * `.topbar__menu-btn` reste émise — les suites Playwright de Dialum cliquent
+ * dessus pour ouvrir le tiroir mobile. Voir Topbar.scss.
+ */
 export function Topbar({ 
   onMenuClick, 
   onAICoachClick,
@@ -19,10 +24,10 @@ export function Topbar({
   rightContent
 }: TopbarProps) {
   return (
-    <div className="topbar">
-      <div className="topbar__left">
+    <div className="topbar umb-topbar">
+      <div className="topbar__left umb-topbar__left">
         <button 
-          className="topbar__menu-btn" 
+          className="topbar__menu-btn umb-topbar__menu-btn" 
           onClick={onMenuClick}
           aria-label="Toggle menu"
         >
@@ -30,26 +35,26 @@ export function Topbar({
         </button>
       </div>
 
-      <div className="topbar__center">
+      <div className="topbar__center umb-topbar__center">
         {onAICoachClick && (
           <button 
-            className={`topbar__ai-cta ${isAICoachOpen ? 'is-active' : ''}`}
+            className={`topbar__ai-cta umb-topbar__ai-cta ${isAICoachOpen ? 'is-active' : ''}`}
             onClick={onAICoachClick}
           >
-            <span className="topbar__ai-cta-icon">
+            <span className="topbar__ai-cta-icon umb-topbar__ai-cta-icon">
               <Zap size={20} />
             </span>
-            <span className="topbar__ai-cta-text">
+            <span className="topbar__ai-cta-text umb-topbar__ai-cta-text">
               {isAICoachOpen ? aiCoachOpenLabel : aiCoachLabel}
             </span>
-            <span className="topbar__ai-cta-shortcut">⌘K</span>
+            <span className="topbar__ai-cta-shortcut umb-topbar__ai-cta-shortcut">⌘K</span>
           </button>
         )}
       </div>
 
-      <div className="topbar__right">
+      <div className="topbar__right umb-topbar__right">
         {rightContent || (
-          <button className="topbar__action-btn" aria-label="Notifications">
+          <button className="topbar__action-btn umb-topbar__action-btn" aria-label="Notifications">
             <Bell size={22} />
           </button>
         )}

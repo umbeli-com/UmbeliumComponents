@@ -1,5 +1,16 @@
 // Umbeli Layout Component Styles
 // Import this file in your application to include all layout styles
+//
+// SÛRE À IMPORTER PARTOUT. Toutes les classes de cette feuille sont préfixées
+// `umb-` (`.umb-app-shell`, `.umb-page-header`, `.umb-topbar`,
+// `.umb-grid-section`, plus les `.sidebar-nav*` déjà nommés) : elle ne peut
+// plus toucher les `.app-shell` / `.page-header` / `.topbar` maison d'une app.
+// C'était le blocage — Webum l'avait explicitement refusée pour ça et se
+// contentait de `layout/styles/sidebar.css`.
+//
+// Les composants du paquet émettent quand même les classes historiques en plus
+// des préfixées, pour que rien ne bouge chez les apps déjà en place. Détail du
+// raisonnement sur la cascade : voir components/AppShell/AppShell.scss.
 
 // Layout component styles
 @use '../components/PageHeader/PageHeader';
