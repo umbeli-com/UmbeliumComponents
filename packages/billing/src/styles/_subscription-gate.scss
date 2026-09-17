@@ -250,6 +250,53 @@
     }
   }
 
+  // ── Tuile inerte (`selectablePlans={false}`) ────────────
+  // Classe NEUVE : une offre unique n'est pas un choix, donc ni curseur de
+  // clic, ni survol qui soulève, ni coche. Déclarée après `&__plan`, même
+  // spécificité une fois composée (0,2,0) : elle gagne par l'ordre.
+  &__plan--static {
+    cursor: default;
+
+    &:hover {
+      border-color: #e7e9ef;
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  // ── Attente d'activation (`activating`) ─────────────────
+  // Rendue À LA PLACE des plans, des fonctions, du CTA et de la mention.
+  &__activating {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 28px 0 8px;
+    text-align: center;
+  }
+
+  &__activating-spinner {
+    width: 22px;
+    height: 22px;
+    border: 2px solid rgba(91, 86, 255, 0.18);
+    border-top-color: #5b56ff;
+    border-radius: 50%;
+    animation: subgate-spin 0.8s linear infinite;
+  }
+
+  &__activating-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #0d0d2b;
+  }
+
+  &__activating-subtitle {
+    margin: 0;
+    font-size: 13px;
+    color: #5a5f73;
+  }
+
   // ── Error ───────────────────────────────────────────────
   &__error {
     background: #fde8e8;

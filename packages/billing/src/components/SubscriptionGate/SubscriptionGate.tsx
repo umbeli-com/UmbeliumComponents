@@ -87,6 +87,12 @@ export interface SubscriptionGateLabels {
   errorSubscribe?: string;
   /** Repli d'erreur des liens secondaires. défaut : 'Erreur' */
   errorGeneric?: string;
+  /** CTA quand `soldOut`. défaut : 'Offre complète' */
+  soldOutCta?: string;
+  /** Titre de l'écran d'activation (`activating`). défaut : 'Activation en cours' */
+  activatingTitle?: string;
+  /** Ligne sous ce titre. défaut : 'Votre accès s'ouvre dans quelques secondes…' */
+  activatingSubtitle?: string;
 }
 
 /**
@@ -107,6 +113,10 @@ export interface SubscriptionGateTestIds {
   plan?: (planId: string) => string;
   /** bloc d'erreur */
   error?: string;
+  /** second bloc d'erreur (`secondaryError`) */
+  secondaryError?: string;
+  /** bloc d'attente d'activation (`activating`) */
+  activating?: string;
   /** CTA principal (essai OU abonnement) */
   cta?: string;
   /** lien « Vérifier l'accès » */
@@ -163,6 +173,41 @@ export interface SubscriptionGateProps {
   /** Classes additionnelles sur la racine `.subgate` (ex. 'subgate--paywall'). */
   className?: string;
   /**
+   * Afficher le lien « Facturation » / portail dans les liens secondaires
+   * (défaut `true`). `false` : le lien ET le séparateur qui le précède
+   * disparaissent — le paywall « essai consommé » de Monitorum n'a que
+   * « Vérifier l'accès » et « Déconnexion ».
+   */
+  showPortal?: boolean;
+  /**
+   * Tuiles de plan CLIQUABLES (défaut `true`). `false` : chaque tuile est un
+   * `<div>` non focalisable, sans coche ni état `--selected`, et le CTA part
+   * avec le plan par défaut — la forme d'une offre UNIQUE (licence fondateurs),
+   * où un `<button>` sélectionnable promet un choix qui n'existe pas.
+   */
+  selectablePlans?: boolean;
+  /**
+   * Offre épuisée (plafond atteint) : le CTA affiche `labels.soldOutCta` et
+   * reste inerte, sans spinner. Mesuré sur le paywall fondateurs (plafond de
+   * 100 licences), qui n'avait aucun moyen de désactiver le CTA autrement que
+   * pendant un chargement.
+   */
+  soldOut?: boolean;
+  /**
+   * Paiement encaissé, accès pas encore ouvert : à la place des plans, des
+   * fonctions, du CTA et de la mention, l'écran rend un titre, une ligne et un
+   * spinner (`labels.activatingTitle` / `activatingSubtitle`). Les liens
+   * secondaires — dont « Vérifier l'accès » — restent, puisque c'est
+   * exactement ce que l'utilisateur doit pouvoir faire.
+   */
+  activating?: boolean;
+  /**
+   * SECOND bloc d'erreur, sous le premier (délai d'activation dépassé, par
+   * exemple). `error` reste la voie normale ; celui-ci existe parce que le
+   * paywall fondateurs affiche deux causes distinctes en même temps.
+   */
+  secondaryError?: ReactNode;
+  /**
    * Afficher le sélecteur de plans (défaut `true`). `false` : ni tuiles, ni
    * conteneur `.subgate__plans` — la forme « essai consommé → abonnement
    * seul » d'une app à plan unique (Monitorum : checkout `pro_monthly`, 115
@@ -209,6 +254,9 @@ const defaultLabels = {
   errorTrial: "Impossible de démarrer l'essai",
   errorSubscribe: "Impossible d'ouvrir le paiement",
   errorGeneric: 'Erreur',
+  soldOutCta: 'Offre complète',
+  activatingTitle: 'Activation en cours',
+  activatingSubtitle: 'Votre accès s\'ouvre dans quelques secondes…',
   // `trialUsedSubtitle` n'a VOLONTAIREMENT pas de défaut ici : son repli est du
   // JSX (`<strong>{appName}</strong>`), rendu en ligne dans l'en-tête.
 } satisfies Omit<Required<SubscriptionGateLabels>, 'trialUsedSubtitle'>;
@@ -253,6 +301,11 @@ export function SubscriptionGate({
   testIds,
   className,
   showPlans = true,
+  showPortal = true,
+  selectablePlans = true,
+  soldOut = false,
+  activating = false,
+  secondaryError,
 }: SubscriptionGateProps) {
   const l = { ...defaultLabels, ...labels };
   const tid: SubscriptionGateTestIds = testIds ?? {};
@@ -384,19 +437,26 @@ export function SubscriptionGate({
         </div>
 
         {/* Plan selector — cards side by side */}
-        {showPlans && (
+        {showPlans && !activating && (
         <div className="subgate__plans">
           {plans.map((plan) => {
             const selected = plan.id === selectedId;
             const priceStr = l.price(plan);
             const periodStr = plan.interval === 'month' ? l.perMonth : l.perYear;
+            // Une offre unique n'est pas un choix : la tuile devient un bloc
+            // inerte, sans coche ni état sélectionné (voir `selectablePlans`).
+            const Tile = selectablePlans ? 'button' : 'div';
 
             return (
-              <button
+              <Tile
                 key={plan.id}
-                type="button"
-                className={`subgate__plan ${selected ? 'subgate__plan--selected' : ''}`}
-                onClick={() => setSelectedId(plan.id)}
+                {...(selectablePlans
+                  ? {
+                      type: 'button' as const,
+                      className: `subgate__plan ${selected ? 'subgate__plan--selected' : ''}`,
+                      onClick: () => setSelectedId(plan.id),
+                    }
+                  : { className: 'subgate__plan subgate__plan--static' })}
                 data-testid={tid.plan?.(plan.id)}
               >
                 {plan.badge && <span className="subgate__plan-badge">{plan.badge}</span>}
@@ -406,17 +466,19 @@ export function SubscriptionGate({
                   <span className="subgate__plan-period">{periodStr}</span>
                 </span>
                 <span className="subgate__plan-desc">{plan.description}</span>
-                <span className={`subgate__plan-check ${selected ? 'subgate__plan-check--on' : ''}`}>
-                  {selected && <Check size={14} />}
-                </span>
-              </button>
+                {selectablePlans && (
+                  <span className={`subgate__plan-check ${selected ? 'subgate__plan-check--on' : ''}`}>
+                    {selected && <Check size={14} />}
+                  </span>
+                )}
+              </Tile>
             );
           })}
         </div>
         )}
 
         {/* Features */}
-        {features.length > 0 && (
+        {features.length > 0 && !activating && (
           <ul className="subgate__features">
             {features.map((f, i) => (
               <li key={i}><Check size={15} /><span>{f}</span></li>
@@ -429,14 +491,31 @@ export function SubscriptionGate({
           <div className="subgate__error" data-testid={tid.error}><p>{error}</p></div>
         )}
 
+        {/* Second bloc d'erreur (voir `secondaryError`) */}
+        {secondaryError && (
+          <div className="subgate__error" data-testid={tid.secondaryError}><p>{secondaryError}</p></div>
+        )}
+
+        {/* Paiement encaissé, accès pas encore ouvert (voir `activating`) */}
+        {activating && (
+          <div className="subgate__activating" data-testid={tid.activating}>
+            <span className="subgate__activating-spinner" />
+            <p className="subgate__activating-title">{l.activatingTitle}</p>
+            <p className="subgate__activating-subtitle">{l.activatingSubtitle}</p>
+          </div>
+        )}
+
         {/* CTA — trial start, or paid checkout when the trial was consumed */}
+        {!activating && (
         <button
           className="subgate__cta"
           onClick={isPaywall ? handleSubscribe : handleTrial}
-          disabled={isLoading}
+          disabled={isLoading || soldOut}
           data-testid={tid.cta}
         >
-          {trialLoading ? (
+          {soldOut ? (
+            l.soldOutCta
+          ) : trialLoading ? (
             <span className="subgate__cta-loading">
               <span className="subgate__spinner" />
               {isPaywall ? l.subscribeCtaLoading : l.trialCtaLoading}
@@ -453,10 +532,13 @@ export function SubscriptionGate({
             </>
           )}
         </button>
+        )}
 
-        <p className="subgate__fine-print">
-          {isPaywall ? l.finePrintSubscribe : l.finePrintTrial}
-        </p>
+        {!activating && (
+          <p className="subgate__fine-print">
+            {isPaywall ? l.finePrintSubscribe : l.finePrintTrial}
+          </p>
+        )}
 
         {/* Secondary links */}
         <div className="subgate__links">
@@ -464,11 +546,15 @@ export function SubscriptionGate({
             <RefreshCw size={13} className={statusLoading ? 'subgate__spin' : ''} />
             {statusLoading ? l.refreshLoading : l.refresh}
           </button>
-          <span className="subgate__link-sep" />
-          <button className="subgate__link" onClick={handlePortal} disabled={portalLoading} data-testid={tid.portal}>
-            <ExternalLink size={13} />
-            {l.portal}
-          </button>
+          {showPortal && (
+            <>
+              <span className="subgate__link-sep" />
+              <button className="subgate__link" onClick={handlePortal} disabled={portalLoading} data-testid={tid.portal}>
+                <ExternalLink size={13} />
+                {l.portal}
+              </button>
+            </>
+          )}
           <span className="subgate__link-sep" />
           <button className="subgate__link subgate__link--muted" onClick={onSignOut} data-testid={tid.signOut}>
             <LogOut size={13} />
