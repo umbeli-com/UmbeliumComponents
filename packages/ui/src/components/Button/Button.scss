@@ -11,6 +11,10 @@
 //                                            xl 2rem)
 //   --button-font-size        par cran       taille de police
 //   --button-transition       background-color .15s ease, color .15s ease
+//   --button-line-height      inherit          (interligne du libellé)
+//   --button-hover-opacity    1                (survol en OPACITÉ, cf. plus bas)
+//   --button-secondary-border 1px solid neutral-surface
+//   --button-ghost-border     1px solid neutral-surface
 //   --button-focus-ring       2px solid brand  (`outline` de :focus-visible)
 //   --button-focus-ring-offset 2px
 //   --button-primary-bg-hover / --button-primary-bg-active
@@ -32,6 +36,9 @@
   border-radius: var(--button-radius, 100px);
   font-family: 'Manrope', sans-serif;
   font-weight: 500;
+  // `inherit` en repli = ce que le bouton faisait sans déclaration (la
+  // propriété est héritée) : aucune valeur calculée ne bouge.
+  line-height: var(--button-line-height, inherit);
   cursor: pointer;
   transition: var(--button-transition, background-color 0.15s ease, color 0.15s ease);
   border: none;
@@ -89,7 +96,9 @@
   &--secondary {
     background-color: var(--theme-color-neutral-surface-alt, #F8F9FA);
     color: var(--theme-color-neutral-text, #1a1a2e);
-    border: 1px solid var(--theme-color-neutral-surface);
+    // Filet réglable : le Manager pose --theme-color-neutral-border et
+    // Anonymum un contour de marque de 2px, qu'aucun token n'atteignait.
+    border: var(--button-secondary-border, 1px solid var(--theme-color-neutral-surface));
 
     &:hover:not(:disabled) {
       background-color: var(--button-secondary-bg-hover, var(--theme-color-neutral-surface));
@@ -99,7 +108,7 @@
   &--ghost {
     background-color: transparent;
     color: var(--theme-color-neutral-text, #1a1a2e);
-    border: 1px solid var(--theme-color-neutral-surface);
+    border: var(--button-ghost-border, 1px solid var(--theme-color-neutral-surface));
 
     &:hover:not(:disabled) {
       background-color: var(--button-ghost-bg-hover, var(--theme-color-neutral-surface-alt, #F8F9FA));
@@ -313,6 +322,16 @@
   &--link[aria-disabled='true']:hover {
     text-decoration: none;
   }
+}
+
+// ── Survol en OPACITÉ ───────────────────────────────────────────────────────
+// Sept boutons du Manager s'éclaircissent au survol par `hover:opacity-90`,
+// que les tokens `--button-*-bg-hover` (qui posent une COULEUR) ne peuvent pas
+// exprimer. Repli `1` : aucune opacité n'est appliquée tant que le token n'est
+// pas posé, donc rendu inchangé. La garde `:not(:disabled)` reprend celle des
+// survols de variante, et l'attribut `aria-disabled` couvre les liens inertes.
+.button:hover:not(:disabled):not([aria-disabled='true']) {
+  opacity: var(--button-hover-opacity, 1);
 }
 
 // ── Le bouton rendu en `<a>` ──
