@@ -67,7 +67,9 @@ export interface ButtonLabels {
    *  seulement là, `children` est retiré : sans cette chaîne (ou un `aria-label`
    *  fourni par l'appelant) le bouton n'aurait plus de nom du tout.
    *  Défaut : « Chargement… ». En mode texte, le libellé visible reste le nom
-   *  et le spinner ne dit rien (cf. `loading`). */
+   *  et le spinner ne dit rien (cf. `loading`).
+   *  Sans usage en `unstyled` : aucun spinner n'y est rendu et `children`
+   *  n'y est jamais retiré, donc le nom ne change pas. */
   loading?: string;
 }
 
@@ -89,7 +91,9 @@ export interface ButtonOwnProps {
    *  Le bouton s'élargit du spinner et du `gap` le temps du chargement ; en
    *  `iconOnly` la largeur est figée par la taille, donc rien ne bouge.
    *  Sur un élément qui n'est PAS un `<button>` (cf. `as`), `disabled` n'existe
-   *  pas dans le DOM : il devient `aria-disabled="true"` + clic neutralisé. */
+   *  pas dans le DOM : il devient `aria-disabled="true"` + clic neutralisé.
+   *  En `unstyled`, tout cela reste vrai SAUF le spinner, qui n'est pas rendu :
+   *  l'indicateur d'attente appartient alors à l'app (cf. `unstyled`). */
   loading?: boolean;
   /**
    * Bouton inactif. Sur un `<button>` c'est l'attribut natif, inchangé.
@@ -141,6 +145,57 @@ export interface ButtonOwnProps {
    * `as` décide de l'élément et `href` est simplement transmis.
    */
   href?: string;
+  /**
+   * NU : le composant garde le COMPORTEMENT et rend l'APPARENCE à l'app. Il
+   * n'émet AUCUNE classe `button*` — ni `button`, ni `button--{variant}` /
+   * `button--{size}`, ni `--full-width`, `--icon-only`, `--loading`,
+   * `--inherit-font`, `--custom-weight`, `--custom-height`, ni
+   * `button__spinner`. Il ne reste que `className`, transmise TELLE QUELLE ;
+   * vide ou absente, l'attribut `class` n'est pas écrit du tout (même règle
+   * que `DragDropUpload`). Même idée que `unstyledTitle` de `PageHeader`, à
+   * l'échelle du composant entier.
+   *
+   * Mesuré : l'admin de Webum ne charge PAS `@umbeli-com/ui/styles`
+   * (`apps/admin/src/main.tsx:8-14` n'importe que sa feuille, billing et
+   * layout) ; il peint ses boutons avec son propre `.btn`
+   * (`apps/admin/src/styles.css:454-477`, 145 `className="btn …"` dans
+   * `apps/admin/src`). Adopter `<Button className="btn …">`
+   * ajoutait `button button--primary button--md`, que rien n'y stylise,
+   * pendant que `.btn` continuait de peindre ; et `as`/`href` ne servait à rien
+   * à ses boutons-liens (`components/PublishBar.tsx:124`,
+   * `pages/Dashboard.tsx:93`…) tant que la classe du paquet s'ajoutait. Avec :
+   *
+   *   <Button as="a" unstyled className="btn btn--ghost btn--sm" href={url}>
+   *
+   * le DOM est exactement `<a class="btn btn--ghost btn--sm" href="…">`.
+   *
+   * RESTE géré par le composant :
+   * - l'élément rendu (`as`, `href`), la `ref`, `testId` et toutes les props
+   *   natives (`style`, `title`, `aria-*`, `onClick`…) ;
+   * - `disabled` : attribut natif sur un `<button>` ; ailleurs
+   *   `aria-disabled="true"`, `href` retiré d'un `<a>`, clic neutralisé ;
+   * - `loading` : `disabled` + `aria-busy="true"` sur un `<button>` ; ailleurs
+   *   `aria-busy="true"` + la même inertie.
+   *
+   * SE TAIT — c'est de la peau, désormais celle de l'app :
+   * - `variant`, `size`, `fullWidth`, `iconOnly`, `inheritFont`, `height` :
+   *   aucune classe, et aucune variable CSS inline (`--button-height`,
+   *   `--button-font-weight`) — pas de `style` écrit pour une peau absente ;
+   * - le `Spinner` de `loading` n'est PAS rendu, et `children` n'est jamais
+   *   retiré, même en `iconOnly`. Le spinner est lui aussi de la peau du paquet
+   *   (classes `spinner*`, servies par la feuille que l'app ne charge pas) et,
+   *   chez Webum, `.spinner` EST l'anneau (`styles.css:41`) : il retomberait
+   *   sur l'enveloppe du composant (cf. `Spinner.isolate`) et le libellé
+   *   « Chargement… » n'y serait plus masqué. L'indicateur d'attente reste
+   *   donc celui de l'app, dans `children`, comme aujourd'hui
+   *   (`<Loader className="spin" />`, « Enregistrement… »).
+   *
+   * Défaut `false` : rendu historique, au caractère près. Seul `true` active le
+   * mode — comme `inheritFont`, une valeur venue de JS qui n'est pas `true`
+   * (`"false"`, `1`) laisse la peau en place. Consommée par le composant :
+   * jamais transmise à l'élément rendu, ni au DOM ni à un `as={Composant}`.
+   */
+  unstyled?: boolean;
   className?: string;
 }
 
@@ -209,6 +264,7 @@ function ButtonRender(
     iconOnly = false,
     inheritFont = false,
     height,
+    unstyled = false,
     testId,
     labels,
     className = '',
@@ -224,6 +280,13 @@ function ButtonRender(
   const element: ElementType = as ?? (props.href !== undefined ? 'a' : 'button');
   const isNativeButton = element === 'button';
 
+  // `unstyled` : comportement gardé, peau rendue à l'app (cf. la prop). Seul
+  // `true` l'active — même règle que `inheritFont === true` plus bas : un
+  // `"false"` venu de JS ne doit pas retirer la peau sans bruit. Au défaut,
+  // `bare` vaut `false` et chaque garde qui le lit ci-dessous se neutralise :
+  // on repasse exactement par le chemin historique.
+  const bare = unstyled === true;
+
   // `inheritFont` : `false`/absent = rien ne change ; `true` = famille ET
   // graisse héritées ; un nombre EXPLOITABLE = famille héritée + cette
   // graisse-là.
@@ -234,12 +297,17 @@ function ButtonRender(
   // garde-fou annoncé, et une typographie changée sans bruit.
   // Toute autre valeur qu'un booléen ou un nombre (un `'600'` venu de JS) suit
   // la même règle : elle n'est pas `true`, donc elle ne libère rien.
-  const customWeight = typeof inheritFont === 'number' && isUsableWeight(inheritFont);
+  // En `unstyled`, `customWeight` et `customHeight` tombent à `false` : les
+  // variables `--button-font-weight` / `--button-height` n'alimentent que des
+  // classes qui ne sont plus émises, les poser écrirait un `style` pour rien.
+  const customWeight =
+    !bare && typeof inheritFont === 'number' && isUsableWeight(inheritFont);
   const inheritsFont =
     typeof inheritFont === 'number' ? customWeight : inheritFont === true;
   // Même garde que le diamètre libre du Spinner : un NaN ou un négatif
   // écrirait `NaNpx` et ferait disparaître le bouton sans bruit.
-  const customHeight = typeof height === 'number' && Number.isFinite(height) && height > 0;
+  const customHeight =
+    !bare && typeof height === 'number' && Number.isFinite(height) && height > 0;
 
   // La chaîne de classes garde la forme historique au caractère près quand les
   // nouvelles props sont à leur défaut : chaque modificateur ajouté porte son
@@ -252,6 +320,16 @@ function ButtonRender(
     `${customWeight ? ' button--custom-weight' : ''}` +
     `${customHeight ? ' button--custom-height' : ''}` +
     ` ${className}`;
+
+  // Attribut `class` réellement posé. Hors `unstyled` : la chaîne ci-dessus,
+  // toujours, à la même place qu'avant. En `unstyled` : la `className` de
+  // l'app SEULE et TELLE QUELLE — rien d'ajouté, rien de normalisé — et, vide
+  // ou absente, pas d'attribut du tout plutôt qu'un `class=""`.
+  const classProps = bare
+    ? className !== ''
+      ? { className }
+      : null
+    : { className: classes };
 
   // Valeurs libres passées en variables CSS inline et consommées par la
   // feuille, comme `--spinner-size` : l'app garde la main dessus en CSS, et
@@ -307,7 +385,7 @@ function ButtonRender(
 
   return (
     <Component
-      className={classes}
+      {...classProps}
       {...rest}
       // Étalés seulement quand ils ont une valeur : à leur défaut, l'élément
       // rendu est exactement celui d'avant (mêmes attributs, même ordre).
@@ -316,7 +394,14 @@ function ButtonRender(
       {...(testId !== undefined ? { 'data-testid': testId } : null)}
       {...(ref ? { ref } : null)}
     >
-      {loading && (
+      {/*
+        `unstyled` : ni spinner, ni retrait de `children`. Le spinner est de la
+        peau (classes `spinner*` d'une feuille que l'app ne charge pas) ; sans
+        lui, retirer l'icône en `iconOnly` laisserait un bouton vide. L'état
+        d'attente reste annoncé par `aria-busy`, posé plus haut dans les deux
+        modes.
+      */}
+      {loading && !bare && (
         <Spinner
           size={spinnerSizeFor[size]}
           // Le contenu d'un `<button>` EST son nom accessible, et le libellé
@@ -329,7 +414,7 @@ function ButtonRender(
           className="button__spinner"
         />
       )}
-      {iconOnly && loading ? null : children}
+      {iconOnly && loading && !bare ? null : children}
     </Component>
   );
 }
