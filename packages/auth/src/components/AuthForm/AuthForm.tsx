@@ -360,6 +360,19 @@ export interface AuthFormProps {
   showOAuthDivider?: boolean;
   /** Lien « Mot de passe oublié ? » en connexion (défaut `true`). */
   showForgotPassword?: boolean;
+  /**
+   * Indice sous le champ mot de passe, aux écrans qui en CHOISISSENT un
+   * (inscription et `reset`). Défaut `true` (historique).
+   *
+   * `false` n'émet PAS l'élément — `labels.passwordHint: ''` le vidait sans le
+   * retirer, et `.auth-page__field` étant `display:flex` avec `gap: 8px`, la
+   * gouttière s'appliquait quand même. Mesuré au Manager sur son écran
+   * « nouveau mot de passe », qui n'a jamais eu d'indice : champ 80,39 →
+   * 88,39px, formulaire 338,36 → 346,36px, carte 448,75 → 456,75px. C'est ce
+   * +8px qui a fait échouer l'adoption de `mode="reset"`. Symétrique de
+   * `showLabels={false}`, qui retire le `<label>` au lieu de le vider.
+   */
+  showPasswordHint?: boolean;
   /** Rend la carte `.auth-page__card` autour du formulaire. Passer `false`
    *  quand l'app fournit son propre chrome. @default true */
   showCard?: boolean;
@@ -521,6 +534,7 @@ export function AuthForm({
   oauthPosition = 'before',
   showOAuthDivider = true,
   showForgotPassword = true,
+  showPasswordHint = true,
   showCard = true,
   classNames = {},
 }: AuthFormProps) {
@@ -876,9 +890,9 @@ export function AuthForm({
               // CONNEXION, un compte existant doit pouvoir se connecter quel que
               // soit son mot de passe.
               minLength={choosesPassword ? minPasswordLength : undefined}
-              aria-describedby={choosesPassword ? fieldId('password-hint') : undefined}
+              aria-describedby={choosesPassword && showPasswordHint ? fieldId('password-hint') : undefined}
             />
-            {choosesPassword ? (
+            {choosesPassword && showPasswordHint ? (
               <span id={fieldId('password-hint')} className={c.hint}>
                 {withMin(t.passwordHint)}
               </span>
