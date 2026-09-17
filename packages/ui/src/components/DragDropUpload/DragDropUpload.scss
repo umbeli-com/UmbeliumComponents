@@ -40,6 +40,14 @@
   }
 }
 
+// `layout="flat"` avec la peau du paquet : les parties sont des items directs
+// de la zone (déjà en colonne centrée) — il leur faut le `gap` et l'alignement
+// de texte que portait `__content`. Classe NEUVE, émise seulement en `flat`.
+.drag-drop-upload--flat {
+  gap: 1rem;
+  text-align: center;
+}
+
 .drag-drop-upload__content {
   display: flex;
   flex-direction: column;

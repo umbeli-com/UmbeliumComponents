@@ -39,6 +39,29 @@ import { Button } from '../Button';
  * l'app posait sa classe et gardait quand même le survol du paquet.
  */
 
+/**
+ * Disposition de la zone au repos.
+ *
+ * - `default` (historique) : `[input, __content > [__icon-wrapper > icône,
+ *   __text-wrapper > [titre, sous-titre, « ou », bouton], __meta, erreur]]`.
+ * - `flat` : À PLAT — icône, titre, sous-titre, « ou » + bouton, formats et
+ *   erreur sont des enfants DIRECTS de la zone : ni `__content`, ni
+ *   `__text-wrapper`, ni enveloppe d'icône. L'équivalent de `flatActions` de
+ *   PageHeader. Les zones écrites à la main posent leurs parties en items flex
+ *   directs, espacés par le `gap` de la zone : Profilum `.dropzone`
+ *   (Wizard.jsx:271 — icône / `<strong>` / `.hint`, `gap: 12px`) et Webum
+ *   `.media-dropzone` (Media.tsx:98 — icône / `<span>`). Enveloppées, trois
+ *   parties n'en faisaient plus qu'une et le rythme vertical s'effondrait.
+ *   En `flat`, `classNames.icon` est sans objet : l'icône est posée telle
+ *   quelle, l'app habille l'élément qu'elle passe en `icon`. Les états
+ *   envoi/conversion/succès gardent leur propre sous-arbre, posé lui aussi
+ *   directement dans la zone.
+ */
+export type DragDropUploadLayout = 'default' | 'flat';
+
+/** Balise du titre / du sous-titre. */
+export type DragDropUploadTextTag = 'p' | 'span' | 'strong' | 'div';
+
 /** Chaînes affichées, surchargeables. Français par défaut. */
 export interface DragDropUploadLabels {
   /** Défaut : « Glissez votre fichier ici ». */
@@ -161,6 +184,29 @@ export interface DragDropUploadProps {
    * les leurs — sans équivalent côté app, ils disparaîtraient à l'écran.
    */
   unstyled?: boolean;
+  /** Disposition au repos (défaut `default`). Voir `DragDropUploadLayout`. */
+  layout?: DragDropUploadLayout;
+  /** Balise du titre (défaut `p`). Profilum cible `.dropzone strong`, Webum
+   *  rend un `<span>`. */
+  titleAs?: DragDropUploadTextTag;
+  /** Balise du sous-titre `labels.subtitle` (défaut `p`). */
+  subtitleAs?: DragDropUploadTextTag;
+  /**
+   * Rendre la ligne des formats acceptés (`labels.formats`). Défaut `true`
+   * (historique). `false` : la ligne n'existe plus du tout — y compris quand
+   * `labels.formats` renvoie `null`, où elle restait un item flex VIDE, qui
+   * ajoutait un `gap` de plus sous le titre.
+   */
+  showMeta?: boolean;
+  /**
+   * Cacher l'`<input type="file">` par l'attribut `hidden`, sans dépendre de
+   * la feuille du paquet. Par défaut il n'est caché QUE par
+   * `.drag-drop-upload__input` : une app qui n'importe pas la feuille
+   * (Profilum) le verrait apparaître. `input.click()` et `setInputFiles` de
+   * Playwright fonctionnent sur un input `hidden`.
+   * Défaut : `true` en `layout="flat"`, `false` sinon (rendu historique).
+   */
+  hideInput?: boolean;
   /** Classes de l'app, partie par partie. */
   classNames?: DragDropUploadClassNames;
   /** Extensions acceptées (« .pdf », « .docx »…). Remplace la liste média par
@@ -231,6 +277,11 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   clickToBrowse = false,
   showBrowseButton = true,
   unstyled = false,
+  layout = 'default',
+  titleAs = 'p',
+  subtitleAs = 'p',
+  showMeta = true,
+  hideInput,
   classNames,
   allowedExtensions,
   validate,
@@ -410,6 +461,10 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   };
 
   const isProcessing = isLoading || isConverting;
+  const flat = layout === 'flat';
+  const inputHidden = hideInput ?? flat;
+  const Title = titleAs;
+  const Subtitle = subtitleAs;
 
   // `unstyled` : plus de classe du paquet sur la racine — donc plus non plus
   // de `drag-drop-upload--clickable`, qui ne portait que le liseré de focus du
@@ -418,7 +473,114 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
     ? [isDragOver ? dragOverClass : '', isProcessing ? loadingClass : '', className]
         .filter(Boolean)
         .join(' ')
-    : `drag-drop-upload ${isDragOver ? dragOverClass : ''} ${isProcessing ? loadingClass : ''} ${className}${clickToBrowse ? ' drag-drop-upload--clickable' : ''}`;
+    : `drag-drop-upload ${isDragOver ? dragOverClass : ''} ${isProcessing ? loadingClass : ''} ${className}${clickToBrowse ? ' drag-drop-upload--clickable' : ''}${flat ? ' drag-drop-upload--flat' : ''}`;
+
+  // ── Parties au repos, partagées par les deux dispositions ────────────────
+  // En `default`, elles sont posées exactement où elles l'étaient ; en `flat`,
+  // les mêmes éléments remontent en enfants directs de la zone.
+  const iconElement = icon ?? <Upload size={48} />;
+
+  const textNodes = (
+    <>
+      <Title {...skinAttr(skin('drag-drop-upload__title', cn.title))}>
+        {multiple ? t.titleMultiple : t.title}
+      </Title>
+      {t.subtitle !== undefined && (
+        <Subtitle {...skinAttr(skin('drag-drop-upload__subtitle', cn.subtitle))}>{t.subtitle}</Subtitle>
+      )}
+      {/* Le « ou » et le bouton forment un tout : ils partent ensemble. */}
+      {showBrowseButton && (
+        <>
+          <p {...skinAttr(skin('drag-drop-upload__divider', cn.divider))}>
+            {t.or}
+          </p>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleButtonClick}
+            type="button"
+            testId={ids.browse}
+          >
+            {t.browse}
+          </Button>
+        </>
+      )}
+    </>
+  );
+
+  const metaNode = showMeta && (
+    <div {...skinAttr(skin('drag-drop-upload__meta', cn.meta))}>
+      {t.formats(maxSizeLabel)}
+    </div>
+  );
+
+  const errorNode = error && (
+    <div
+      {...skinAttr(skin('drag-drop-upload__error', cn.error))}
+      {...(ids.error !== undefined ? { 'data-testid': ids.error } : null)}
+    >
+      {error}
+    </div>
+  );
+
+  // Disposition À PLAT : les mêmes parties, sans `__content` ni enveloppes.
+  const restingNodes = (
+    <>
+      {iconElement}
+      {textNodes}
+      {metaNode}
+      {errorNode}
+    </>
+  );
+
+  // États envoi / conversion / succès : un seul sous-arbre, prioritaire dans
+  // cet ordre, identique dans les deux dispositions.
+  const busyOrDone = isConverting || isLoading || uploadSuccess;
+  function renderState() {
+    if (isConverting) {
+      return (
+        <div className="drag-drop-upload__loader drag-drop-upload__converting">
+          <div className="drag-drop-upload__progress-container">
+            <div className="drag-drop-upload__progress-bar drag-drop-upload__progress-bar--conversion">
+              <div
+                className="drag-drop-upload__progress-fill drag-drop-upload__progress-fill--conversion"
+                style={{ width: `${conversionProgress}%` }}
+              />
+            </div>
+            <p className="drag-drop-upload__progress-percentage">{conversionProgress}%</p>
+          </div>
+          <p className="drag-drop-upload__progress-text">{conversionMessage || t.converting}</p>
+        </div>
+      );
+    }
+    if (isLoading) {
+      return (
+        <div className="drag-drop-upload__loader">
+          <div className="drag-drop-upload__progress-container">
+            <div className="drag-drop-upload__progress-bar">
+              <div
+                className="drag-drop-upload__progress-fill"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+            <p className="drag-drop-upload__progress-percentage">{uploadProgress}%</p>
+            {totalBytes > 0 && (
+              <p className="drag-drop-upload__progress-bytes">
+                {formatBytes(uploadedBytes)} / {formatBytes(totalBytes)}
+              </p>
+            )}
+          </div>
+          <p className="drag-drop-upload__progress-text">{t.uploading}</p>
+        </div>
+      );
+    }
+    return (
+      <div className="drag-drop-upload__success">
+        <div className="drag-drop-upload__success-icon">✓</div>
+        <p className="drag-drop-upload__success-text">{t.success}</p>
+      </div>
+    );
+  }
 
   const dropZone = (
     <div
@@ -462,93 +624,33 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
         className="drag-drop-upload__input"
         disabled={isProcessing}
         multiple={multiple}
+        {...(inputHidden ? { hidden: true } : null)}
         {...(ids.input !== undefined ? { 'data-testid': ids.input } : null)}
       />
 
-      <div {...skinAttr(skin('drag-drop-upload__content', cn.content))}>
-        {isConverting ? (
-          <div className="drag-drop-upload__loader drag-drop-upload__converting">
-            <div className="drag-drop-upload__progress-container">
-              <div className="drag-drop-upload__progress-bar drag-drop-upload__progress-bar--conversion">
-                <div
-                  className="drag-drop-upload__progress-fill drag-drop-upload__progress-fill--conversion"
-                  style={{ width: `${conversionProgress}%` }}
-                />
+      {flat ? (
+        busyOrDone ? renderState() : restingNodes
+      ) : (
+        <div {...skinAttr(skin('drag-drop-upload__content', cn.content))}>
+          {busyOrDone ? (
+            renderState()
+          ) : (
+            <>
+              <div {...skinAttr(skin('drag-drop-upload__icon-wrapper', cn.icon))}>
+                {iconElement}
               </div>
-              <p className="drag-drop-upload__progress-percentage">{conversionProgress}%</p>
-            </div>
-            <p className="drag-drop-upload__progress-text">{conversionMessage || t.converting}</p>
-          </div>
-        ) : isLoading ? (
-          <div className="drag-drop-upload__loader">
-            <div className="drag-drop-upload__progress-container">
-              <div className="drag-drop-upload__progress-bar">
-                <div
-                  className="drag-drop-upload__progress-fill"
-                  style={{ width: `${uploadProgress}%` }}
-                />
+
+              <div {...skinAttr(skin('drag-drop-upload__text-wrapper', cn.text))}>
+                {textNodes}
               </div>
-              <p className="drag-drop-upload__progress-percentage">{uploadProgress}%</p>
-              {totalBytes > 0 && (
-                <p className="drag-drop-upload__progress-bytes">
-                  {formatBytes(uploadedBytes)} / {formatBytes(totalBytes)}
-                </p>
-              )}
-            </div>
-            <p className="drag-drop-upload__progress-text">{t.uploading}</p>
-          </div>
-        ) : uploadSuccess ? (
-          <div className="drag-drop-upload__success">
-            <div className="drag-drop-upload__success-icon">✓</div>
-            <p className="drag-drop-upload__success-text">{t.success}</p>
-          </div>
-        ) : (
-          <>
-            <div {...skinAttr(skin('drag-drop-upload__icon-wrapper', cn.icon))}>
-              {icon ?? <Upload size={48} />}
-            </div>
 
-            <div {...skinAttr(skin('drag-drop-upload__text-wrapper', cn.text))}>
-              <p {...skinAttr(skin('drag-drop-upload__title', cn.title))}>
-                {multiple ? t.titleMultiple : t.title}
-              </p>
-              {t.subtitle !== undefined && (
-                <p {...skinAttr(skin('drag-drop-upload__subtitle', cn.subtitle))}>{t.subtitle}</p>
-              )}
-              {/* Le « ou » et le bouton forment un tout : ils partent ensemble. */}
-              {showBrowseButton && (
-                <>
-                  <p {...skinAttr(skin('drag-drop-upload__divider', cn.divider))}>
-                    {t.or}
-                  </p>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleButtonClick}
-                    type="button"
-                    testId={ids.browse}
-                  >
-                    {t.browse}
-                  </Button>
-                </>
-              )}
-            </div>
+              {metaNode}
 
-            <div {...skinAttr(skin('drag-drop-upload__meta', cn.meta))}>
-              {t.formats(maxSizeLabel)}
-            </div>
-
-            {error && (
-              <div
-                {...skinAttr(skin('drag-drop-upload__error', cn.error))}
-                {...(ids.error !== undefined ? { 'data-testid': ids.error } : null)}
-              >
-                {error}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+              {errorNode}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 
