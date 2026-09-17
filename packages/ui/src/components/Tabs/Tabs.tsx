@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 // Styles are imported separately via @umbeli-com/ui/styles
 
 /**
@@ -79,6 +79,11 @@ export interface Tab {
   /** Posé tel quel en `data-testid` sur le bouton de CET onglet.
    *  Contrat des suites Playwright des apps (ex. `f2-mode-text`). */
   testId?: string;
+  /** Classe de CET onglet, après `tabClassName` et la classe d'état. Socialum
+   *  (ThumbnailSelector) donne à chaque plateforme sa propre classe. */
+  className?: string;
+  /** Style de CET onglet — ex. `{ '--platform-color': '#1877f2' }` (Socialum). */
+  style?: CSSProperties;
 }
 
 /**
@@ -183,6 +188,33 @@ export interface TabsProps {
   inactiveClassName?: string;
   /** Classe posée sur le panneau (`.tabs__content`). */
   panelClassName?: string;
+  /** Classe de l'enveloppe d'icône (en plus de `.tabs__tab-icon`, seule en
+   *  `bare`) — Socialum `thumbnail-selector__platform-icon`. */
+  iconClassName?: string;
+  /** Classe de l'enveloppe du libellé (en plus de `.tabs__tab-label`, seule
+   *  en `bare`) — Socialum `planification-page__filter-label`. */
+  labelClassName?: string;
+  /**
+   * Envelopper icône, libellé et `trailing` dans des `<span>` (défaut `true`,
+   * historique). `false` : ils sont posés tels quels, en enfants DIRECTS du
+   * bouton — `iconClassName` / `labelClassName` sont alors sans objet.
+   * Mesuré chez Servum (bascule Graph/Editor) : même sans classe, le `<span>`
+   * autour du `<svg>` en fait une boîte inline posée sur la ligne de base, et
+   * le bouton passait de 34 à 37px de haut.
+   */
+  wrapContent?: boolean;
+  /**
+   * Rendre le conteneur de la barre (défaut `true`). `false` : les boutons
+   * sont rendus en fragment, enfants directs de l'élément de l'app — les deux
+   * bascules de Servum vivent dans la MÊME rangée flex que le bouton Re-scan.
+   * À combiner avec `renderRoot={false}` et `renderPanel={false}`.
+   *
+   * Sans conteneur il n'y a plus de `tablist` : le rôle des onglets n'est plus
+   * déduit de `listRole` (un `tab` orphelin serait invalide) et retombe sur
+   * `aria-current` à l'actif — sauf `tabRole` explicite (`'button'` →
+   * `aria-pressed`). `labels.tablist` et le `testId` de barre sont sans objet.
+   */
+  renderList?: boolean;
   /**
    * Attribut `type` des boutons d'onglet. Défaut : AUCUN attribut — c'est ce
    * que le composant a toujours rendu. Les barres écrites à la main dans les
@@ -226,6 +258,10 @@ export function Tabs({
   activeClassName = '',
   inactiveClassName = '',
   panelClassName = '',
+  iconClassName = '',
+  labelClassName = '',
+  wrapContent = true,
+  renderList = true,
   tabType,
   listRole = 'tablist',
   tabRole,
@@ -270,10 +306,10 @@ export function Tabs({
     : [className, listClassName].filter(Boolean).join(' ');
   const listClass = bare ? listOwn : `tabs__list${listOwn ? ` ${listOwn}` : ''}`;
 
-  const tabClassFor = (isActive: boolean) => {
+  const tabClassFor = (isActive: boolean, own?: string) => {
     const extra = `${tabClassName ? ` ${tabClassName}` : ''}${
       isActive && activeClassName ? ` ${activeClassName}` : ''
-    }${!isActive && inactiveClassName ? ` ${inactiveClassName}` : ''}`;
+    }${!isActive && inactiveClassName ? ` ${inactiveClassName}` : ''}${own ? ` ${own}` : ''}`;
     if (bare) return extra.slice(1);
     return `tabs__tab ${isActive ? 'tabs__tab--active' : ''}${extra}`;
   };
@@ -283,48 +319,74 @@ export function Tabs({
     : `tabs__content${panelClassName ? ` ${panelClassName}` : ''}`;
 
   // ── Rôles ARIA ────────────────────────────────────────────────────────────
+  // Sans conteneur, pas de `tablist`/`radiogroup` pour porter la paire : le
+  // rôle n'est plus déduit (cf. `renderList`).
+  const effectiveListRole = renderList ? listRole : null;
   const resolvedTabRole: TabsTabRole | null =
-    tabRole !== undefined ? tabRole : listRole !== null ? TAB_ROLE_FOR_LIST[listRole] : null;
+    tabRole !== undefined
+      ? tabRole
+      : effectiveListRole !== null
+        ? TAB_ROLE_FOR_LIST[effectiveListRole]
+        : null;
   // Un `tabpanel` n'a de sens qu'en face d'un `tablist` : hors de ce régime le
   // panneau redevient une simple boîte.
-  const panelRole = listRole === 'tablist' ? 'tabpanel' : null;
+  const panelRole = effectiveListRole === 'tablist' ? 'tabpanel' : null;
 
   // Sans racine, c'est la barre qui porte l'identifiant de test : elle EST la
   // racine. Le suffixe `-list` n'existe que lorsqu'il y a les deux éléments à
   // distinguer.
   const listTestId = testId === undefined ? undefined : renderRoot ? `${testId}-list` : testId;
 
-  const list = (
+  /** Classe d'une enveloppe : celle du paquet (sauf en `bare`) puis celle de
+   *  l'app ; vide ⇒ pas d'attribut `class`, comme hier en `bare`. */
+  const partClass = (own: string, app: string) => {
+    const value = bare ? app : app ? `${own} ${app}` : own;
+    return value ? { className: value } : null;
+  };
+
+  const buttons = tabs.map(tab => {
+    const isActive = currentTab === tab.id;
+    const buttonClass = tabClassFor(isActive, tab.className);
+    const hasTrailing = tab.trailing !== undefined && tab.trailing !== null;
+    return (
+      <button
+        key={tab.id}
+        {...(tabType !== undefined ? { type: tabType } : null)}
+        {...(buttonClass ? { className: buttonClass } : null)}
+        {...(tab.style !== undefined ? { style: tab.style } : null)}
+        onClick={() => handleTabClick(tab.id)}
+        {...(resolvedTabRole !== null ? { role: resolvedTabRole } : null)}
+        {...selectionAttribute(resolvedTabRole, isActive)}
+        {...(tab.testId !== undefined ? { 'data-testid': tab.testId } : null)}
+      >
+        {wrapContent ? (
+          <>
+            {tab.icon && <span {...partClass('tabs__tab-icon', iconClassName)}>{tab.icon}</span>}
+            <span {...partClass('tabs__tab-label', labelClassName)}>{tab.label}</span>
+            {hasTrailing && <span {...partClass('tabs__tab-trailing', '')}>{tab.trailing}</span>}
+          </>
+        ) : (
+          <>
+            {tab.icon}
+            {tab.label}
+            {hasTrailing && tab.trailing}
+          </>
+        )}
+      </button>
+    );
+  });
+
+  const list = renderList ? (
     <div
       {...(listClass ? { className: listClass } : null)}
       {...(listRole !== null ? { role: listRole } : null)}
       {...(t.tablist !== undefined ? { 'aria-label': t.tablist } : null)}
       {...(listTestId !== undefined ? { 'data-testid': listTestId } : null)}
     >
-      {tabs.map(tab => {
-        const isActive = currentTab === tab.id;
-        const buttonClass = tabClassFor(isActive);
-        return (
-          <button
-            key={tab.id}
-            {...(tabType !== undefined ? { type: tabType } : null)}
-            {...(buttonClass ? { className: buttonClass } : null)}
-            onClick={() => handleTabClick(tab.id)}
-            {...(resolvedTabRole !== null ? { role: resolvedTabRole } : null)}
-            {...selectionAttribute(resolvedTabRole, isActive)}
-            {...(tab.testId !== undefined ? { 'data-testid': tab.testId } : null)}
-          >
-            {tab.icon && (
-              <span {...(bare ? null : { className: 'tabs__tab-icon' })}>{tab.icon}</span>
-            )}
-            <span {...(bare ? null : { className: 'tabs__tab-label' })}>{tab.label}</span>
-            {tab.trailing !== undefined && tab.trailing !== null && (
-              <span {...(bare ? null : { className: 'tabs__tab-trailing' })}>{tab.trailing}</span>
-            )}
-          </button>
-        );
-      })}
+      {buttons}
     </div>
+  ) : (
+    <>{buttons}</>
   );
 
   const panel = renderPanel ? (
