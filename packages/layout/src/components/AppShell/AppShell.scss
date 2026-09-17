@@ -25,6 +25,18 @@
 // Les classes d'état (`is-open`, `is-visible`, `chat-open`) restent NUES : elles
 // ne sont jamais seules dans un sélecteur, et les tests e2e les assertent.
 
+// Tokens d'empilement et de tiroir (repli = valeurs d'hier). Mesuré chez
+// Socialum : topbar AU-DESSUS du tiroir ouvert (z-index 800/900/799), tiroir
+// mobile en 240px et non 85vw, voile affiché d'un coup — restés en local faute
+// de levier.
+//   --umb-app-shell-z-sidebar            100
+//   --umb-app-shell-z-topbar             50
+//   --umb-app-shell-z-overlay            99
+//   --umb-app-shell-sidebar-height       100vh puis 100dvh
+//   --umb-app-shell-drawer-width         85vw
+//   --umb-app-shell-drawer-max-width     320px
+//   --umb-app-shell-overlay-bg           rgba(0, 0, 0, 0.5)
+//   --umb-app-shell-overlay-transition   opacity 0.3s ease
 .umb-app-shell {
   display: flex;
   min-height: 100vh;
@@ -34,16 +46,16 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 100vh;
-  height: 100dvh;
+  height: var(--umb-app-shell-sidebar-height, 100vh);
+  height: var(--umb-app-shell-sidebar-height, 100dvh);
   width: var(--umb-app-shell-sidebar-width, 240px);
-  z-index: 100;
+  z-index: var(--umb-app-shell-z-sidebar, 100);
   transition: width 0.2s ease, transform 0.2s ease;
 
   @media (max-width: 767px) {
     transform: translateX(-100%);
-    width: 85vw;
-    max-width: 320px;
+    width: var(--umb-app-shell-drawer-width, 85vw);
+    max-width: var(--umb-app-shell-drawer-max-width, 320px);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
 
     &.is-open {
@@ -68,7 +80,7 @@
 .umb-app-shell__topbar {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: var(--umb-app-shell-z-topbar, 50);
 }
 
 .umb-app-shell__content {
@@ -87,10 +99,10 @@
   display: none;
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 99;
+  background-color: var(--umb-app-shell-overlay-bg, rgba(0, 0, 0, 0.5));
+  z-index: var(--umb-app-shell-z-overlay, 99);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: var(--umb-app-shell-overlay-transition, opacity 0.3s ease);
 
   @media (max-width: 767px) {
     display: block;
@@ -152,8 +164,8 @@
   // 768px la sidebar est un tiroir, plein ou fermé. On rejoue donc les
   // métriques du tiroir, exactement comme le `margin-left: 0` d'en dessous.
   @media (max-width: 767px) {
-    width: 85vw;
-    max-width: 320px;
+    width: var(--umb-app-shell-drawer-width, 85vw);
+    max-width: var(--umb-app-shell-drawer-max-width, 320px);
   }
 }
 
