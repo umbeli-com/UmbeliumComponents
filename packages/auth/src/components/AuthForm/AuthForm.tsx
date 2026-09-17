@@ -318,6 +318,22 @@ export interface AuthFormProps {
   /** Champs affichés à l'inscription (défaut : les 5 champs de la suite) —
    *  `{ fullName: true }` pour un champ unique « Nom complet ». */
   signUpFields?: AuthSignUpFields;
+  /**
+   * Rendre les `<label>` visibles (défaut `true`). `false` : aucun élément
+   * `<label>` — chaque champ garde son nom accessible par `aria-label` (même
+   * texte, sans la marque de requis). Servum (login à placeholders seuls) :
+   * `classNames.label: ''` ne retirait que la classe, le texte restait.
+   */
+  showLabels?: boolean;
+  /**
+   * Position du bouton Google par rapport au formulaire (défaut `'before'`,
+   * historique). `'after'` : sous le bouton d'envoi — la page de Servum.
+   */
+  oauthPosition?: 'before' | 'after';
+  /** Séparateur « ou » entre OAuth et formulaire (défaut `true`). */
+  showOAuthDivider?: boolean;
+  /** Lien « Mot de passe oublié ? » en connexion (défaut `true`). */
+  showForgotPassword?: boolean;
   /** Rend la carte `.auth-page__card` autour du formulaire. Passer `false`
    *  quand l'app fournit son propre chrome. @default true */
   showCard?: boolean;
@@ -473,6 +489,10 @@ export function AuthForm({
   forgotPasswordMode = 'screen',
   resetRedirectTo,
   signUpFields,
+  showLabels = true,
+  oauthPosition = 'before',
+  showOAuthDivider = true,
+  showForgotPassword = true,
   showCard = true,
   classNames = {},
 }: AuthFormProps) {
@@ -640,14 +660,24 @@ export function AuthForm({
         ? t.signInSubmitBusy
         : t.signInSubmit;
 
-  const firstNameField = (
-    <div className={c.field}>
-      <label htmlFor={fieldId('firstName')} className={c.label}>
-        {t.firstName}
+  /** `<label>` d'un champ — ou rien avec `showLabels={false}`. Au défaut,
+   *  l'élément d'hier au caractère près. */
+  const fieldLabel = (name: string, text: string) =>
+    showLabels ? (
+      <label htmlFor={fieldId(name)} className={c.label}>
+        {text}
         {t.requiredMark}
       </label>
+    ) : null;
+  /** Sans `<label>`, le nom accessible passe par `aria-label`. */
+  const nameWithoutLabel = (text: string) => (showLabels ? null : { 'aria-label': text });
+
+  const firstNameField = (
+    <div className={c.field}>
+      {fieldLabel('firstName', t.firstName)}
       <input
         id={fieldId('firstName')}
+        {...nameWithoutLabel(t.firstName)}
         type="text"
         value={values.firstName}
         onChange={setField('firstName')}
@@ -662,12 +692,10 @@ export function AuthForm({
 
   const lastNameField = (
     <div className={c.field}>
-      <label htmlFor={fieldId('lastName')} className={c.label}>
-        {t.lastName}
-        {t.requiredMark}
-      </label>
+      {fieldLabel('lastName', t.lastName)}
       <input
         id={fieldId('lastName')}
+        {...nameWithoutLabel(t.lastName)}
         type="text"
         value={values.lastName}
         onChange={setField('lastName')}
@@ -684,12 +712,10 @@ export function AuthForm({
    *  (« Jean Dupont »), là où `given-name` n'aurait donné que « Jean ». */
   const fullNameField = (
     <div className={c.field}>
-      <label htmlFor={fieldId('fullName')} className={c.label}>
-        {t.fullName}
-        {t.requiredMark}
-      </label>
+      {fieldLabel('fullName', t.fullName)}
       <input
         id={fieldId('fullName')}
+        {...nameWithoutLabel(t.fullName)}
         type="text"
         value={values.fullName}
         onChange={setField('fullName')}
@@ -718,25 +744,44 @@ export function AuthForm({
     lastNameField
   ) : null;
 
+  /** OAuth + séparateur. Avant le formulaire (défaut, historique) : bouton
+   *  puis « ou » ; après (`oauthPosition="after"`) : « ou » puis bouton, le
+   *  séparateur restant ENTRE les deux blocs. */
+  const showOAuth = Boolean(onGoogle) && !isForgot && !isReset;
+  const oauthButton = showOAuth ? (
+    <GoogleOAuthButton
+      onClick={() => {
+        setLocalError(null);
+        if (onGoogle) run(onGoogle());
+      }}
+      disabled={busy}
+      label={t.google}
+    />
+  ) : null;
+  const oauthDivider = showOAuth && showOAuthDivider ? (
+    <div className={c.divider}>
+      <span>{t.or}</span>
+    </div>
+  ) : null;
+  const oauthBlock = showOAuth ? (
+    oauthPosition === 'after' ? (
+      <>
+        {oauthDivider}
+        {oauthButton}
+      </>
+    ) : (
+      <>
+        {oauthButton}
+        {oauthDivider}
+      </>
+    )
+  ) : null;
+
   const body = (
     <>
       {/* Pas d'OAuth sur l'écran « mot de passe oublié » : il n'y a rien à
           connecter, juste un email à envoyer. */}
-      {onGoogle && !isForgot && !isReset ? (
-        <>
-          <GoogleOAuthButton
-            onClick={() => {
-              setLocalError(null);
-              run(onGoogle());
-            }}
-            disabled={busy}
-            label={t.google}
-          />
-          <div className={c.divider}>
-            <span>{t.or}</span>
-          </div>
-        </>
-      ) : null}
+      {oauthPosition === 'before' ? oauthBlock : null}
 
       <form ref={formRef} onSubmit={handleSubmit} className={c.form} aria-busy={busy}>
         {shownError ? (
@@ -757,12 +802,10 @@ export function AuthForm({
             déjà connu — le redemander serait un champ mort. */}
         {!isReset ? (
         <div className={c.field}>
-          <label htmlFor={fieldId('email')} className={c.label}>
-            {t.email}
-            {t.requiredMark}
-          </label>
+          {fieldLabel('email', t.email)}
           <input
             id={fieldId('email')}
+            {...nameWithoutLabel(t.email)}
             type="email"
             value={values.email}
             onChange={setField('email')}
@@ -777,12 +820,10 @@ export function AuthForm({
 
         {!isForgot ? (
           <div className={c.field}>
-            <label htmlFor={fieldId('password')} className={c.label}>
-              {isReset ? t.newPassword : t.password}
-              {t.requiredMark}
-            </label>
+            {fieldLabel('password', isReset ? t.newPassword : t.password)}
             <input
               id={fieldId('password')}
+              {...nameWithoutLabel(isReset ? t.newPassword : t.password)}
               type="password"
               value={values.password}
               onChange={setField('password')}
@@ -807,12 +848,10 @@ export function AuthForm({
 
         {(isSignUp && showConfirmPassword) || isReset ? (
           <div className={c.field}>
-            <label htmlFor={fieldId('confirmPassword')} className={c.label}>
-              {t.confirmPassword}
-              {t.requiredMark}
-            </label>
+            {fieldLabel('confirmPassword', t.confirmPassword)}
             <input
               id={fieldId('confirmPassword')}
+              {...nameWithoutLabel(t.confirmPassword)}
               type="password"
               value={values.confirmPassword}
               onChange={setField('confirmPassword')}
@@ -825,7 +864,7 @@ export function AuthForm({
           </div>
         ) : null}
 
-        {!isSignUp && !isForgot && !isReset ? (
+        {!isSignUp && !isForgot && !isReset && showForgotPassword ? (
           <div className={c.forgot}>
             <button
               type="button"
@@ -846,6 +885,7 @@ export function AuthForm({
           {submitLabel}
         </button>
       </form>
+      {oauthPosition === 'after' ? oauthBlock : null}
     </>
   );
 
