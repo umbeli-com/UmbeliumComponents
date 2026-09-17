@@ -652,3 +652,13 @@ html.dark .auth-page__spinner,
     transform: rotate(360deg);
   }
 }
+
+/* AuthHeader `actions` : contrôles dans l'en-tête (thème, langue — onboarding
+   de Socialum). Élément NEUF, rendu seulement si la prop est fournie. */
+.auth-page__header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
