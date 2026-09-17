@@ -295,6 +295,12 @@ $c-danger-soft:   var(--theme-color-danger-soft, #fde8e8);
   pointer-events: none;
 }
 
-.input--with-leading {
+// Double classe VOLONTAIRE (0,2,0). Avec la seule `.input--with-leading`
+// (0,1,0), une app dont la feuille est chargée APRÈS celle du paquet et qui
+// déclare le raccourci `.input { padding: 0 1rem }` gagnait par l'ordre de
+// source : mesuré chez Anonymum, le padding gauche retombait de 34px à 16px
+// et le premier caractère saisi s'écrivait SOUS l'icône. Aucune app ne cible
+// `.input--with-leading` (classe introduite en 1.7.0), donc rien à casser.
+.input.input--with-leading {
   padding-left: var(--input-leading-padding, 2.125rem);
 }
