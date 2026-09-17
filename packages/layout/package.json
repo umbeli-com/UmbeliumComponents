@@ -27,7 +27,7 @@
     "typecheck": "tsc --noEmit --composite false --declaration false --declarationMap false",
     "build:styles": "sass src/styles:dist/styles --style=compressed",
     "clean": "rm -rf dist",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

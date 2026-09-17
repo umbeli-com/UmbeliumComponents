@@ -37,7 +37,7 @@
     "typecheck": "tsc --noEmit --composite false --declaration false --declarationMap false",
     "build:styles": "mkdir -p dist/styles && cp src/styles/AuthPages.css dist/styles/AuthPages.css",
     "clean": "rm -rf dist",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

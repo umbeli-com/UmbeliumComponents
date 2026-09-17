@@ -17,7 +17,12 @@
     "vendor:list": "node scripts/vendor-list.mjs"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "@eslint/js": "^9.9.1",
+    "eslint": "^9.9.1",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.9.0",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.3.0"
   },
   "packageManager": "pnpm@8.15.0",
   "engines": {

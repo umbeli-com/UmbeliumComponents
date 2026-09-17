@@ -32,6 +32,11 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      # Le script `lint` existait sans qu'ESLint soit installé : il n'avait
+      # jamais tourné. Socle identique aux apps (typescript-eslint + react-hooks).
+      - name: Lint
+        run: pnpm lint
+
       # Chaque composant exporté doit avoir du CSS dans le bundle : DetailedChart et
       # LanguageSwitcher ont été livrés sans feuille de style et personne ne l'a vu.
       - name: Styles câblées + tokens définis
