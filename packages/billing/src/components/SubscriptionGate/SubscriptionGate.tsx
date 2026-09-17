@@ -39,10 +39,14 @@ export interface SubscriptionGateLabels {
   /**
    * Sous-titre paywall HISTORIQUE (`trialUsed` sans `reason`).
    * Sans surcharge : « Abonnez-vous pour continuer à utiliser <strong>{appName}</strong>. ».
-   * Avec surcharge : la chaîne rendue telle quelle (plus de `<strong>`).
+   * Avec surcharge : rendu tel quel. Une chaîne reste une chaîne (plus de
+   * `<strong>`) ; depuis la 1.3, un nœud React est accepté pour garder la mise en
+   * valeur — le paywall de Monitorum écrit « … utiliser <strong>Monitorum</strong>
+   * avec le compte <strong>{email}</strong>. » (passer alors `userEmail` à
+   * `undefined` pour ne pas répéter le compte sur sa propre ligne).
    * Ignoré dès que `reason` est fourni — c'est alors `reason*` qui décide.
    */
-  trialUsedSubtitle?: (copy: SubscriptionGateCopyContext) => string;
+  trialUsedSubtitle?: (copy: SubscriptionGateCopyContext) => ReactNode;
   /** reason='canceled'. défaut : 'Votre abonnement a été résilié. Pour continuer à utiliser {app}, …' */
   reasonCanceled?: (copy: SubscriptionGateCopyContext) => string;
   /** reason='expired'. défaut : 'Votre abonnement a expiré. Pour continuer à utiliser {app}, …' */
@@ -158,6 +162,15 @@ export interface SubscriptionGateProps {
   testIds?: SubscriptionGateTestIds;
   /** Classes additionnelles sur la racine `.subgate` (ex. 'subgate--paywall'). */
   className?: string;
+  /**
+   * Afficher le sélecteur de plans (défaut `true`). `false` : ni tuiles, ni
+   * conteneur `.subgate__plans` — la forme « essai consommé → abonnement
+   * seul » d'une app à plan unique (Monitorum : checkout `pro_monthly`, 115
+   * lignes de `.subgate` recopiées pour retirer ce seul bloc). Les CTA
+   * reçoivent alors le plan par défaut (celui à badge, sinon le dernier), ou
+   * `''` si `plans` est vide.
+   */
+  showPlans?: boolean;
 }
 
 /**
@@ -239,6 +252,7 @@ export function SubscriptionGate({
   labels,
   testIds,
   className,
+  showPlans = true,
 }: SubscriptionGateProps) {
   const l = { ...defaultLabels, ...labels };
   const tid: SubscriptionGateTestIds = testIds ?? {};
@@ -370,6 +384,7 @@ export function SubscriptionGate({
         </div>
 
         {/* Plan selector — cards side by side */}
+        {showPlans && (
         <div className="subgate__plans">
           {plans.map((plan) => {
             const selected = plan.id === selectedId;
@@ -398,6 +413,7 @@ export function SubscriptionGate({
             );
           })}
         </div>
+        )}
 
         {/* Features */}
         {features.length > 0 && (
