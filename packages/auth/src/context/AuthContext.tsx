@@ -31,6 +31,28 @@ export interface SignUpOptions {
   emailRedirectTo?: string;
 }
 
+export interface ResetPasswordOptions {
+  /**
+   * URL de retour du lien reçu par email. Défaut : `getResetPasswordUrl()`
+   * (`/auth/reset-password`) — une route que plusieurs apps ne déclarent pas,
+   * d'où l'appel direct à `resetPasswordForEmail` que Monitorum gardait.
+   * Typiquement `getAuthCallbackUrl()`, ou le `resetRedirectTo` d'AuthForm.
+   */
+  redirectTo?: string;
+}
+
+export interface SignInWithGoogleOptions {
+  /** URL de retour OAuth. Défaut : `getAuthCallbackUrl()`. */
+  redirectTo?: string;
+  /**
+   * Paramètres ajoutés à l'URL d'autorisation Google — ex.
+   * `{ prompt: 'select_account' }` pour forcer le choix du compte (Monitorum).
+   */
+  queryParams?: Record<string, string>;
+  /** Portées OAuth supplémentaires, séparées par des espaces. */
+  scopes?: string;
+}
+
 /** Chaînes visibles par l'utilisateur, surchargeables. Défauts en français. */
 export interface AuthLabels {
   /** Erreur renvoyée quand la configuration Supabase manque. */
@@ -58,10 +80,12 @@ export interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<AuthError | null>;
   signUp: (email: string, password: string, options?: SignUpOptions) => Promise<AuthError | null>;
   signOut: () => Promise<AuthError | null>;
-  /** OAuth Google ; redirige vers `getAuthCallbackUrl()`. Résout AVANT la redirection. */
-  signInWithGoogle: () => Promise<AuthError | null>;
-  /** Envoie l'e-mail de réinitialisation vers `getResetPasswordUrl()`. */
-  resetPassword: (email: string) => Promise<AuthError | null>;
+  /** OAuth Google ; redirige vers `getAuthCallbackUrl()` (ou `options.redirectTo`).
+   *  Résout AVANT la redirection. */
+  signInWithGoogle: (options?: SignInWithGoogleOptions) => Promise<AuthError | null>;
+  /** Envoie l'e-mail de réinitialisation vers `getResetPasswordUrl()` (ou
+   *  `options.redirectTo`). */
+  resetPassword: (email: string, options?: ResetPasswordOptions) => Promise<AuthError | null>;
   /** Revalide la session auprès du serveur (après un retour d'onglet, un webhook, un checkout…). */
   refresh: () => Promise<void>;
 }
@@ -364,26 +388,35 @@ export function AuthProvider({
     return null;
   }, [supabase, isConfigured, signOutScope, fail]);
 
-  const signInWithGoogle = useCallback(async () => {
-    setError(null);
-    const blocked = guard();
-    if (blocked) return blocked;
+  const signInWithGoogle = useCallback(
+    async (options: SignInWithGoogleOptions = {}) => {
+      setError(null);
+      const blocked = guard();
+      if (blocked) return blocked;
 
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: getAuthCallbackUrl() },
-    });
-    return fail(oauthError);
-  }, [supabase, guard, fail]);
+      // Sans options, l'objet envoyé est exactement celui d'avant
+      // (`{ redirectTo }`) : `queryParams` / `scopes` ne sont posés que fournis.
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: options.redirectTo ?? getAuthCallbackUrl(),
+          ...(options.queryParams ? { queryParams: options.queryParams } : {}),
+          ...(options.scopes ? { scopes: options.scopes } : {}),
+        },
+      });
+      return fail(oauthError);
+    },
+    [supabase, guard, fail],
+  );
 
   const resetPassword = useCallback(
-    async (email: string) => {
+    async (email: string, options: ResetPasswordOptions = {}) => {
       setError(null);
       const blocked = guard();
       if (blocked) return blocked;
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: getResetPasswordUrl(),
+        redirectTo: options.redirectTo ?? getResetPasswordUrl(),
       });
       return fail(resetError);
     },

@@ -3,7 +3,15 @@ export * from './components';
 
 // Contexte Supabase — le contrat d'auth de la suite en un seul endroit
 export { AuthProvider, useAuth } from './context';
-export type { AuthContextValue, AuthLabels, AuthProviderProps, SignOutScope, SignUpOptions } from './context';
+export type {
+  AuthContextValue,
+  AuthLabels,
+  AuthProviderProps,
+  ResetPasswordOptions,
+  SignInWithGoogleOptions,
+  SignOutScope,
+  SignUpOptions,
+} from './context';
 
 export { createSupabaseAuthClient } from './utils/supabaseClient';
 export type { CreateSupabaseAuthClientOptions, SupabaseAuthClient } from './utils/supabaseClient';

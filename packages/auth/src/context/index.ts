@@ -3,6 +3,8 @@ export type {
   AuthContextValue,
   AuthLabels,
   AuthProviderProps,
+  ResetPasswordOptions,
+  SignInWithGoogleOptions,
   SignOutScope,
   SignUpOptions,
 } from './AuthContext';
