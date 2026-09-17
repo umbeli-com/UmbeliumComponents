@@ -141,6 +141,21 @@ export interface PageHeaderProps
    * Sans effet sans `leading`.
    */
   titleRowStyle?: CSSProperties;
+  /**
+   * Fentes AUTOUR du bloc titre + sous-titre, dans `__content` : la rangée
+   * `[◀] [h1 / p] [▶]` de Dialum (CallInterface.tsx:208, navigation entre
+   * prospects), la forme des en-têtes de calendrier « ‹ Septembre 2026 › ».
+   * `leading` ne convient pas : il se place à côté du TITRE seul, le
+   * sous-titre passant dessous les deux.
+   *
+   * Rendu : `__content--row > [contentBefore, __text > [titre, sous-titre],
+   * contentAfter]`. Émis seulement si l'une des deux fentes est rendable ;
+   * sinon balisage d'hier. Token `--umb-page-header-content-row-gap` (0.75rem).
+   * Pour un surtitre (« eyebrow ») AU-DESSUS du titre, utiliser plutôt
+   * `leading` + `unstyledTitleRow`.
+   */
+  contentBefore?: ReactNode;
+  contentAfter?: ReactNode;
 }
 
 /** Concaténation « à trous » : au défaut, produit exactement la chaîne d'hier. */
@@ -191,6 +206,8 @@ export function PageHeader({
   unstyledTitleRow = false,
   titleRowClassName,
   titleRowStyle,
+  contentBefore,
+  contentAfter,
   ...rest
 }: PageHeaderProps) {
   const Title = titleAs;
@@ -227,6 +244,47 @@ export function PageHeader({
     <div className="page-header__actions umb-page-header__actions">{actions}</div>
   );
 
+  // Bloc texte : exactement les enfants d'hier de `__content` — posés tels
+  // quels dans `__content`, ou dans `__text` quand les fentes de contenu
+  // l'encadrent. Un fragment n'ajoute aucun nœud au DOM.
+  const hasContentSlots = isRenderable(contentBefore) || isRenderable(contentAfter);
+  const textNodes = (
+    <>
+      {/*
+        Sans `leading`, le premier enfant est `titleNode` tel quel : même
+        élément, même position qu'hier, donc même balisage et même
+        réconciliation. La rangée n'existe que si la fente est remplie.
+      */}
+      {isRenderable(leading) ? (
+        <div
+          className={cx(
+            'page-header__title-row',
+            !unstyledTitleRow && 'umb-page-header__title-row',
+            titleRowClassName,
+          )}
+          style={titleRowStyle}
+        >
+          {leading}
+          {titleNode}
+        </div>
+      ) : (
+        titleNode
+      )}
+      {isRenderable(subtitle) && (
+        <p
+          className={cx(
+            'page-header__subtitle',
+            !unstyledSubtitle && 'umb-page-header__subtitle',
+            subtitleClassName,
+          )}
+          style={subtitleStyle}
+        >
+          {subtitle}
+        </p>
+      )}
+    </>
+  );
+
   return (
     <div
       {...rest}
@@ -238,40 +296,19 @@ export function PageHeader({
         className,
       )}
     >
-      <div className="page-header__content umb-page-header__content">
-        {/*
-          Sans `leading`, le premier enfant est `titleNode` tel quel : même
-          élément, même position qu'hier, donc même balisage et même
-          réconciliation. La rangée n'existe que si la fente est remplie.
-        */}
-        {isRenderable(leading) ? (
-          <div
-            className={cx(
-              'page-header__title-row',
-              !unstyledTitleRow && 'umb-page-header__title-row',
-              titleRowClassName,
-            )}
-            style={titleRowStyle}
-          >
-            {leading}
-            {titleNode}
+      {hasContentSlots ? (
+        <div className="page-header__content umb-page-header__content page-header__content--row umb-page-header__content--row">
+          {isRenderable(contentBefore) && contentBefore}
+          <div className="page-header__text umb-page-header__text">
+            {textNodes}
           </div>
-        ) : (
-          titleNode
-        )}
-        {isRenderable(subtitle) && (
-          <p
-            className={cx(
-              'page-header__subtitle',
-              !unstyledSubtitle && 'umb-page-header__subtitle',
-              subtitleClassName,
-            )}
-            style={subtitleStyle}
-          >
-            {subtitle}
-          </p>
-        )}
-      </div>
+          {isRenderable(contentAfter) && contentAfter}
+        </div>
+      ) : (
+        <div className="page-header__content umb-page-header__content">
+          {textNodes}
+        </div>
+      )}
 
       {flatActions ? (
         <>

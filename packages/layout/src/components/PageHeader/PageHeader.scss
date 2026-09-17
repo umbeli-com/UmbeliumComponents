@@ -36,6 +36,9 @@
 //             --umb-page-header-actions-gap      0.75rem
 //   Rangée    --umb-page-header-leading-gap      0.5rem   (NEUF — prop `leading`,
 //             --umb-page-header-leading-align    center    pas de valeur d'hier)
+//   Fentes    --umb-page-header-content-row-gap  0.75rem  (NEUF — contentBefore/After)
+//   Actions   --umb-page-header-actions-align    center
+//   Flat      --umb-page-header-content-min-width 0
 //
 // `normal` / `nowrap` / `none` sont les valeurs INITIALES des propriétés
 // concernées, mais « valeur initiale » ne veut PAS dire « sans effet » : une
@@ -143,7 +146,9 @@
 
 .umb-page-header__actions {
   display: flex;
-  align-items: center;
+  // Token (repli = valeur d'hier) : Servum remettait `stretch` par une ligne
+  // d'app quand une action passe sur deux lignes.
+  align-items: var(--umb-page-header-actions-align, center);
   gap: var(--umb-page-header-actions-gap, 0.75rem);
 }
 
@@ -158,6 +163,25 @@
 // du titre (Webum EntryEdit.tsx:104) — un item flex ne rétrécit pas sans ça.
 .umb-page-header--flat-actions > .umb-page-header__content {
   margin-right: auto;
+  // Token (repli `0`, valeur d'hier) : `flatActions` mêlait « pas de __meta »
+  // et ce `min-width: 0`, mesuré comme régression chez Servum (titre à 82,78px
+  // au lieu de 92,33 sur une ligne serrée). `auto` le retire.
+  min-width: var(--umb-page-header-content-min-width, 0);
+}
+
+// `contentBefore` / `contentAfter` : `__content` passe en rangée autour du bloc
+// texte. Classes NEUVES (émises seulement avec une fente remplie) ; `--row`
+// (0,1,0) est déclaré après la base `__content` (0,1,0) et gagne par l'ordre.
+.umb-page-header__content--row {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--umb-page-header-content-row-gap, 0.75rem);
+}
+
+.umb-page-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--umb-page-header-content-gap, 0.25rem);
   min-width: 0;
 }
 
