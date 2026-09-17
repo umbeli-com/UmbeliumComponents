@@ -106,6 +106,27 @@ export interface KpiCardProps extends HTMLAttributes<HTMLDivElement> {
   labelClassName?: string;
   /** Classe ajoutée au chiffre (`.kpi-card__value`). */
   valueClassName?: string;
+  /**
+   * Classe ajoutée à la pastille de tendance (`.kpi-card__trend`), seule en
+   * `trendUnstyled`. Sans `trend`, sans effet.
+   */
+  trendClassName?: string;
+  /**
+   * Flèche de tendance (défaut `true`). `false` : la pastille ne rend que sa
+   * valeur — le `span.kpi-card__trend-icon` n'est pas émis du tout.
+   *
+   * Mesuré chez Dialum : la pastille maison est un `<span>` de texte seul
+   * (47,03 × 24px) ; celle du paquet ajoute une flèche `lucide` de 14px et un
+   * `gap`, soit +18px de large. Sans échappatoire, brancher `trend` changeait
+   * la tuile dès qu'un vrai delta serait câblé.
+   */
+  showTrendIcon?: boolean;
+  /**
+   * NU : aucune classe `kpi-card__trend*` n'est émise sur la pastille — ne
+   * reste que `trendClassName`, telle quelle. La direction reste lisible par
+   * `data-direction` (up/down/flat). Même contrat que les autres `unstyled`.
+   */
+  trendUnstyled?: boolean;
   /** Balise du libellé (défaut `span`). */
   labelAs?: KpiCardTextTag;
   /** Balise du chiffre (défaut `span`). */
@@ -151,6 +172,9 @@ export function KpiCard({
   labelSize = 'default',
   labelClassName,
   valueClassName,
+  trendClassName,
+  showTrendIcon = true,
+  trendUnstyled = false,
   labelAs = 'span',
   valueAs = 'span',
   renderRoot = true,
@@ -228,13 +252,35 @@ export function KpiCard({
 
   const trendEl =
     trend && !loading ? (
-      <span className={`kpi-card__trend ${getTrendClass()}`} data-testid={testIds?.trend}>
-        <span className="kpi-card__trend-icon">{renderTrendIcon()}</span>
+      <span
+        // Par défaut la chaîne est EXACTEMENT celle d'hier — `kpi-card__trend`
+        // suivi d'une espace puis du modificateur (vide pour `flat`).
+        {...(trendUnstyled
+          ? partClass(null, trendClassName)
+          : {
+              className: `kpi-card__trend ${getTrendClass()}${trendClassName ? ` ${trendClassName}` : ''}`,
+            })}
+        // Seul ajout quand la peau saute : la direction reste lisible.
+        {...(trendUnstyled ? { 'data-direction': trend.direction } : null)}
+        data-testid={testIds?.trend}
+      >
+        {showTrendIcon && <span className="kpi-card__trend-icon">{renderTrendIcon()}</span>}
         {/* Le fragment garde DEUX enfants texte (nombre puis « % »), comme la
-            version historique : même DOM, même `textContent`, même rendu. */}
-        <span className="kpi-card__trend-value">
-          {trend.label !== undefined ? trend.label : <>{Math.abs(trend.value)}%</>}
-        </span>
+            version historique : même DOM, même `textContent`, même rendu.
+            En `trendUnstyled`, la valeur est posée SANS enveloppe : la pastille
+            de l'app est un simple `<span>` de texte, et un `<span>` interne
+            porteur de `.kpi-card__trend-value` en changerait la mise en page. */}
+        {trendUnstyled ? (
+          trend.label !== undefined ? (
+            trend.label
+          ) : (
+            <>{Math.abs(trend.value)}%</>
+          )
+        ) : (
+          <span className="kpi-card__trend-value">
+            {trend.label !== undefined ? trend.label : <>{Math.abs(trend.value)}%</>}
+          </span>
+        )}
       </span>
     ) : null;
 
