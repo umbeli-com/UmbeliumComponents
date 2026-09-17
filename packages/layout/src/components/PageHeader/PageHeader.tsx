@@ -27,6 +27,10 @@ export type PageHeaderTitleTag = 'h1' | 'h2' | 'h3';
  *   Profilum frontend/src/styles/base/_layout.scss:42       __actions en enfant direct
  *   Servum   apps/web/src/styles/main.scss:264-270          .dashboard-header, h1 24px
  *
+ * Refus suivant, mesuré à l'adoption (Webum ×3, Profilum ×2) : le lien
+ * « retour » vit HORS du `<h1>`, avant lui — aucune prop ne l'atteignait.
+ * D'où `leading` (+ `unstyledTitleRow`, `titleRowClassName`, `titleRowStyle`).
+ *
  * Tout ce qui suit est ADDITIF : sans nouvelle prop, le balisage est celui
  * d'hier à l'octet près (mêmes balises, mêmes classes, même ordre, aucun
  * attribut en plus — `__meta` reste émis même vide) et la feuille rend les
@@ -100,6 +104,43 @@ export interface PageHeaderProps
   subtitleClassName?: string;
   /** Transmis au sous-titre (ex. `maxWidth: '54ch'` de Profilum Contacts:141). */
   subtitleStyle?: CSSProperties;
+  /**
+   * Fente AVANT le titre, HORS de la balise de titre : le lien « retour » de
+   * Webum (EntryEdit.tsx:105, CollectionEntries.tsx:73, CollectionEdit.tsx:327)
+   * et de Profilum (frontend LinkDetailPage.jsx:146, BioPageEditorPage.jsx:171).
+   *
+   * `title` ne convient pas : il met le lien DANS le `<h1>`, dont le nom
+   * accessible devient « Retour aux fiches Café Arabica » —
+   * `getByRole('heading', { name: 'Café Arabica' })` casse
+   * (Webum e2e/collections.admin.spec.ts:187).
+   *
+   * Rendu : `__content > __title-row > [leading, titre]`, sous-titre inchangé
+   * en dessous. La rangée n'est émise QUE si `leading` est rendable (même garde
+   * que `subtitle` : `leading={cond && <Link/>}` à `false` n'émet rien) ; sans
+   * la prop, le balisage est celui d'hier à l'octet près.
+   *
+   * Disposition : la feuille met la rangée EN LIGNE — lien à GAUCHE du titre,
+   * centré (la forme de Webum ; tokens `--umb-page-header-leading-*`). Lien
+   * AU-DESSUS du titre (la forme de Profilum) : `unstyledTitleRow`.
+   */
+  leading?: ReactNode;
+  /**
+   * N'émet PAS `umb-page-header__title-row` : la feuille ne peut plus mettre la
+   * rangée en ligne, elle reste un `<div>` en flux normal — le lien retombe
+   * AU-DESSUS du titre et la peau de l'app décide du reste. Même contrat que
+   * `unstyledTitle` : le rendu ne dépend plus de la présence de la feuille.
+   * Profilum n'importe que `sidebar.css` aujourd'hui ; sans cette prop, importer
+   * la feuille complète demain ferait basculer ses liens à gauche du titre.
+   * Sans effet sans `leading`.
+   */
+  unstyledTitleRow?: boolean;
+  /** Ajoutée aux classes de la rangée `leading` + titre. Sans effet sans `leading`. */
+  titleRowClassName?: string;
+  /**
+   * Transmis à la rangée (ex. le `gap: 10` de Webum EntryEdit.tsx:104).
+   * Sans effet sans `leading`.
+   */
+  titleRowStyle?: CSSProperties;
 }
 
 /** Concaténation « à trous » : au défaut, produit exactement la chaîne d'hier. */
@@ -143,9 +184,37 @@ export function PageHeader({
   titleStyle,
   subtitleClassName,
   subtitleStyle,
+  // À extraire ici, toutes les quatre : oubliée, une prop tomberait dans
+  // `rest` et finirait en attribut inconnu sur la racine (`leading="[object
+  // Object]"`).
+  leading,
+  unstyledTitleRow = false,
+  titleRowClassName,
+  titleRowStyle,
   ...rest
 }: PageHeaderProps) {
   const Title = titleAs;
+
+  /*
+    `!= null` ne suffisait pas : `false` est un `ReactNode` parfaitement
+    valide, et c'est la valeur que produit l'idiome même que l'élargissement
+    encourage — `title={canEdit && <span>…</span>}`. Il émettait alors un
+    `<h1>` VIDE, précisément ce que la prop dit éviter. `''` garde en revanche
+    le comportement d'hier (`<h1>` vide), parce qu'il était atteignable avec
+    l'ancien type `string`.
+  */
+  const titleNode = title !== undefined && title !== null && typeof title !== 'boolean' && (
+    <Title
+      className={cx(
+        'page-header__title',
+        !unstyledTitle && 'umb-page-header__title',
+        titleClassName,
+      )}
+      style={titleStyle}
+    >
+      {title}
+    </Title>
+  );
 
   const periodNode = isRenderable(period) && (
     <div className="page-header__period umb-page-header__period">
@@ -171,24 +240,24 @@ export function PageHeader({
     >
       <div className="page-header__content umb-page-header__content">
         {/*
-          `!= null` ne suffisait pas : `false` est un `ReactNode` parfaitement
-          valide, et c'est la valeur que produit l'idiome même que
-          l'élargissement encourage — `title={canEdit && <span>…</span>}`.
-          Il émettait alors un `<h1>` VIDE, précisément ce que la prop dit
-          éviter. `''` garde en revanche le comportement d'hier (`<h1>` vide),
-          parce qu'il était atteignable avec l'ancien type `string`.
+          Sans `leading`, le premier enfant est `titleNode` tel quel : même
+          élément, même position qu'hier, donc même balisage et même
+          réconciliation. La rangée n'existe que si la fente est remplie.
         */}
-        {title !== undefined && title !== null && typeof title !== 'boolean' && (
-          <Title
+        {isRenderable(leading) ? (
+          <div
             className={cx(
-              'page-header__title',
-              !unstyledTitle && 'umb-page-header__title',
-              titleClassName,
+              'page-header__title-row',
+              !unstyledTitleRow && 'umb-page-header__title-row',
+              titleRowClassName,
             )}
-            style={titleStyle}
+            style={titleRowStyle}
           >
-            {title}
-          </Title>
+            {leading}
+            {titleNode}
+          </div>
+        ) : (
+          titleNode
         )}
         {isRenderable(subtitle) && (
           <p

@@ -34,6 +34,8 @@
 //             --umb-page-header-subtitle-measure none   (mesure, ex. 54ch)
 //   Méta      --umb-page-header-meta-gap         1rem
 //             --umb-page-header-actions-gap      0.75rem
+//   Rangée    --umb-page-header-leading-gap      0.5rem   (NEUF — prop `leading`,
+//             --umb-page-header-leading-align    center    pas de valeur d'hier)
 //
 // `normal` / `nowrap` / `none` sont les valeurs INITIALES des propriétés
 // concernées, mais « valeur initiale » ne veut PAS dire « sans effet » : une
@@ -157,4 +159,27 @@
 .umb-page-header--flat-actions > .umb-page-header__content {
   margin-right: auto;
   min-width: 0;
+}
+
+// `leading` : rangée [fente, titre] dans `__content`, le lien « retour » HORS
+// de la balise de titre. Élément NEUF, émis seulement si la fente est remplie :
+// aucune cascade d'hier à préserver, d'où la spécificité ordinaire (0,1,0)
+// plutôt qu'un `:where()` — qu'un simple `div { display: block }` de reset
+// battrait.
+//
+// En ligne : lien à GAUCHE du titre, centré — la rangée que Webum écrit à la
+// main (EntryEdit.tsx:104 `display:flex; align-items:center; gap:10`, qu'il
+// retrouve avec `--umb-page-header-leading-gap: 10px`). Le lien AU-DESSUS du
+// titre (Profilum) n'a besoin d'aucune règle : la prop `unstyledTitleRow`
+// n'émet pas cette classe, la rangée reste un bloc en flux normal — avec ou
+// sans cette feuille.
+//
+// Ellipse du titre (Webum EntryEdit) : `flatActions` (qui pose `min-width: 0`
+// sur `__content`) + `overflow: hidden` sur le titre, via `titleStyle` — un
+// item flex dont `overflow` n'est pas `visible` a déjà un minimum automatique
+// nul, rien à ajouter ici.
+.umb-page-header__title-row {
+  display: flex;
+  align-items: var(--umb-page-header-leading-align, center);
+  gap: var(--umb-page-header-leading-gap, 0.5rem);
 }
