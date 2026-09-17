@@ -26,6 +26,12 @@ import { X } from 'lucide-react';
  * qu'elles ne sont pas passées : sans elles, le DOM produit est exactement
  * celui d'avant, attribut par attribut.
  *
+ * Une seule évolution touche le défaut, et c'est un correctif : le verrou de
+ * défilement rend en `padding-right` la largeur de la barre qu'il retire. Sans
+ * cela, ouvrir une fenêtre élargissait la page de la largeur de la barre et la
+ * mise en page sautait sous le voile. Là où la barre ne prend pas de place, le
+ * verrou n'écrit rien de plus qu'avant (voir `lockBodyScroll`).
+ *
  * La PEAU, elle, se règle PAR INSTANCE : couleur du voile, `padding` de
  * l'en-tête/du corps/du pied, taille du titre et du texte, plus une classe par
  * partie. Une app n'adopte pas la fenêtre « atelier » d'un écran au prix de
@@ -183,12 +189,44 @@ function cssLength(value: ModalLength): string {
 // forcément la chaîne vide — une app peut déjà bloquer le scroll elle-même).
 let scrollLockCount = 0;
 let previousBodyOverflow = '';
+// `null` = le verrou n'a rien écrit dans `padding-right` : la restauration n'y
+// touche pas non plus.
+let previousBodyPaddingRight: string | null = null;
+
+/** Largeur (px CSS) que la barre de défilement du viewport prend à la page. */
+function viewportScrollbarWidth(): number {
+  return Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+}
 
 function lockBodyScroll(): () => void {
   if (typeof document === 'undefined') return () => undefined;
   if (scrollLockCount === 0) {
-    previousBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const body = document.body;
+    const scrollbarBefore = viewportScrollbarWidth();
+    previousBodyOverflow = body.style.overflow;
+    body.style.overflow = 'hidden';
+
+    // `overflow: hidden` retire la barre du viewport. Quand elle PREND de la
+    // place (barre classique, ou stylée par `::-webkit-scrollbar` — Socialum :
+    // 8px), la page s'élargit d'autant sous le voile et toute la mise en page
+    // se recompose : 1008 → 1016px mesurés. On rend cette largeur en
+    // `padding-right`, par-dessus celui que la page avait déjà.
+    //
+    // La largeur compensée est celle qui a DISPARU — mesurée avant et après —
+    // et non la barre supposée. Rien n'est donc écrit quand la barre ne
+    // disparaît pas : barre en surimpression (macOS, mobile), page sans
+    // débordement, Chromium headless, `overflow` posé sur `<html>` (le verrou
+    // de `<body>` ne se propage alors pas au viewport, la barre reste) ou
+    // `scrollbar-gutter: stable` (la gouttière reste réservée). Ni sous jsdom,
+    // où `innerWidth - clientWidth` vaut 1024 faute de mise en page : les deux
+    // mesures y sont égales. Dans tous ces cas, `<body>` reçoit exactement ce
+    // qu'il recevait avant — `overflow: hidden`, rien d'autre.
+    const removed = scrollbarBefore > 0 ? scrollbarBefore - viewportScrollbarWidth() : 0;
+    if (removed > 0) {
+      previousBodyPaddingRight = body.style.paddingRight;
+      const currentPadding = parseFloat(window.getComputedStyle(body).paddingRight) || 0;
+      body.style.paddingRight = `${currentPadding + removed}px`;
+    }
   }
   scrollLockCount += 1;
 
@@ -200,6 +238,10 @@ function lockBodyScroll(): () => void {
     if (scrollLockCount === 0) {
       document.body.style.overflow = previousBodyOverflow;
       previousBodyOverflow = '';
+      if (previousBodyPaddingRight !== null) {
+        document.body.style.paddingRight = previousBodyPaddingRight;
+        previousBodyPaddingRight = null;
+      }
     }
   };
 }
