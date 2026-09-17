@@ -5,9 +5,13 @@
 // nom aussi générique que les autres ; l'uniformité évite qu'une app s'y
 // cogne demain. Le composant émet les deux jeux de classes, modificateur
 // `--gap-*` compris (le sélecteur qui porte la gouttière en dépend).
+//
+// Tokens (repli = valeur d'hier, donc rendu inchangé tant qu'ils sont absents) :
+//   --umb-grid-section-spacing   2rem    marge sous une section
+//   --umb-grid-section-align     start   align-items de la grille
 
 .umb-grid-section {
-  margin-bottom: 2rem;
+  margin-bottom: var(--umb-grid-section-spacing, 2rem);
 
   &:last-child {
     margin-bottom: 0;
@@ -23,7 +27,7 @@
 
 .umb-grid-section__grid {
   display: grid;
-  align-items: start;
+  align-items: var(--umb-grid-section-align, start);
 
   .umb-grid-section--gap-sm & {
     gap: 0.75rem;
@@ -34,6 +38,21 @@
   }
 
   .umb-grid-section--gap-lg & {
+    gap: 1.5rem;
+  }
+
+  // `wrapper={false}` : plus d'ancêtre `.umb-grid-section--gap-*`, le cran est
+  // porté par la grille elle-même. Classes NEUVES, émises seulement sans
+  // section ; même spécificité (0,2,0) que les règles descendantes ci-dessus.
+  &#{&}--gap-sm {
+    gap: 0.75rem;
+  }
+
+  &#{&}--gap-md {
+    gap: 1.25rem;
+  }
+
+  &#{&}--gap-lg {
     gap: 1.5rem;
   }
 }
