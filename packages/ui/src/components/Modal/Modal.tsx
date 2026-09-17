@@ -81,6 +81,9 @@ const defaultModalLabels: Required<ModalLabels> = {
   dialog: 'Fenêtre de dialogue',
 };
 
+/** Balise du titre de la fenêtre. */
+export type ModalTitleTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'div';
+
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -141,6 +144,37 @@ export interface ModalProps {
   maxHeight?: ModalLength;
   /** Rayon des coins. Défaut : 16px (feuille de style). */
   radius?: ModalLength;
+  /** `border` de la fenêtre, POUR CETTE FENÊTRE (`'2px solid var(--color-border-strong)'`,
+   *  `'none'`). Défaut : `1px solid var(--theme-color-neutral-border)`. Anonymum
+   *  (« ouvrir en grand ») portait le trait en className faute de levier. */
+  border?: string;
+  /** `box-shadow` de la fenêtre (`'0 24px 60px rgba(0,0,0,.35)'`, `'none'`).
+   *  Défaut : `--theme-color-shadow-lg`. */
+  shadow?: string;
+  /**
+   * Animer l'entrée (défaut `true`). `false` : ni fondu du voile ni
+   * `umb-modal-in` (translateY 8px + scale .985) — la fenêtre « ouvrir en
+   * grand » d'Anonymum n'avait aucune animation et posait `animation: none`
+   * dans sa propre classe. `prefers-reduced-motion` coupe déjà tout.
+   */
+  animation?: boolean;
+  /**
+   * Balise du titre (défaut `h2`). La hiérarchie appartient à la page :
+   * Socialum rendait `h3` (Planification, médiathèque) et `h4` (paiement
+   * Stripe), et l'adoption les avait fait passer en `h2`. L'`id` qui nomme la
+   * fenêtre (`aria-labelledby`) suit la balise, quelle qu'elle soit.
+   */
+  titleAs?: ModalTitleTag;
+  /**
+   * Ligne d'explication SOUS le titre, dans l'en-tête — le « h4 + paragraphe »
+   * de la fenêtre de paiement de Socialum. Rendue en `<p class="umb-modal__description">`
+   * et reliée par `aria-describedby`. Fournie, elle groupe titre et
+   * description dans `div.umb-modal__heading` ; absente, l'en-tête est
+   * exactement celui d'avant.
+   */
+  description?: ReactNode;
+  /** Classe posée sur la description, en plus de `.umb-modal__description`. */
+  descriptionClassName?: string;
   /**
    * Couleur du voile, POUR CETTE FENÊTRE (`'rgba(15, 23, 42, 0.55)'`,
    * `'var(--color-overlay)'`…). Défaut : `--theme-color-overlay`, le jeton de
@@ -296,6 +330,12 @@ export function Modal({
   showCloseButton = true,
   closeClassName = '',
   closeContent,
+  border,
+  shadow,
+  animation = true,
+  titleAs = 'h2',
+  description,
+  descriptionClassName,
   backdropBlur,
   width,
   maxWidth,
@@ -344,6 +384,7 @@ export function Modal({
 
   const instanceId = useId();
   const titleId = `${instanceId}-title`;
+  const descriptionId = `${instanceId}-description`;
 
   useEffect(() => {
     if (!isOpen || typeof document === 'undefined') return undefined;
@@ -467,6 +508,11 @@ export function Modal({
   if (height !== undefined) dialogStyle.height = height;
   if (maxHeight !== undefined) dialogStyle.maxHeight = maxHeight;
   if (radius !== undefined) dialogStyle.borderRadius = radius;
+  // Trait et ombre passent par des variables lues par la feuille (repli : les
+  // valeurs d'origine) plutôt qu'en `border`/`boxShadow` inline : une classe
+  // d'app sur la fenêtre peut toujours les surcharger.
+  if (border !== undefined) dialogStyle['--umb-modal-border'] = border;
+  if (shadow !== undefined) dialogStyle['--umb-modal-shadow'] = shadow;
   // Les mesures de peau voyagent en variables CSS posées sur la fenêtre :
   // l'en-tête, le corps et le pied en héritent, et la règle de style garde sa
   // valeur d'origine en repli. Une seule fenêtre est donc touchée, et
@@ -483,6 +529,26 @@ export function Modal({
     dialogStyle['--umb-modal-body-font-size'] = cssLength(bodyFontSize);
   }
   const hasDialogStyle = Object.keys(dialogStyle).length > 0;
+
+  const Title = titleAs;
+  const titleNode = (
+    <Title
+      className={`umb-modal__title${titleClassName ? ` ${titleClassName}` : ''}`}
+      id={titleId}
+      data-testid={testIds.title}
+    >
+      {title}
+    </Title>
+  );
+  const hasDescription = description !== undefined && description !== null && description !== false && description !== '';
+  const descriptionNode = hasDescription ? (
+    <p
+      className={`umb-modal__description${descriptionClassName ? ` ${descriptionClassName}` : ''}`}
+      id={descriptionId}
+    >
+      {description}
+    </p>
+  ) : null;
 
   // Sans `closeClassName` ni `closeContent`, la croix est l'élément d'avant au
   // caractère près : même `class`, même icône.
@@ -502,8 +568,8 @@ export function Modal({
   return createPortal(
     <div
       className={`umb-modal__backdrop${blurOn ? ' umb-modal__backdrop--blur' : ''}${
-        backdropClassName ? ` ${backdropClassName}` : ''
-      }`}
+        animation ? '' : ' umb-modal__backdrop--static'
+      }${backdropClassName ? ` ${backdropClassName}` : ''}`}
       role="presentation"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
@@ -512,10 +578,13 @@ export function Modal({
     >
       <div
         ref={dialogRef}
-        className={`umb-modal umb-modal--${size}${className ? ` ${className}` : ''}`}
+        className={`umb-modal umb-modal--${size}${animation ? '' : ' umb-modal--static'}${
+          className ? ` ${className}` : ''
+        }`}
         role={role}
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
+        {...(hasDescription ? { 'aria-describedby': descriptionId } : null)}
         aria-label={title ? undefined : t.dialog}
         tabIndex={-1}
         style={hasDialogStyle ? dialogStyle : undefined}
@@ -523,14 +592,13 @@ export function Modal({
       >
         {hasHeader && (
           <div className={`umb-modal__header${headerClassName ? ` ${headerClassName}` : ''}`}>
-            {title ? (
-              <h2
-                className={`umb-modal__title${titleClassName ? ` ${titleClassName}` : ''}`}
-                id={titleId}
-                data-testid={testIds.title}
-              >
-                {title}
-              </h2>
+            {title && hasDescription ? (
+              <div className="umb-modal__heading">
+                {titleNode}
+                {descriptionNode}
+              </div>
+            ) : title ? (
+              titleNode
             ) : (
               // Cale qui tient la place du titre absent (elle pousse la croix à
               // droite). Elle porte `.umb-modal__title`, donc elle porte aussi

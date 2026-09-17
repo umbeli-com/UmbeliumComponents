@@ -39,9 +39,11 @@
   max-height: calc(100vh - 48px);
   min-width: 0;
   background-color: var(--theme-color-neutral-surface-alt, #ffffff);
-  border: 1px solid var(--theme-color-neutral-border, #d1d5db);
+  // `--umb-modal-border` / `--umb-modal-shadow` : props `border` / `shadow`,
+  // repli = valeurs d'origine.
+  border: var(--umb-modal-border, 1px solid var(--theme-color-neutral-border, #d1d5db));
   border-radius: 16px;
-  box-shadow: var(--theme-color-shadow-lg, 0 18px 48px rgba(0, 0, 0, 0.22));
+  box-shadow: var(--umb-modal-shadow, var(--theme-color-shadow-lg, 0 18px 48px rgba(0, 0, 0, 0.22)));
   color: var(--theme-color-neutral-text, #1a1a2e);
   outline: none;
   animation: umb-modal-in 0.16s ease-out;
@@ -244,6 +246,30 @@
 @keyframes umb-modal-in {
   from { opacity: 0; transform: translateY(8px) scale(0.985); }
   to { opacity: 1; transform: none; }
+}
+
+// `animation={false}` : classes NEUVES, même spécificité que les règles de
+// base et déclarées après — elles gagnent sans `!important`.
+.umb-modal__backdrop--static,
+.umb-modal--static {
+  animation: none;
+}
+
+// `description` : titre et ligne d'explication empilés, à la place du titre
+// seul. Éléments NEUFS, émis seulement quand la description est fournie.
+.umb-modal__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.umb-modal__description {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--theme-color-neutral-text-muted, #6b7280);
 }
 
 @media (prefers-reduced-motion: reduce) {

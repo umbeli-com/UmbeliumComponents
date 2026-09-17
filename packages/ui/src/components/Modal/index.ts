@@ -5,6 +5,7 @@ export {
   type ModalLength,
   type ModalLabels,
   type ModalTestIds,
+  type ModalTitleTag,
 } from './Modal';
 export {
   ConfirmDialog,
