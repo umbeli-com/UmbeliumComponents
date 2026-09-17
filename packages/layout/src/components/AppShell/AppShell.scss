@@ -221,12 +221,16 @@
 // enfle jusqu'à ~40 % de l'écran sur une page courte. Le tiroir et son
 // backdrop sont `position: fixed` ou `display: none` : ils ne sont pas des
 // items de grille et ne consomment aucune ligne.
+//
+// Tokens (repli = valeur d'hier) : `--umb-app-shell-mobile-rows` et
+// `--umb-app-shell-mobile-align`. Monitorum gardait une ligne d'override pour
+// sa parité ; il la remplace par un token posé sur sa racine.
 @media (max-width: 768px) {
   .umb-app-shell--grid,
   .umb-app-shell--grid.umb-app-shell--collapsed {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
-    align-content: start;
+    grid-template-rows: var(--umb-app-shell-mobile-rows, auto minmax(0, 1fr));
+    align-content: var(--umb-app-shell-mobile-align, start);
   }
 
   .umb-app-shell--grid > .umb-app-shell__main {
