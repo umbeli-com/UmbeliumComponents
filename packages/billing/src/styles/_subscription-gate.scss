@@ -262,6 +262,15 @@
       transform: none;
       box-shadow: none;
     }
+
+    // `highlightPlan` : la tuile reste INERTE mais garde l'aspect « mise en
+    // avant ». Sans cette règle, `--static:hover` — déclarée après
+    // `--selected`, à spécificité égale — reprenait le filet gris et effaçait
+    // la lueur dès le survol.
+    &.subgate__plan--selected:hover {
+      border-color: #5b56ff;
+      box-shadow: 0 0 0 3px rgba(91, 86, 255, 0.08);
+    }
   }
 
   // ── Attente d'activation (`activating`) ─────────────────

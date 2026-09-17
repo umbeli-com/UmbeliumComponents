@@ -187,6 +187,35 @@ export interface SubscriptionGateProps {
    */
   selectablePlans?: boolean;
   /**
+   * Garder l'aspect « mise en avant » (filet et lueur de `--selected`) sur une
+   * tuile INERTE — `selectablePlans={false}` la rendait grise.
+   *
+   * Mesuré chez Anonymum : la licence fondateurs est une offre unique, donc
+   * inerte, mais l'app la rendait `subgate__plan--selected` (filet 2px
+   * `#5b56ff`, fond `rgba(91,86,255,.02)`, lueur `0 0 0 3px`). Sans
+   * échappatoire, adopter le composant effaçait l'encadré violet sur quatre
+   * écrans. Ni curseur de clic, ni soulèvement au survol, ni coche : seule
+   * la peau « choisie » revient. Sans effet quand `selectablePlans` vaut `true`
+   * (la sélection réelle pilote alors `--selected`).
+   */
+  highlightPlan?: boolean;
+  /**
+   * Classe ajoutée à CHAQUE tuile de plan (`.subgate__plan`), quel que soit le
+   * mode. Pour un habillage que ni `highlightPlan` ni les jetons ne couvrent.
+   */
+  planClassName?: string;
+  /**
+   * Peindre soi-même le bloc d'attente d'activation, à la place de
+   * `div.subgate__activating` (spinner + titre + sous-titre).
+   *
+   * Mesuré chez Anonymum : sa ligne d'attente vit DANS l'en-tête
+   * (`span.subgate__cta-loading` à côté du titre), pas dans un bloc centré
+   * sous lui — aucune combinaison de props ne rendait cette forme. Reçoit les
+   * libellés résolus ; renvoyer `null` n'émet rien. Sans effet hors
+   * `activating`.
+   */
+  renderActivating?: (state: { title: string; subtitle: string }) => ReactNode;
+  /**
    * Offre épuisée (plafond atteint) : le CTA affiche `labels.soldOutCta` et
    * reste inerte, sans spinner. Mesuré sur le paywall fondateurs (plafond de
    * 100 licences), qui n'avait aucun moyen de désactiver le CTA autrement que
@@ -303,6 +332,9 @@ export function SubscriptionGate({
   showPlans = true,
   showPortal = true,
   selectablePlans = true,
+  highlightPlan = false,
+  planClassName,
+  renderActivating,
   soldOut = false,
   activating = false,
   secondaryError,
@@ -409,7 +441,7 @@ export function SubscriptionGate({
         data-testid={tid.card}
       >
 
-        <button className="subgate__close" onClick={onSignOut} aria-label={l.close} data-testid={tid.close}>&times;</button>
+        <button type="button" className="subgate__close" onClick={onSignOut} aria-label={l.close} data-testid={tid.close}>&times;</button>
 
         {/* Header — trial offer, or "trial over" paywall (trialUsed / reason) */}
         <div className="subgate__header">
@@ -453,10 +485,18 @@ export function SubscriptionGate({
                 {...(selectablePlans
                   ? {
                       type: 'button' as const,
-                      className: `subgate__plan ${selected ? 'subgate__plan--selected' : ''}`,
+                      className: `subgate__plan ${selected ? 'subgate__plan--selected' : ''}${planClassName ? ` ${planClassName}` : ''}`,
                       onClick: () => setSelectedId(plan.id),
                     }
-                  : { className: 'subgate__plan subgate__plan--static' })}
+                  : {
+                      // `--static` retire le chrome de choix (curseur, focus) ;
+                      // `highlightPlan` remet l'aspect « mis en avant », qu'une
+                      // offre unique garde souvent (mesuré chez Anonymum : la
+                      // licence fondateurs perdait son encadré violet).
+                      className: `subgate__plan subgate__plan--static${
+                        highlightPlan ? ' subgate__plan--selected' : ''
+                      }${planClassName ? ` ${planClassName}` : ''}`,
+                    })}
                 data-testid={tid.plan?.(plan.id)}
               >
                 {plan.badge && <span className="subgate__plan-badge">{plan.badge}</span>}
@@ -497,17 +537,21 @@ export function SubscriptionGate({
         )}
 
         {/* Paiement encaissé, accès pas encore ouvert (voir `activating`) */}
-        {activating && (
-          <div className="subgate__activating" data-testid={tid.activating}>
-            <span className="subgate__activating-spinner" />
-            <p className="subgate__activating-title">{l.activatingTitle}</p>
-            <p className="subgate__activating-subtitle">{l.activatingSubtitle}</p>
-          </div>
-        )}
+        {activating &&
+          (renderActivating ? (
+            renderActivating({ title: l.activatingTitle, subtitle: l.activatingSubtitle })
+          ) : (
+            <div className="subgate__activating" data-testid={tid.activating}>
+              <span className="subgate__activating-spinner" />
+              <p className="subgate__activating-title">{l.activatingTitle}</p>
+              <p className="subgate__activating-subtitle">{l.activatingSubtitle}</p>
+            </div>
+          ))}
 
         {/* CTA — trial start, or paid checkout when the trial was consumed */}
         {!activating && (
         <button
+          type="button"
           className="subgate__cta"
           onClick={isPaywall ? handleSubscribe : handleTrial}
           disabled={isLoading || soldOut}
@@ -542,21 +586,21 @@ export function SubscriptionGate({
 
         {/* Secondary links */}
         <div className="subgate__links">
-          <button className="subgate__link" onClick={handleRefresh} disabled={statusLoading} data-testid={tid.refresh}>
+          <button type="button" className="subgate__link" onClick={handleRefresh} disabled={statusLoading} data-testid={tid.refresh}>
             <RefreshCw size={13} className={statusLoading ? 'subgate__spin' : ''} />
             {statusLoading ? l.refreshLoading : l.refresh}
           </button>
           {showPortal && (
             <>
               <span className="subgate__link-sep" />
-              <button className="subgate__link" onClick={handlePortal} disabled={portalLoading} data-testid={tid.portal}>
+              <button type="button" className="subgate__link" onClick={handlePortal} disabled={portalLoading} data-testid={tid.portal}>
                 <ExternalLink size={13} />
                 {l.portal}
               </button>
             </>
           )}
           <span className="subgate__link-sep" />
-          <button className="subgate__link subgate__link--muted" onClick={onSignOut} data-testid={tid.signOut}>
+          <button type="button" className="subgate__link subgate__link--muted" onClick={onSignOut} data-testid={tid.signOut}>
             <LogOut size={13} />
             {l.signOut}
           </button>
