@@ -14,4 +14,6 @@ export type {
   CardHeaderTitleTag,
   CardHeaderAlign,
   CardHeaderSpacing,
+  CardHeaderSubtitleSize,
+  CardHeaderAlignItems,
 } from './Card';

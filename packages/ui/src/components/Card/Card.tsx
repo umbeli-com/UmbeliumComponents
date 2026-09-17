@@ -107,6 +107,24 @@ export function Card({
 export type CardHeaderTitleSize = 'sm' | 'md' | 'lg' | 'inherit';
 
 /**
+ * Typographie du sous-titre. `default` = `.card__header-subtitle` (12px, marge
+ * haute 2px, couleur atténuée), rendu historique. `inherit` = AUCUNE classe du
+ * paquet sur le sous-titre : ni taille, ni interligne, ni marge, ni couleur —
+ * seule `subtitleClassName` le peint, et elle gagne par ABSENCE de règle
+ * concurrente, quel que soit l'ordre des feuilles.
+ *
+ * Plus radical que `titleSize="inherit"`, qui garde la base du titre (`margin`,
+ * `color`) : la base du sous-titre, elle, ne déclare QUE de la peau. Mesuré au
+ * Manager (OrganizationManager, BillingSection, ProfileSection) : sous-titres à
+ * `margin-top: 0` / `text-sm`, et `mt-0` n'existe pas dans sa feuille Tailwind
+ * précompilée — les 2px de la base ne se rattrapaient par aucune classe.
+ */
+export type CardHeaderSubtitleSize = 'default' | 'inherit';
+
+/** Axe VERTICAL de l'en-tête, indépendant de `align`. */
+export type CardHeaderAlignItems = 'center' | 'start';
+
+/**
  * Balise du titre. La hiérarchie des titres appartient à la PAGE, pas au
  * composant — même raisonnement que `EmptyStateTitleTag`. Anonymum rend `h3`
  * dans ses six panneaux (`InputPanel.tsx:27`, `OutputPanel.tsx:65`,
@@ -215,11 +233,25 @@ export interface CardHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 't
    *  si l'app charge son SCSS après `@umbeli-com/ui/styles` — ce qu'impose la
    *  convention de la suite (`Anonymum/src/main.tsx` lignes 5 puis 7).
    *  Découper la base pour lui offrir le même `inherit` changerait la chaîne de
-   *  classes de TOUS les sous-titres déjà rendus : écarté ici. */
+   *  classes de TOUS les sous-titres déjà rendus : écarté ici.
+   *
+   *  Pour lever l'asymétrie SANS toucher ces sous-titres : `subtitleSize`
+   *  ci-dessous, opt-in. */
   subtitleClassName?: string;
+  /** `inherit` : aucune classe du paquet sur le sous-titre, la peau vient de
+   *  `subtitleClassName` seule. Défaut `default` (rendu historique). */
+  subtitleSize?: CardHeaderSubtitleSize;
   /** `start` aligne en haut quand l'en-tête est haut (défaut `center`) ;
    *  `between` répartit horizontalement, comme `CardFooter`. */
   align?: CardHeaderAlign;
+  /**
+   * Axe vertical SEUL, combinable avec `align="between"` — la paire que
+   * l'énumération `align` rend exclusive (en-têtes « Équipe » / facturation /
+   * profil du Manager : `items-start` ET `justify-between`). `start` émet
+   * `card__header--align-start`, la classe que `align="start"` émet déjà —
+   * jamais deux fois. `center` (défaut) n'émet rien.
+   */
+  alignItems?: CardHeaderAlignItems;
   /** Espace sous l'en-tête. Sans valeur : aucune marge (rendu historique). */
   spacing?: CardHeaderSpacing;
   className?: string;
@@ -239,7 +271,9 @@ export function CardHeader({
   titleAs,
   titleClassName,
   subtitleClassName,
+  subtitleSize = 'default',
   align = 'center',
+  alignItems = 'center',
   spacing,
   className = '',
   testId,
@@ -251,11 +285,14 @@ export function CardHeader({
   // `align` : même forme que `CardFooter` — rien pour la valeur par défaut, une
   // classe sinon. Pour `center` et `start`, la chaîne produite est au caractère
   // près celle d'hier (`''` / `'card__header--align-start'`).
+  // `alignItems="start"` rejoint la même classe, à la place qu'elle occupe
+  // aujourd'hui avec `align="start"` ; absente, rien ne s'insère.
   const classes = [
     'card__header',
     `card__header--padding-${padding}`,
     divider ? '' : 'card__header--no-divider',
     align === 'center' ? '' : `card__header--align-${align}`,
+    alignItems === 'start' && align !== 'start' ? 'card__header--align-start' : '',
     spacing === undefined || spacing === 'none' ? '' : `card__header--spacing-${spacing}`,
     className,
   ]
@@ -284,9 +321,15 @@ export function CardHeader({
           )}
           {subtitle && (
             <p
-              className={`card__header-subtitle${
-                subtitleClassName ? ` ${subtitleClassName}` : ''
-              }`}
+              {...(subtitleSize === 'inherit'
+                ? subtitleClassName
+                  ? { className: subtitleClassName }
+                  : null
+                : {
+                    className: `card__header-subtitle${
+                      subtitleClassName ? ` ${subtitleClassName}` : ''
+                    }`,
+                  })}
             >
               {subtitle}
             </p>
