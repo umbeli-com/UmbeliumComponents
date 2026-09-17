@@ -56,3 +56,41 @@
     gap: 1.5rem;
   }
 }
+
+// ── Colonnes par palier (`columns={{ base: 1, md: 2, xl: 4 }}`) ─────────────
+// Les valeurs arrivent en variables inline ; ce sont ces media queries qui les
+// appliquent, donc la grille reste responsive (un gabarit en ligne, lui,
+// battrait toute media query — c'est ce qui bloquait Dialum et le Manager).
+// Un palier absent hérite du précédent, comme en Tailwind, grâce aux replis
+// imbriqués. Classe NEUVE, émise seulement avec un objet de colonnes.
+.umb-grid-section__grid--responsive {
+  grid-template-columns: var(--umb-grid-cols-base, repeat(1, 1fr));
+
+  @media (min-width: 640px) {
+    grid-template-columns: var(--umb-grid-cols-sm, var(--umb-grid-cols-base, repeat(1, 1fr)));
+  }
+
+  @media (min-width: 768px) {
+    grid-template-columns: var(
+      --umb-grid-cols-md,
+      var(--umb-grid-cols-sm, var(--umb-grid-cols-base, repeat(1, 1fr)))
+    );
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: var(
+      --umb-grid-cols-lg,
+      var(--umb-grid-cols-md, var(--umb-grid-cols-sm, var(--umb-grid-cols-base, repeat(1, 1fr))))
+    );
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: var(
+      --umb-grid-cols-xl,
+      var(
+        --umb-grid-cols-lg,
+        var(--umb-grid-cols-md, var(--umb-grid-cols-sm, var(--umb-grid-cols-base, repeat(1, 1fr))))
+      )
+    );
+  }
+}

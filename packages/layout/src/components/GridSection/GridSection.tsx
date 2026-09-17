@@ -1,4 +1,7 @@
 import { CSSProperties, ReactNode } from 'react';
+
+/** Un style qui porte aussi des variables CSS (`--umb-grid-cols-md`). */
+type StyleWithVars = CSSProperties & Record<`--${string}`, string>;
 // Styles are imported separately via @umbeli-com/layout/styles
 
 /** Mot-clé de répétition du mode auto. `'auto-fill'` garde les pistes vides
@@ -6,10 +9,37 @@ import { CSSProperties, ReactNode } from 'react';
  *  (la carte s'étire sur toute la ligne). */
 export type GridSectionAutoColumns = 'auto-fill' | 'auto-fit';
 
+/**
+ * Colonnes PAR PALIER, sémantique Tailwind (`grid-cols-1 md:grid-cols-2
+ * xl:grid-cols-4`) : un palier non renseigné hérite du précédent.
+ *
+ * Mesuré chez Dialum (5 grilles : Dashboard ×3, AccountSettings, CallInterface)
+ * et au Manager (builder) : `columns` était un nombre FIXE, `minColumnWidth`
+ * fait de l'auto-fill (il ne peut pas passer de 2 à 4 colonnes sans passer par
+ * 3) et `templateColumns` est un style EN LIGNE, qui battrait toute media
+ * query. Ici les valeurs voyagent en variables CSS et ce sont les media
+ * queries de la FEUILLE qui les appliquent — l'app peut donc supprimer ses
+ * classes responsives.
+ *
+ * Un nombre vaut `repeat(n, 1fr)` ; une chaîne est écrite telle quelle
+ * (`'minmax(0, 1.8fr) minmax(300px, 1fr)'`).
+ *
+ * Seuils : `sm` 640px, `md` 768px, `lg` 1024px, `xl` 1280px.
+ */
+export interface GridSectionColumnsByBreakpoint {
+  base?: number | string;
+  sm?: number | string;
+  md?: number | string;
+  lg?: number | string;
+  xl?: number | string;
+}
+
 export interface GridSectionProps {
   children: ReactNode;
   title?: string;
-  columns?: number;
+  /** Nombre de colonnes (défaut 12), ou un gabarit PAR PALIER — voir
+   *  `GridSectionColumnsByBreakpoint`. */
+  columns?: number | GridSectionColumnsByBreakpoint;
   /** Largeur MINIMALE d'une piste → `repeat(auto-fill, minmax(w, 1fr))` : le
    *  nombre de colonnes s'adapte à la place disponible au lieu d'être figé.
    *  Nombre = px. Fournie, elle REMPLACE `columns` (qui garde son type et son
@@ -67,6 +97,12 @@ export interface GridSectionProps {
 const toCssSize = (value: number | string): string =>
   typeof value === 'number' ? `${value}px` : value;
 
+/** Nombre → `repeat(n, 1fr)` ; chaîne → gabarit tel quel. */
+const toTemplate = (value: number | string): string =>
+  typeof value === 'number' ? `repeat(${value}, 1fr)` : value;
+
+const BREAKPOINTS = ['base', 'sm', 'md', 'lg', 'xl'] as const;
+
 /**
  * Double classe (historique + `umb-`), modificateur `--gap-*` inclus : la
  * gouttière est portée par `.umb-grid-section--gap-X .umb-grid-section__grid`,
@@ -75,6 +111,11 @@ const toCssSize = (value: number | string): string =>
  * Le gabarit de colonnes est un style EN LIGNE depuis toujours : le mode
  * `minColumnWidth` ne fait qu'en changer la valeur, il n'ajoute ni classe ni
  * règle CSS. Sans la prop, la chaîne produite reste `repeat(12, 1fr)`.
+ *
+ * SEULE exception : `columns` sous forme d'objet (colonnes par palier) n'écrit
+ * AUCUN `grid-template-columns` en ligne — un style en ligne battrait les media
+ * queries. Les valeurs partent en variables `--umb-grid-cols-*` et la feuille
+ * les applique par palier (voir `GridSectionColumnsByBreakpoint`).
  *
  * Tout ce qui suit `autoColumns` dans les props est ADDITIF : sans ces props,
  * le balisage est celui d'hier à l'octet près (mêmes balises, mêmes classes,
@@ -95,13 +136,22 @@ export function GridSection({
   className = '',
   gridClassName,
 }: GridSectionProps) {
-  const style: CSSProperties = {};
-  if (templateColumns !== undefined) {
+  // Gabarit par palier : AUCUN `grid-template-columns` en ligne (il battrait
+  // les media queries), seulement des variables lues par la feuille.
+  const byBreakpoint = typeof columns === 'object' && columns !== null ? columns : undefined;
+
+  const style: StyleWithVars = {};
+  if (byBreakpoint !== undefined) {
+    for (const bp of BREAKPOINTS) {
+      const value = byBreakpoint[bp];
+      if (value !== undefined) style[`--umb-grid-cols-${bp}`] = toTemplate(value);
+    }
+  } else if (templateColumns !== undefined) {
     style.gridTemplateColumns = templateColumns;
   } else if (!unstyledGrid) {
     style.gridTemplateColumns = minColumnWidth !== undefined
       ? `repeat(${autoColumns}, minmax(${toCssSize(minColumnWidth)}, 1fr))`
-      : `repeat(${columns}, 1fr)`;
+      : `repeat(${typeof columns === 'number' ? columns : 12}, 1fr)`;
   }
   // Posée seulement si demandée : sinon la gouttière reste celle du cran
   // `--gap-*` de la feuille (le style en ligne la battrait sans retour).
@@ -114,6 +164,7 @@ export function GridSection({
     : [className, gridClassName].filter(Boolean).join(' ');
   const gridClass =
     `grid-section__grid${unstyledGrid ? '' : ' umb-grid-section__grid'}` +
+    `${byBreakpoint !== undefined && !unstyledGrid ? ' umb-grid-section__grid--responsive' : ''}` +
     `${gridOwn ? ` ${gridOwn}` : ''}` +
     // Sans section, le cran de gouttière ne peut plus passer par l'ancêtre :
     // il rejoint la grille elle-même (voir `.umb-grid-section__grid--gap-*`).

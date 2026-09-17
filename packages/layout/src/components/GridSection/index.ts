@@ -1,2 +1,2 @@
-export { GridSection } from './GridSection';
-export type { GridSectionProps, GridSectionAutoColumns } from './GridSection';
+export * from './GridSection';
+export type { GridSectionProps, GridSectionColumnsByBreakpoint, GridSectionAutoColumns } from './GridSection';
