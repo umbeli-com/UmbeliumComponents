@@ -34,7 +34,13 @@
     pointer-events: none;
   }
 
-  &:hover:not(.is-loading):not(.is-drag-over) {
+  // `disabled` : même inertie visuelle que l'attente, sans la barre.
+  &.is-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(.is-loading):not(.is-drag-over):not(.is-disabled) {
     border-color: var(--theme-color-brand-primary, #030174);
     background-color: var(--theme-color-neutral-surface-alt, #F8F9FA);
   }

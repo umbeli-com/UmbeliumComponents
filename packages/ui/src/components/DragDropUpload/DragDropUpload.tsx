@@ -68,6 +68,9 @@ export interface DragDropUploadLabels {
   title?: string;
   /** Titre en mode `multiple`. Défaut : « Glissez vos fichiers ici ». */
   titleMultiple?: string;
+  /** Titre PENDANT qu'un fichier survole la zone (« Déposez votre image ici »,
+   *  Socialum). Absent : le titre ne change pas au survol, comme avant. */
+  titleDragOver?: string;
   /** Ligne d'explication sous le titre. Rien par défaut. */
   subtitle?: ReactNode;
   /** Défaut : « ou ». */
@@ -130,6 +133,24 @@ export interface DragDropUploadClassNames {
    * resterait cliquable et survolable pendant l'envoi.
    */
   loading?: string;
+  /** Classe de l'état `disabled`. Même règle que `dragOver` / `loading` : en
+   *  plus de `is-disabled` avec la peau du paquet, à sa place en `unstyled`. */
+  disabled?: string;
+}
+
+/** État passé à `renderContent`. */
+export interface DragDropUploadRenderState {
+  isDragOver: boolean;
+  isLoading: boolean;
+  isConverting: boolean;
+  uploadSuccess: boolean;
+  uploadProgress: number;
+  conversionProgress: number;
+  disabled: boolean;
+  /** Dernier message de validation du composant (`null` si aucun). */
+  error: string | null;
+  /** Ouvre le sélecteur de fichiers (sans effet si `disabled` ou en cours). */
+  open: () => void;
 }
 
 /** `data-testid` posés sur les points d'ancrage. Les apps ont des noms non
@@ -207,6 +228,28 @@ export interface DragDropUploadProps {
    * Défaut : `true` en `layout="flat"`, `false` sinon (rendu historique).
    */
   hideInput?: boolean;
+  /**
+   * Contenu ENTIER de la zone, rendu par l'app à partir de l'état — à la place
+   * des parties du paquet ET de ses sous-arbres envoi/conversion/succès. La
+   * zone garde tout le reste : glisser-déposer, clic (`clickToBrowse`),
+   * `<input>` (caché par `hidden`), validation, classes d'état, `queue`.
+   *
+   * Mesuré chez Socialum : la miniature (ThumbnailSelector) affiche sa propre
+   * barre de progression, un aperçu téléversé avec bouton « retirer » et voile
+   * « Image prête », et un titre qui change au survol ; les zones d'avatar
+   * (AccountPage, EditProfilePage) n'ont rien de la structure icône/titre/
+   * formats. Un clic sur un `<button>` intérieur n'ouvre pas le sélecteur.
+   */
+  renderContent?: (state: DragDropUploadRenderState) => ReactNode;
+  /**
+   * Zone inerte, sans remplacer son contenu — ce qu'`isLoading` ne permet pas,
+   * puisqu'il substitue une barre de progression. Anonymum (lot en cours de
+   * traitement) coupait `clickToBrowse` et neutralisait le survol à la main,
+   * et la zone perdait au passage `role=button`/`tabIndex`. Ici : dépôt,
+   * clic et clavier ignorés, input `disabled`, `aria-disabled="true"` sur une
+   * zone cliquable, classe `is-disabled`.
+   */
+  disabled?: boolean;
   /** Classes de l'app, partie par partie. */
   classNames?: DragDropUploadClassNames;
   /** Extensions acceptées (« .pdf », « .docx »…). Remplace la liste média par
@@ -251,7 +294,10 @@ const DEFAULT_EXTENSIONS = [
 
 // `subtitle` à part : `Required<>` lui retirerait le `undefined`, or son défaut
 // EST « rien » — c'est ce qui garde la zone identique à ce qu'elle rendait.
-const defaultLabels: Required<Omit<DragDropUploadLabels, 'subtitle'>> & { subtitle?: ReactNode } = {
+const defaultLabels: Required<Omit<DragDropUploadLabels, 'subtitle' | 'titleDragOver'>> & {
+  subtitle?: ReactNode;
+  titleDragOver?: string;
+} = {
   title: 'Glissez votre fichier ici',
   titleMultiple: 'Glissez vos fichiers ici',
   // Ligne muette par défaut : la zone rend exactement ce qu'elle rendait.
@@ -282,6 +328,8 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   subtitleAs = 'p',
   showMeta = true,
   hideInput,
+  renderContent,
+  disabled = false,
   classNames,
   allowedExtensions,
   validate,
@@ -335,6 +383,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   };
   const dragOverClass = stateClass('is-drag-over', cn.dragOver);
   const loadingClass = stateClass('is-loading', cn.loading);
+  const disabledClass = stateClass('is-disabled', cn.disabled);
   const skinAttr = (value: string) => (value ? { className: value } : null);
 
   // Message d'extension refusée. Sans `allowedExtensions` NI `labels.errorType`,
@@ -353,6 +402,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    if (disabled) return;
     setIsDragOver(true);
   };
 
@@ -365,6 +415,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    if (disabled) return;
     if (!isDragOver) setIsDragOver(true);
   };
 
@@ -439,13 +490,13 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
     e.stopPropagation();
     setIsDragOver(false);
 
-    if (isLoading || isConverting) return;
+    if (isLoading || isConverting || disabled) return;
 
     handleFiles(e.dataTransfer.files);
   };
 
   const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (isLoading || isConverting) return;
+    if (isLoading || isConverting || disabled) return;
 
     handleFiles(e.target.files);
     // Remettre l'input à zéro pour que redéposer LE MÊME fichier redéclenche
@@ -455,6 +506,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   };
 
   const handleButtonClick = () => {
+    if (disabled) return;
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
@@ -462,18 +514,23 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
 
   const isProcessing = isLoading || isConverting;
   const flat = layout === 'flat';
-  const inputHidden = hideInput ?? flat;
+  const custom = renderContent !== undefined;
+  // `renderContent` : l'app peint l'intérieur, rien du paquet ne doit rester
+  // visible — l'input est caché par l'attribut, comme en `flat`.
+  const inputHidden = hideInput ?? (flat || custom);
   const Title = titleAs;
   const Subtitle = subtitleAs;
 
   // `unstyled` : plus de classe du paquet sur la racine — donc plus non plus
   // de `drag-drop-upload--clickable`, qui ne portait que le liseré de focus du
   // paquet. C'est l'app qui montre le focus, comme elle montre tout le reste.
+  // `is-disabled` ne s'insère que si demandé : chaîne d'hier au caractère près
+  // sans la prop.
   const rootClass = unstyled
-    ? [isDragOver ? dragOverClass : '', isProcessing ? loadingClass : '', className]
+    ? [isDragOver ? dragOverClass : '', isProcessing ? loadingClass : '', disabled ? disabledClass : '', className]
         .filter(Boolean)
         .join(' ')
-    : `drag-drop-upload ${isDragOver ? dragOverClass : ''} ${isProcessing ? loadingClass : ''} ${className}${clickToBrowse ? ' drag-drop-upload--clickable' : ''}${flat ? ' drag-drop-upload--flat' : ''}`;
+    : `drag-drop-upload ${isDragOver ? dragOverClass : ''} ${isProcessing ? loadingClass : ''} ${className}${clickToBrowse ? ' drag-drop-upload--clickable' : ''}${flat ? ' drag-drop-upload--flat' : ''}${disabled ? ` ${disabledClass}` : ''}`;
 
   // ── Parties au repos, partagées par les deux dispositions ────────────────
   // En `default`, elles sont posées exactement où elles l'étaient ; en `flat`,
@@ -483,7 +540,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   const textNodes = (
     <>
       <Title {...skinAttr(skin('drag-drop-upload__title', cn.title))}>
-        {multiple ? t.titleMultiple : t.title}
+        {isDragOver && t.titleDragOver !== undefined ? t.titleDragOver : multiple ? t.titleMultiple : t.title}
       </Title>
       {t.subtitle !== undefined && (
         <Subtitle {...skinAttr(skin('drag-drop-upload__subtitle', cn.subtitle))}>{t.subtitle}</Subtitle>
@@ -595,6 +652,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
         ? {
             role: 'button',
             tabIndex: 0,
+            ...(disabled ? { 'aria-disabled': true } : null),
             onClick: (e: React.MouseEvent<HTMLDivElement>) => {
               // Le bouton « Parcourir » et l'input caché ouvrent DÉJÀ le
               // sélecteur ; sans ce garde, leur clic remonterait jusqu'ici et
@@ -622,13 +680,27 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
         onChange={handleFileInputChange}
         accept={accept}
         className="drag-drop-upload__input"
-        disabled={isProcessing}
+        disabled={isProcessing || disabled}
         multiple={multiple}
         {...(inputHidden ? { hidden: true } : null)}
         {...(ids.input !== undefined ? { 'data-testid': ids.input } : null)}
       />
 
-      {flat ? (
+      {custom ? (
+        renderContent({
+          isDragOver,
+          isLoading,
+          isConverting,
+          uploadSuccess,
+          uploadProgress,
+          conversionProgress,
+          disabled,
+          error,
+          open: () => {
+            if (!isProcessing) handleButtonClick();
+          },
+        })
+      ) : flat ? (
         busyOrDone ? renderState() : restingNodes
       ) : (
         <div {...skinAttr(skin('drag-drop-upload__content', cn.content))}>
