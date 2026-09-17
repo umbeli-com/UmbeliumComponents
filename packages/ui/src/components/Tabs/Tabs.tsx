@@ -55,8 +55,21 @@ export interface TabsLabels {
 
 export interface Tab {
   id: string;
-  label: string;
+  /**
+   * Libellé. `ReactNode` depuis la 1.4 (une chaîne reste le cas courant, et
+   * son rendu est inchangé) : Webum pose un repère « connecté » dans le
+   * libellé de ses onglets d'intégrations. Pour un élément APRÈS le texte,
+   * hors de l'enveloppe du libellé, préférer `trailing`.
+   */
+  label: ReactNode;
   icon?: ReactNode;
+  /**
+   * Rendu APRÈS le libellé, dans le bouton — la pastille verte « connecté » de
+   * Webum (Settings.tsx:108). `icon` ne convient pas : il se place AVANT le
+   * texte. Enveloppé dans `<span class="tabs__tab-trailing">` (sans classe en
+   * `bare`) ; absent, rien n'est émis.
+   */
+  trailing?: ReactNode;
   /**
    * Panneau de cet onglet. OPTIONNEL depuis `renderPanel={false}` : une app
    * qui place son contenu ailleurs n'a plus à inventer un `content` bidon
@@ -70,9 +83,15 @@ export interface Tab {
 
 /**
  * Apparence. `bare` = NU : aucune classe du paquet n'est posée, nulle part.
- * C'est la seule valeur qui ne peint rien ; les trois autres sont inchangées.
+ * `plain` = STRUCTURE SEULE : les classes de base (`.tabs__list`,
+ * `.tabs__tab`, `-icon`, `-label`) restent émises — donc leur mise en place
+ * (flex, alignement, curseur, `nowrap`, icône centrée) et les sélecteurs que la
+ * peau de l'app accroche déjà — mais AUCUNE règle de variante ne s'applique :
+ * ni survol, ni aplat actif. Monitorum (VisionBoard) habille `.tabs__tab` et
+ * devait annuler le survol du `segmented` ; `bare` lui retirait la structure
+ * dont sa peau dépend. `default`, `pills` et `segmented` sont inchangées.
  */
-export type TabsVariant = 'default' | 'pills' | 'segmented' | 'bare';
+export type TabsVariant = 'default' | 'pills' | 'segmented' | 'plain' | 'bare';
 
 /** Rôle ARIA de la barre. `null` = aucun attribut `role`. */
 export type TabsListRole = 'tablist' | 'radiogroup' | 'group';
@@ -154,6 +173,14 @@ export interface TabsProps {
    *  seule à le marquer en `bare`. Les apps utilisent presque toutes
    *  `.is-active` ; le paquet n'a pas à leur imposer son nom. */
   activeClassName?: string;
+  /**
+   * Classe posée sur chaque onglet INACTIF — le pendant d'`activeClassName`.
+   * Webum peint l'inactif en `btn--ghost` et l'actif en `btn--accent` ; or
+   * `.btn--ghost` est déclaré APRÈS `.btn--accent` dans sa feuille : posée sur
+   * tous les onglets via `tabClassName`, elle repeignait l'actif en fantôme.
+   * N'être émise que sur les inactifs supprime le conflit.
+   */
+  inactiveClassName?: string;
   /** Classe posée sur le panneau (`.tabs__content`). */
   panelClassName?: string;
   /**
@@ -197,6 +224,7 @@ export function Tabs({
   listClassName = '',
   tabClassName = '',
   activeClassName = '',
+  inactiveClassName = '',
   panelClassName = '',
   tabType,
   listRole = 'tablist',
@@ -228,6 +256,8 @@ export function Tabs({
   // rien, l'attribut `class` n'est pas écrit du tout.
   const bare = variant === 'bare';
 
+  // `plain` produit `tabs tabs--plain` : aucune règle de la feuille ne vise
+  // ce modificateur, donc seules les règles de BASE s'appliquent.
   const rootClass = bare
     ? className
     : `tabs tabs--${variant}${renderPanel ? '' : ' tabs--no-panel'}${className ? ` ${className}` : ''}`;
@@ -243,7 +273,7 @@ export function Tabs({
   const tabClassFor = (isActive: boolean) => {
     const extra = `${tabClassName ? ` ${tabClassName}` : ''}${
       isActive && activeClassName ? ` ${activeClassName}` : ''
-    }`;
+    }${!isActive && inactiveClassName ? ` ${inactiveClassName}` : ''}`;
     if (bare) return extra.slice(1);
     return `tabs__tab ${isActive ? 'tabs__tab--active' : ''}${extra}`;
   };
@@ -288,6 +318,9 @@ export function Tabs({
               <span {...(bare ? null : { className: 'tabs__tab-icon' })}>{tab.icon}</span>
             )}
             <span {...(bare ? null : { className: 'tabs__tab-label' })}>{tab.label}</span>
+            {tab.trailing !== undefined && tab.trailing !== null && (
+              <span {...(bare ? null : { className: 'tabs__tab-trailing' })}>{tab.trailing}</span>
+            )}
           </button>
         );
       })}

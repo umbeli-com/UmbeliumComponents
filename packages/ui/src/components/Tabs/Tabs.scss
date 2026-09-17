@@ -87,6 +87,15 @@
   white-space: nowrap;
 }
 
+// Fente APRÈS le libellé (`Tab.trailing`) : même mise en place que l'icône,
+// sans taille imposée — la pastille « connecté » de Webum garde la sienne.
+// Classe NEUVE, émise seulement si la fente est remplie.
+.tabs__tab-trailing {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
 .tabs__content {
   flex: 1;
 }
@@ -151,6 +160,12 @@
     font-size: 14px;
   }
 }
+
+// ── Variante « plain » (STRUCTURE SEULE) ────────────────────────────────────
+// Rien ici non plus, et c'est tout le principe : `.tabs--plain` n'apparaît dans
+// aucun sélecteur, donc aucune règle de variante (survol, aplat actif) ne
+// s'applique. Restent les règles de BASE de `.tabs__list` / `.tabs__tab` /
+// `-icon` / `-label`, que la peau de l'app surcharge comme aujourd'hui.
 
 // ── Variante « bare » (NUE) ─────────────────────────────────────────────────
 // Rien ici, et c'est VOLONTAIRE : `variant="bare"` ne pose aucune classe dans
