@@ -17,9 +17,11 @@ import { GoogleOAuthButton } from '../GoogleOAuthButton';
 
    CONTRATS FIGÉS PAR LES SPECS E2E DE LA SUITE — ne pas « améliorer » :
      · id des champs : email, password, firstName, lastName, confirmPassword
-       (les specs font page.locator('#email')) ;
+       (les specs font page.locator('#email')) — et fullName pour le champ
+       unique de `signUpFields.fullName` (UmbeliumManager cible #fullName) ;
      · autocomplete email / current-password (connexion) / new-password
-       (inscription) ;
+       (inscription) ; given-name / family-name sur la paire prénom/nom,
+       name sur le champ unique ;
      · JAMAIS de minlength en CONNEXION — un compte existant doit pouvoir
        entrer quel que soit son mot de passe ;
      · le bascule de mode est un <button> dont le nom accessible est
@@ -43,6 +45,11 @@ import { GoogleOAuthButton } from '../GoogleOAuthButton';
        renvoient vers /auth/callback.
      · `signUpFields` : masque firstName / lastName / confirmPassword pour les
        apps dont l'inscription n'a que 2 champs (Servum).
+     · `signUpFields.fullName` : UN champ « Nom complet » (id=fullName,
+       autocomplete=name) À LA PLACE de la paire prénom/nom (Webum,
+       UmbeliumManager). La valeur remonte dans `payload.fullName`, jamais
+       dans `firstName` : un `given-name` recyclé ferait autoremplir le seul
+       PRÉNOM par le navigateur, qui finirait dans `full_name`.
      · `classNames` + `showCard` : renomme ou retire le chrome du package.
      · `authFormLabelsEn` : la copie anglaise complète, prête à passer en
        `labels`.
@@ -54,12 +61,21 @@ import { GoogleOAuthButton } from '../GoogleOAuthButton';
 export type AuthFormMode = 'signin' | 'signup' | 'forgot';
 
 /** Charge utile d'inscription — `firstName`/`lastName` sont déjà trimés
- *  (chaîne vide quand le champ est masqué via `signUpFields`). */
+ *  (chaîne vide quand le champ est masqué via `signUpFields`, donc aussi en
+ *  mode `signUpFields.fullName`). */
 export interface AuthSignUpPayload {
   email: string;
   password: string;
   firstName: string;
   lastName: string;
+  /**
+   * Nom complet trimé, saisi dans le champ unique — PRÉSENT UNIQUEMENT quand
+   * `signUpFields.fullName` est actif. Hors de ce mode la clé est ABSENTE (pas
+   * `''`) : le payload historique garde exactement ses 4 clés, même pour une
+   * app qui l'étalerait dans ses métadonnées. Se passe tel quel à
+   * `useAuth().signUp(email, password, { fullName })`.
+   */
+  fullName?: string;
 }
 
 /** Deuxième argument de `onForgotPassword` — ignorable (une fonction
@@ -101,10 +117,25 @@ export interface AuthFormModeToggle {
 /** Champs d'inscription affichés. Tout est à `true` par défaut : le
  *  formulaire à 5 champs de la suite ne bouge pas. */
 export interface AuthSignUpFields {
-  /** @default true */
+  /** @default true — ignoré quand `fullName` est actif. */
   firstName?: boolean;
-  /** @default true */
+  /** @default true — ignoré quand `fullName` est actif. */
   lastName?: boolean;
+  /**
+   * UN champ « Nom complet » À LA PLACE de la paire prénom/nom (Webum,
+   * UmbeliumManager) : `id="fullName"` (passé par `idPrefix`),
+   * `autocomplete="name"`, libellés `labels.fullName` /
+   * `labels.fullNamePlaceholder`, valeur dans `payload.fullName`.
+   * `firstName` / `lastName` sont alors IGNORÉS — jamais trois champs de nom —
+   * et remontent `''`.
+   *
+   * ⚠️ Ne pas l'imiter avec `lastName: false` + `labels.firstName` : le champ
+   * garderait `id="firstName"` et `autocomplete="given-name"`, le navigateur
+   * n'y autoremplirait que le PRÉNOM, et c'est lui qui finirait dans
+   * `full_name`.
+   * @default false
+   */
+  fullName?: boolean;
   /** @default true — à `false`, la validation « mots de passe identiques »
    *  ne s'exécute plus (il n'y a plus rien à comparer). */
   confirmPassword?: boolean;
@@ -144,6 +175,9 @@ export interface AuthFormLabels {
   firstNamePlaceholder: string;
   lastName: string;
   lastNamePlaceholder: string;
+  /** Champ unique « Nom complet » (`signUpFields.fullName` uniquement). */
+  fullName: string;
+  fullNamePlaceholder: string;
   email: string;
   emailPlaceholder: string;
   password: string;
@@ -256,7 +290,8 @@ export interface AuthFormProps {
    * tomberait sur la page de vente). Typiquement `getAuthCallbackUrl()`.
    */
   resetRedirectTo?: string;
-  /** Champs affichés à l'inscription (défaut : les 5 champs de la suite). */
+  /** Champs affichés à l'inscription (défaut : les 5 champs de la suite) —
+   *  `{ fullName: true }` pour un champ unique « Nom complet ». */
   signUpFields?: AuthSignUpFields;
   /** Rend la carte `.auth-page__card` autour du formulaire. Passer `false`
    *  quand l'app fournit son propre chrome. @default true */
@@ -272,6 +307,8 @@ const defaultLabels: AuthFormLabels = {
   firstNamePlaceholder: 'Jean',
   lastName: 'Nom',
   lastNamePlaceholder: 'Dupont',
+  fullName: 'Nom complet',
+  fullNamePlaceholder: 'Jean Dupont',
   email: 'Email',
   emailPlaceholder: 'vous@exemple.com',
   password: 'Mot de passe',
@@ -308,6 +345,8 @@ export const authFormLabelsEn: AuthFormLabels = {
   firstNamePlaceholder: 'Jane',
   lastName: 'Last name',
   lastNamePlaceholder: 'Doe',
+  fullName: 'Full name',
+  fullNamePlaceholder: 'Jane Doe',
   email: 'Email',
   emailPlaceholder: 'you@example.com',
   password: 'Password',
@@ -367,6 +406,7 @@ function mergeClassNames(overrides: Partial<AuthFormClassNames>): AuthFormClassN
 interface AuthFormValues {
   firstName: string;
   lastName: string;
+  fullName: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -375,6 +415,7 @@ interface AuthFormValues {
 const emptyValues: AuthFormValues = {
   firstName: '',
   lastName: '',
+  fullName: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -423,8 +464,11 @@ export function AuthForm({
   const withMin = (text: string) => text.replace('{min}', String(minPasswordLength));
   const fieldId = (name: string) => `${idPrefix}${name}`;
   const shownError = localError ?? error;
-  const showFirstName = signUpFields?.firstName ?? true;
-  const showLastName = signUpFields?.lastName ?? true;
+  /** Le champ unique REMPLACE la paire prénom/nom : leurs drapeaux sont alors
+   *  ignorés (jamais trois champs de nom à l'écran). */
+  const showFullName = signUpFields?.fullName ?? false;
+  const showFirstName = !showFullName && (signUpFields?.firstName ?? true);
+  const showLastName = !showFullName && (signUpFields?.lastName ?? true);
   const showConfirmPassword = signUpFields?.confirmPassword ?? true;
 
   // Un changement de mode repart d'une ardoise propre côté validation locale.
@@ -520,6 +564,9 @@ export function AuthForm({
           // (l'app peut basculer `signUpFields` après une première saisie).
           firstName: showFirstName ? values.firstName.trim() : '',
           lastName: showLastName ? values.lastName.trim() : '',
+          // Clé AJOUTÉE seulement en mode champ unique : hors de ce mode, le
+          // payload garde exactement ses 4 clés historiques.
+          ...(showFullName ? { fullName: values.fullName.trim() } : {}),
         }),
       );
       return;
@@ -580,19 +627,43 @@ export function AuthForm({
     </div>
   );
 
-  /** Les deux champs → la rangée 1fr 1fr historique ; un seul → pleine
-   *  largeur (la grille laisserait une colonne vide) ; aucun → rien. */
-  const nameFields =
-    showFirstName && showLastName ? (
-      <div className={c.row}>
-        {firstNameField}
-        {lastNameField}
-      </div>
-    ) : showFirstName ? (
-      firstNameField
-    ) : showLastName ? (
-      lastNameField
-    ) : null;
+  /** Champ unique : `autocomplete="name"` fait autoremplir le nom ENTIER
+   *  (« Jean Dupont »), là où `given-name` n'aurait donné que « Jean ». */
+  const fullNameField = (
+    <div className={c.field}>
+      <label htmlFor={fieldId('fullName')} className={c.label}>
+        {t.fullName}
+        {t.requiredMark}
+      </label>
+      <input
+        id={fieldId('fullName')}
+        type="text"
+        value={values.fullName}
+        onChange={setField('fullName')}
+        className={c.input}
+        placeholder={t.fullNamePlaceholder}
+        autoComplete="name"
+        required
+        disabled={busy}
+      />
+    </div>
+  );
+
+  /** Champ unique → pleine largeur ; les deux champs → la rangée 1fr 1fr
+   *  historique ; un seul → pleine largeur (la grille laisserait une colonne
+   *  vide) ; aucun → rien. */
+  const nameFields = showFullName ? (
+    fullNameField
+  ) : showFirstName && showLastName ? (
+    <div className={c.row}>
+      {firstNameField}
+      {lastNameField}
+    </div>
+  ) : showFirstName ? (
+    firstNameField
+  ) : showLastName ? (
+    lastNameField
+  ) : null;
 
   const body = (
     <>
