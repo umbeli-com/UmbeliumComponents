@@ -265,6 +265,32 @@ export interface AuthFormProps {
   info?: string | null;
   /** Longueur minimale à l'INSCRIPTION uniquement (défaut 8). */
   minPasswordLength?: number;
+  /**
+   * Valeurs de départ des champs, appliquées AU MONTAGE seulement — le
+   * formulaire reste non contrôlé (il possède ses valeurs, comme avant).
+   *
+   * Mesuré chez Anonymum : le formulaire de la landing passe l'e-mail en
+   * `?email=`, que la page préremplit ; sa spec exige
+   * `expect(page.locator('#email')).toHaveValue('camille@cabinet.fr')`
+   * (landing-journeys.spec.ts:96). Rien n'atteignait les valeurs internes.
+   *
+   * Changer l'objet APRÈS le montage n'a aucun effet (sinon la saisie de
+   * l'utilisateur serait écrasée à chaque rendu du parent) : pour réinitialiser,
+   * remonter le formulaire avec une `key`.
+   */
+  initialValues?: Partial<AuthSignUpPayload & { confirmPassword: string }>;
+  /**
+   * Champs SUPPLÉMENTAIRES rendus à l'inscription, entre la confirmation du
+   * mot de passe et la mention CGU. L'app garde leur état et les lit dans son
+   * propre `onSignUp` — rien ne transite par `payload`.
+   *
+   * Mesuré chez Anonymum : son inscription porte « Code de parrainage
+   * (facultatif) » (id=referralCode), asserté par referral.spec.ts:16,
+   * simple-pages.spec.ts:91 et landing-journeys.spec.ts:97, et `termsNotice`
+   * ne convenait pas (rendu dans un `<p class="auth-page__terms">`, donc un
+   * `div.auth-page__field` y serait du HTML invalide portant la classe des CGU).
+   */
+  extraSignUpFields?: ReactNode;
   /** Mention CGU rendue au-dessus du bouton en mode inscription. */
   termsNotice?: ReactNode;
   /** Contenu libre sous le pied de bascule (ex. « Retour à l'accueil »).
@@ -480,6 +506,8 @@ export function AuthForm({
   error = null,
   info = null,
   minPasswordLength = 8,
+  initialValues,
+  extraSignUpFields,
   termsNotice,
   footer,
   idPrefix = '',
@@ -496,7 +524,19 @@ export function AuthForm({
   showCard = true,
   classNames = {},
 }: AuthFormProps) {
-  const [values, setValues] = useState<AuthFormValues>(emptyValues);
+  // Les valeurs de départ ne sont lues qu'à l'initialisation de l'état : une
+  // nouvelle référence d'objet au rendu suivant n'écrase jamais la saisie.
+  const [values, setValues] = useState<AuthFormValues>(() => ({
+    ...emptyValues,
+    ...(initialValues?.firstName !== undefined ? { firstName: initialValues.firstName } : null),
+    ...(initialValues?.lastName !== undefined ? { lastName: initialValues.lastName } : null),
+    ...(initialValues?.fullName !== undefined ? { fullName: initialValues.fullName } : null),
+    ...(initialValues?.email !== undefined ? { email: initialValues.email } : null),
+    ...(initialValues?.password !== undefined ? { password: initialValues.password } : null),
+    ...(initialValues?.confirmPassword !== undefined
+      ? { confirmPassword: initialValues.confirmPassword }
+      : null),
+  }));
   /** Erreur produite ICI (validation locale ou promesse rejetée par le
    *  parent). Prioritaire sur `error` : c'est la plus récente. */
   const [localError, setLocalError] = useState<string | null>(null);
@@ -878,6 +918,8 @@ export function AuthForm({
             </button>
           </div>
         ) : null}
+
+        {isSignUp && extraSignUpFields ? extraSignUpFields : null}
 
         {isSignUp && termsNotice ? <p className={c.terms}>{termsNotice}</p> : null}
 
