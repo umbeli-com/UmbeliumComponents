@@ -60,6 +60,19 @@ import { GoogleOAuthButton } from '../GoogleOAuthButton';
  *  une OPTION (`forgotPasswordMode`), pas un mode de plus. */
 export type AuthFormMode = 'signin' | 'signup' | 'forgot';
 
+/**
+ * Écran rendu : les trois modes BASCULABLES, plus `'reset'` — « nouveau mot
+ * de passe + confirmation », sans email, pour la page ouverte depuis le lien de
+ * récupération (session établie par `PASSWORD_RECOVERY`). Mesuré au Manager
+ * (`pages/ResetPassword.tsx`, 100 lignes recopiées à la main).
+ *
+ * Type SÉPARÉ plutôt qu'un élargissement d'`AuthFormMode` : `onModeChange`
+ * reste typé sur les trois modes (on n'arrive jamais sur `'reset'` par la
+ * bascule, seulement par un lien), donc un `useState<'signin' | 'signup' |
+ * 'forgot'>` passé tel quel à `onModeChange` compile toujours.
+ */
+export type AuthFormScreen = AuthFormMode | 'reset';
+
 /** Charge utile d'inscription — `firstName`/`lastName` sont déjà trimés
  *  (chaîne vide quand le champ est masqué via `signUpFields`, donc aussi en
  *  mode `signUpFields.fullName`). */
@@ -92,8 +105,8 @@ export interface AuthForgotPasswordOptions {
 
 /** Ce que reçoit `renderModeToggle` pour rebâtir le pied à sa main. */
 export interface AuthFormModeToggle {
-  /** Mode affiché actuellement. */
-  mode: AuthFormMode;
+  /** Écran affiché actuellement (`'reset'` compris). */
+  mode: AuthFormScreen;
   /** Mode vers lequel bascule le contrôle (`'signup'` depuis la connexion,
    *  `'signin'` depuis l'inscription ET depuis l'écran d'oubli). */
   target: AuthFormMode;
@@ -207,8 +220,12 @@ export interface AuthFormLabels {
   /** Pied en mode inscription : « Déjà un compte ? » + « Se connecter ». */
   haveAccountPrompt: string;
   signInAction: string;
-  /** Pied en mode mot de passe oublié. */
+  /** Pied en mode mot de passe oublié (et en mode `reset`). */
   backToSignIn: string;
+  /** Mode `reset` : libellé du champ mot de passe. */
+  newPassword: string;
+  resetSubmit: string;
+  resetSubmitBusy: string;
   /** Erreurs de validation locale (avant tout aller-retour réseau). */
   passwordMismatch: string;
   /** `{min}` est remplacé par `minPasswordLength`. */
@@ -216,12 +233,20 @@ export interface AuthFormLabels {
 }
 
 export interface AuthFormProps {
-  /** Mode courant — le parent le possède (composant contrôlé). */
-  mode: AuthFormMode;
+  /** Mode courant — le parent le possède (composant contrôlé). `'reset'` :
+   *  écran « nouveau mot de passe », voir `AuthFormScreen`. */
+  mode: AuthFormScreen;
   /** Appelé quand l'utilisateur clique « Créer un compte » / « Se connecter »
    *  / « Mot de passe oublié ? ». */
   onModeChange: (mode: AuthFormMode) => void;
   onSignIn: (email: string, password: string) => void | Promise<void>;
+  /**
+   * Mode `'reset'` : reçoit le nouveau mot de passe, APRÈS la validation locale
+   * (longueur `minPasswordLength` + correspondance avec la confirmation). Se
+   * branche sur `supabase.auth.updateUser({ password })`. Sans lui, le submit
+   * du mode `reset` ne fait rien.
+   */
+  onResetPassword?: (password: string) => void | Promise<void>;
   onSignUp: (payload: AuthSignUpPayload) => void | Promise<void>;
   /** Le 2e argument est OPTIONNEL côté implémentation : un handler
    *  `(email) => …` écrit avant `resetRedirectTo` reste valide. */
@@ -332,6 +357,9 @@ const defaultLabels: AuthFormLabels = {
   haveAccountPrompt: 'Déjà un compte ? ',
   signInAction: 'Se connecter',
   backToSignIn: 'Retour à la connexion',
+  newPassword: 'Nouveau mot de passe',
+  resetSubmit: 'Mettre à jour le mot de passe',
+  resetSubmitBusy: 'Mise à jour...',
   passwordMismatch: 'Les mots de passe ne correspondent pas',
   passwordTooShort: 'Le mot de passe doit contenir au moins {min} caractères',
 };
@@ -369,6 +397,9 @@ export const authFormLabelsEn: AuthFormLabels = {
   haveAccountPrompt: 'Already have an account? ',
   signInAction: 'Sign in',
   backToSignIn: 'Back to sign in',
+  newPassword: 'New password',
+  resetSubmit: 'Update password',
+  resetSubmitBusy: 'Updating...',
   passwordMismatch: 'Passwords do not match',
   passwordTooShort: 'Password must be at least {min} characters',
 };
@@ -425,6 +456,7 @@ export function AuthForm({
   mode,
   onModeChange,
   onSignIn,
+  onResetPassword,
   onSignUp,
   onForgotPassword,
   onGoogle,
@@ -461,6 +493,10 @@ export function AuthForm({
   const c = mergeClassNames(classNames);
   const isSignUp = mode === 'signup';
   const isForgot = mode === 'forgot';
+  const isReset = mode === 'reset';
+  /** Écrans qui CRÉENT un mot de passe : règles de l'inscription (longueur
+   *  minimale, `new-password`, indice). */
+  const choosesPassword = isSignUp || isReset;
   const withMin = (text: string) => text.replace('{min}', String(minPasswordLength));
   const fieldId = (name: string) => `${idPrefix}${name}`;
   const shownError = localError ?? error;
@@ -547,6 +583,19 @@ export function AuthForm({
       return;
     }
 
+    if (isReset) {
+      if (values.password !== values.confirmPassword) {
+        setLocalError(t.passwordMismatch);
+        return;
+      }
+      if (values.password.length < minPasswordLength) {
+        setLocalError(withMin(t.passwordTooShort));
+        return;
+      }
+      if (onResetPassword) run(onResetPassword(values.password));
+      return;
+    }
+
     if (isSignUp) {
       if (showConfirmPassword && values.password !== values.confirmPassword) {
         setLocalError(t.passwordMismatch);
@@ -575,7 +624,11 @@ export function AuthForm({
     run(onSignIn(email, values.password));
   };
 
-  const submitLabel = isForgot
+  const submitLabel = isReset
+    ? busy
+      ? t.resetSubmitBusy
+      : t.resetSubmit
+    : isForgot
     ? busy
       ? t.forgotSubmitBusy
       : t.forgotSubmit
@@ -669,7 +722,7 @@ export function AuthForm({
     <>
       {/* Pas d'OAuth sur l'écran « mot de passe oublié » : il n'y a rien à
           connecter, juste un email à envoyer. */}
-      {onGoogle && !isForgot ? (
+      {onGoogle && !isForgot && !isReset ? (
         <>
           <GoogleOAuthButton
             onClick={() => {
@@ -700,6 +753,9 @@ export function AuthForm({
 
         {isSignUp ? nameFields : null}
 
+        {/* `reset` : la session vient du lien de récupération, l'email est
+            déjà connu — le redemander serait un champ mort. */}
+        {!isReset ? (
         <div className={c.field}>
           <label htmlFor={fieldId('email')} className={c.label}>
             {t.email}
@@ -717,11 +773,12 @@ export function AuthForm({
             disabled={busy}
           />
         </div>
+        ) : null}
 
         {!isForgot ? (
           <div className={c.field}>
             <label htmlFor={fieldId('password')} className={c.label}>
-              {t.password}
+              {isReset ? t.newPassword : t.password}
               {t.requiredMark}
             </label>
             <input
@@ -731,15 +788,16 @@ export function AuthForm({
               onChange={setField('password')}
               className={c.input}
               placeholder={t.passwordPlaceholder}
-              autoComplete={isSignUp ? 'new-password' : 'current-password'}
+              autoComplete={choosesPassword ? 'new-password' : 'current-password'}
               required
               disabled={busy}
-              // minLength seulement à l'inscription : en CONNEXION, un compte
-              // existant doit pouvoir se connecter quel que soit son mot de passe.
-              minLength={isSignUp ? minPasswordLength : undefined}
-              aria-describedby={isSignUp ? fieldId('password-hint') : undefined}
+              // minLength seulement quand on CHOISIT un mot de passe : en
+              // CONNEXION, un compte existant doit pouvoir se connecter quel que
+              // soit son mot de passe.
+              minLength={choosesPassword ? minPasswordLength : undefined}
+              aria-describedby={choosesPassword ? fieldId('password-hint') : undefined}
             />
-            {isSignUp ? (
+            {choosesPassword ? (
               <span id={fieldId('password-hint')} className={c.hint}>
                 {withMin(t.passwordHint)}
               </span>
@@ -747,7 +805,7 @@ export function AuthForm({
           </div>
         ) : null}
 
-        {isSignUp && showConfirmPassword ? (
+        {(isSignUp && showConfirmPassword) || isReset ? (
           <div className={c.field}>
             <label htmlFor={fieldId('confirmPassword')} className={c.label}>
               {t.confirmPassword}
@@ -767,7 +825,7 @@ export function AuthForm({
           </div>
         ) : null}
 
-        {!isSignUp && !isForgot ? (
+        {!isSignUp && !isForgot && !isReset ? (
           <div className={c.forgot}>
             <button
               type="button"
@@ -791,9 +849,11 @@ export function AuthForm({
     </>
   );
 
-  const toggleTarget: AuthFormMode = isSignUp || isForgot ? 'signin' : 'signup';
-  const togglePrompt = isForgot ? '' : isSignUp ? t.haveAccountPrompt : t.noAccountPrompt;
-  const toggleLabel = isForgot
+  /** `reset` se comporte comme `forgot` pour le pied : un seul retour. */
+  const backOnly = isForgot || isReset;
+  const toggleTarget: AuthFormMode = isSignUp || backOnly ? 'signin' : 'signup';
+  const togglePrompt = backOnly ? '' : isSignUp ? t.haveAccountPrompt : t.noAccountPrompt;
+  const toggleLabel = backOnly
     ? t.backToSignIn
     : isSignUp
       ? t.signInAction
@@ -857,7 +917,7 @@ export function AuthForm({
     })
   ) : (
     <p className={c.footer}>
-      {isForgot ? (
+      {backOnly ? (
         toggleControl
       ) : (
         <>
