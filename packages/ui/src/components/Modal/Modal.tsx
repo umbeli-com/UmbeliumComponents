@@ -102,6 +102,20 @@ export interface ModalProps {
   /** Croix de fermeture dans l'en-tête (défaut : true). */
   showCloseButton?: boolean;
   /**
+   * Classe posée sur la croix, en plus de `.umb-modal__close` — le pendant de
+   * `headerClassName`/`titleClassName` pour le dernier élément de l'en-tête qui
+   * n'en avait pas. Une app qui n'importe pas la feuille du paquet (Webum) n'a
+   * sinon aucun moyen d'habiller la croix : elle s'affiche en bouton natif nu.
+   */
+  closeClassName?: string;
+  /**
+   * Contenu de la croix, à la place de l'icône `<X size={16} />` — ex. `'✕'`,
+   * le glyphe des fenêtres maison de Webum. `undefined`/`null` = l'icône du
+   * paquet. Le nom accessible ne dépend pas de ce contenu : il reste porté par
+   * `aria-label` (`labels.close`).
+   */
+  closeContent?: ReactNode;
+  /**
    * Voile flouté. `true` = 2px ; un nombre ou une chaîne fixe le rayon
    * (`4`, `'2px'`). `undefined`, `false`, `0` et `''` = aucun flou. Défaut :
    * aucun flou, le voile reste une simple opacité.
@@ -280,6 +294,8 @@ export function Modal({
   closeOnBackdrop = true,
   closeOnEscape = true,
   showCloseButton = true,
+  closeClassName = '',
+  closeContent,
   backdropBlur,
   width,
   maxWidth,
@@ -468,16 +484,18 @@ export function Modal({
   }
   const hasDialogStyle = Object.keys(dialogStyle).length > 0;
 
+  // Sans `closeClassName` ni `closeContent`, la croix est l'élément d'avant au
+  // caractère près : même `class`, même icône.
   const closeButton = showCloseButton ? (
     <button
       type="button"
-      className="umb-modal__close"
+      className={`umb-modal__close${closeClassName ? ` ${closeClassName}` : ''}`}
       onClick={onClose}
       aria-label={t.close}
       title={t.close}
       data-testid={testIds.close}
     >
-      <X size={16} aria-hidden="true" />
+      {closeContent ?? <X size={16} aria-hidden="true" />}
     </button>
   ) : null;
 
