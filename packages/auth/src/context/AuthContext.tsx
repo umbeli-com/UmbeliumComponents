@@ -88,6 +88,17 @@ export interface AuthContextValue {
   resetPassword: (email: string, options?: ResetPasswordOptions) => Promise<AuthError | null>;
   /** Revalide la session auprès du serveur (après un retour d'onglet, un webhook, un checkout…). */
   refresh: () => Promise<void>;
+  /**
+   * Efface `error`. Chaque appel (`signIn`, `signInWithGoogle`,
+   * `resetPassword`…) le remet à zéro AVANT de partir, mais rien ne permettait
+   * de l'effacer autrement.
+   *
+   * Mesuré chez Anonymum : sa page d'auth affiche `localError || authError` et
+   * ne remet à zéro que le sien en changeant de mode — une erreur OAuth écrite
+   * par le contexte SURVIVAIT au passage connexion ↔ inscription. C'est ce qui
+   * l'empêchait d'abandonner ses appels directs à `supabase.auth`.
+   */
+  clearError: () => void;
 }
 
 export interface AuthProviderProps {
@@ -310,6 +321,11 @@ export function AuthProvider({
     };
   }, [supabase, isConfigured, readAuthState]);
 
+  /** Stable : aucun consommateur ne se re-rend à cause d'elle. */
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   const refresh = useCallback(async () => {
     const next = await readAuthState();
     if (!mountedRef.current) return;
@@ -436,6 +452,7 @@ export function AuthProvider({
       signInWithGoogle,
       resetPassword,
       refresh,
+      clearError,
     }),
     [
       user,
@@ -449,6 +466,7 @@ export function AuthProvider({
       signInWithGoogle,
       resetPassword,
       refresh,
+      clearError,
     ],
   );
 
