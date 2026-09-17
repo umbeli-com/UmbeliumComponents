@@ -134,10 +134,25 @@ export interface ButtonOwnProps {
    *
    * Le padding horizontal et la taille de police continuent de venir de `size`
    * (rien n'est deviné à partir d'une hauteur) : choisir le cran le plus proche
-   * et corriger le padding chez soi si besoin. Valeur non finie ou ≤ 0 :
+   * et corriger le padding avec `paddingX`. Valeur non finie ou ≤ 0 :
    * ignorée, la hauteur du cran s'applique.
    */
   height?: number;
+  /**
+   * Rayon libre (nombre = px, chaîne telle quelle : `'0.75rem'`), posé en
+   * `--button-radius` inline. Mesuré : le Manager rend ses boutons à 12px
+   * (`var(--mgr-radius)`) et Servum à 8px, là où `.button` impose 100px —
+   * `inheritFont` et `height` réglaient la police et la hauteur, rien ne
+   * réglait le rayon. Pour toute une app, poser `--button-radius` sur un
+   * ancêtre plutôt que la prop sur chaque bouton. Absent : aucun `style`.
+   */
+  radius?: number | string;
+  /**
+   * Padding HORIZONTAL libre, découplé de `size` — ce que `height` a fait pour
+   * la hauteur. Posé en `--button-padding-x` inline (Manager : `px-4` = 1rem
+   * sur un bouton de 37px ; Servum : 20px). Absent : le padding du cran.
+   */
+  paddingX?: number | string;
   /**
    * Cible d'un bouton qui est en fait un lien. Fourni SEUL (sans `as`), il
    * fait rendre un `<a>` — c'est le cas de Scrapium (`src/SalesLanding.tsx:155`
@@ -253,6 +268,15 @@ type ButtonRenderProps = ButtonOwnProps & {
   style?: CSSProperties;
 };
 
+/** Nombre fini ≥ 0 → px ; chaîne non vide → telle quelle ; sinon `undefined`.
+ *  Un `NaN` écrirait `NaNpx`, une déclaration invalide qui retomberait sur le
+ *  repli sans bruit — mieux vaut ne rien poser du tout. */
+function toCssLength(value: number | string | undefined): string | undefined {
+  if (typeof value === 'number') return Number.isFinite(value) && value >= 0 ? `${value}px` : undefined;
+  if (typeof value === 'string') return value.trim() !== '' ? value : undefined;
+  return undefined;
+}
+
 function ButtonRender(
   {
     children,
@@ -264,6 +288,8 @@ function ButtonRender(
     iconOnly = false,
     inheritFont = false,
     height,
+    radius,
+    paddingX,
     unstyled = false,
     testId,
     labels,
@@ -337,8 +363,16 @@ function ButtonRender(
   const cssVars: Record<string, string> = {};
   if (customWeight) cssVars['--button-font-weight'] = String(inheritFont);
   if (customHeight) cssVars['--button-height'] = `${height}px`;
+  // Rayon et padding horizontal : lus DIRECTEMENT par les règles de base et de
+  // cran (`var(--button-radius, 100px)`…), donc sans classe compagnon. Même
+  // garde que la hauteur pour un nombre ; en `unstyled`, rien — la peau n'est
+  // plus celle du paquet.
+  const radiusValue = bare ? undefined : toCssLength(radius);
+  const paddingXValue = bare ? undefined : toCssLength(paddingX);
+  if (radiusValue !== undefined) cssVars['--button-radius'] = radiusValue;
+  if (paddingXValue !== undefined) cssVars['--button-padding-x'] = paddingXValue;
   const styleProps =
-    customWeight || customHeight
+    Object.keys(cssVars).length > 0
       ? { style: { ...props.style, ...cssVars } as CSSProperties }
       : null;
 

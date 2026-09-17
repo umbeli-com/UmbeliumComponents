@@ -1,11 +1,32 @@
 // Button Component Styles
+//
+// Tokens de composant — chacun a pour repli la valeur écrite ici avant son
+// introduction, donc le rendu est inchangé tant qu'aucun n'est posé. Ils se
+// posent sur un ancêtre (peau d'une app : `.mgr-page { --button-radius: 12px }`)
+// ou par instance (props `radius` / `paddingX` de Button.tsx).
+//   --button-radius           100px          rayon
+//   --button-gap              .5rem          espace icône/libellé
+//   --button-padding-x        par cran       padding horizontal (xs .75rem ·
+//                                            sm 1rem · md 1.25rem · lg 1.5rem ·
+//                                            xl 2rem)
+//   --button-font-size        par cran       taille de police
+//   --button-primary-bg-hover / --button-primary-bg-active
+//   --button-secondary-bg-hover / --button-ghost-bg-hover / --button-danger-bg-hover
+//
+// Survol primaire : le repli est `--theme-color-brand-primary`, LE MÊME token
+// que l'état de repos — c'est le rendu d'hier, où le survol n'existe pas dès
+// qu'une app définit sa marque (mesuré chez Servum : repos = survol =
+// rgb(99,102,241)). Une app qui veut un survol distinct pose
+// `--button-primary-bg-hover: var(--theme-color-brand-primary-hover)` —
+// explicite, pour ne pas repeindre en bleu marine du canon le survol d'une app
+// dont la marque est indigo et qui n'a pas défini `-hover`.
 
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  border-radius: 100px;
+  gap: var(--button-gap, 0.5rem);
+  border-radius: var(--button-radius, 100px);
   font-family: 'Manrope', sans-serif;
   font-weight: 500;
   cursor: pointer;
@@ -30,20 +51,20 @@
   // Sizes
   &--sm {
     height: 32px;
-    padding: 0 1rem;
-    font-size: 0.875rem;
+    padding: 0 var(--button-padding-x, 1rem);
+    font-size: var(--button-font-size, 0.875rem);
   }
 
   &--md {
     height: 40px;
-    padding: 0 1.25rem;
-    font-size: 1rem;
+    padding: 0 var(--button-padding-x, 1.25rem);
+    font-size: var(--button-font-size, 1rem);
   }
 
   &--lg {
     height: 48px;
-    padding: 0 1.5rem;
-    font-size: 1.125rem;
+    padding: 0 var(--button-padding-x, 1.5rem);
+    font-size: var(--button-font-size, 1.125rem);
   }
 
   // Variants
@@ -52,11 +73,11 @@
     color: var(--theme-color-brand-on-primary, #ffffff);
 
     &:hover:not(:disabled) {
-      background-color: var(--theme-color-brand-primary, #4f46e5);
+      background-color: var(--button-primary-bg-hover, var(--theme-color-brand-primary, #4f46e5));
     }
 
     &:active:not(:disabled) {
-      background-color: var(--theme-color-brand-primary, #4338ca);
+      background-color: var(--button-primary-bg-active, var(--theme-color-brand-primary, #4338ca));
     }
   }
 
@@ -66,7 +87,7 @@
     border: 1px solid var(--theme-color-neutral-surface);
 
     &:hover:not(:disabled) {
-      background-color: var(--theme-color-neutral-surface);
+      background-color: var(--button-secondary-bg-hover, var(--theme-color-neutral-surface));
     }
   }
 
@@ -76,7 +97,7 @@
     border: 1px solid var(--theme-color-neutral-surface);
 
     &:hover:not(:disabled) {
-      background-color: var(--theme-color-neutral-surface-alt, #F8F9FA);
+      background-color: var(--button-ghost-bg-hover, var(--theme-color-neutral-surface-alt, #F8F9FA));
     }
   }
 }
@@ -93,15 +114,15 @@
   // xs : 24 / 12 / 12px — relevé sur Anonymum `.btn-xs` (padding 12px, font 12px).
   &--xs {
     height: 24px;
-    padding: 0 0.75rem;
-    font-size: 0.75rem;
+    padding: 0 var(--button-padding-x, 0.75rem);
+    font-size: var(--button-font-size, 0.75rem);
   }
 
   // xl : 56 / 32 / 17px — relevé sur Anonymum `.btn-xl` (56px, $space-32, 17px).
   &--xl {
     height: 56px;
-    padding: 0 2rem;
-    font-size: 1.0625rem;
+    padding: 0 var(--button-padding-x, 2rem);
+    font-size: var(--button-font-size, 1.0625rem);
   }
 
   // ── Variants ajoutés ──
@@ -115,7 +136,7 @@
     border: none;
 
     &:hover:not(:disabled) {
-      background-color: var(--theme-color-danger-text, #b91c1c);
+      background-color: var(--button-danger-bg-hover, var(--theme-color-danger-text, #b91c1c));
     }
   }
 
