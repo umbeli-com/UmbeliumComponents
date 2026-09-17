@@ -1,5 +1,5 @@
 export { Field } from './Field';
-export type { FieldProps, FieldLabels } from './Field';
+export type { FieldProps, FieldLabels, FieldClassNames } from './Field';
 
 export { Input } from './Input';
 export type { InputProps, ControlSize } from './Input';

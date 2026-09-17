@@ -36,6 +36,21 @@ function isDev(): boolean {
   return devModeCache;
 }
 
+/**
+ * Classes de l'app, partie par partie — en plus de celles du paquet, ou À LEUR
+ * PLACE avec `unstyled`. Mesuré chez Anonymum (/account, changement de mot de
+ * passe) : son étiquette porte `.input-label` (500, --color-text-secondary) là
+ * où `.field__label` pose 600 et une autre encre, et `className` n'atteignait
+ * que la racine.
+ */
+export interface FieldClassNames {
+  root?: string;
+  label?: string;
+  required?: string;
+  hint?: string;
+  error?: string;
+}
+
 export interface FieldProps {
   /** Étiquette du champ. Rendue dans un vrai `<label for>`. */
   label?: ReactNode;
@@ -57,6 +72,17 @@ export interface FieldProps {
   /** Occupe toute la largeur de la `<FormGrid>` parente. */
   wide?: boolean;
   className?: string;
+  /** Classes de l'app par partie (voir `FieldClassNames`). */
+  classNames?: FieldClassNames;
+  /**
+   * NU : aucune classe `field*` n'est émise (ni `field`, ni `field--wide`,
+   * ni `is-invalid`, ni `field__label` / `__required` / `__hint` / `__error`).
+   * Ne restent que `className` et `classNames`, telles quelles ; une partie
+   * sans classe ne porte pas d'attribut `class`. Tout le CÂBLAGE reste :
+   * `<label for>`, `aria-describedby`, `aria-invalid`, l'id généré et
+   * l'alerte de développement. Même contrat que `unstyled` de Button.
+   */
+  unstyled?: boolean;
   /** Chaînes émises par le composant lui-même, défauts FR. */
   labels?: FieldLabels;
   /** Le contrôle. Un enfant unique reçoit automatiquement `id`,
@@ -74,6 +100,8 @@ export function Field({
   required = false,
   wide = false,
   className = '',
+  classNames = {},
+  unstyled = false,
   labels = {},
   children,
 }: FieldProps) {
@@ -117,17 +145,25 @@ export function Field({
     );
   }
 
+  // Classe d'une partie : celle du paquet (sauf `unstyled`) puis celle de
+  // l'app. Vide ⇒ pas d'attribut `class` du tout, plutôt qu'un `class=""`.
+  const part = (own: string[], app?: string) => {
+    const value = [...(unstyled ? [] : own), app].filter(Boolean).join(' ');
+    return value ? { className: value } : null;
+  };
+
   return (
     <div
-      className={['field', wide ? 'field--wide' : '', error != null ? 'is-invalid' : '', className]
-        .filter(Boolean)
-        .join(' ')}
+      {...part(
+        ['field', wide ? 'field--wide' : '', error != null ? 'is-invalid' : ''].filter(Boolean),
+        [className, classNames.root].filter(Boolean).join(' '),
+      )}
     >
       {label != null && (
-        <label className="field__label" htmlFor={labelFor}>
+        <label {...part(['field__label'], classNames.label)} htmlFor={labelFor}>
           {label}
           {required && (
-            <abbr className="field__required" title={t.required} aria-label={t.required}>
+            <abbr {...part(['field__required'], classNames.required)} title={t.required} aria-label={t.required}>
               *
             </abbr>
           )}
@@ -135,12 +171,12 @@ export function Field({
       )}
       {control}
       {hint != null && (
-        <p className="field__hint" id={hintId}>
+        <p {...part(['field__hint'], classNames.hint)} id={hintId}>
           {hint}
         </p>
       )}
       {error != null && (
-        <p className="field__error" id={errorId} role="alert">
+        <p {...part(['field__error'], classNames.error)} id={errorId} role="alert">
           {error}
         </p>
       )}
