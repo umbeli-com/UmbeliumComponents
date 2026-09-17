@@ -1,5 +1,5 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react';
-import type { ControlSize } from './Input';
+import { classAttr, type ControlSize } from './Input';
 // Styles are imported separately via @umbeli-com/ui/styles
 
 export interface CheckboxProps
@@ -22,6 +22,16 @@ export interface CheckboxProps
   className?: string;
   /** Classe posée sur l'`<input>` lui-même. */
   inputClassName?: string;
+  /** Classe posée sur le texte de l'étiquette (`.checkbox__label`), seule en
+   *  `unstyled`. Sans effet sans `label`. */
+  labelClassName?: string;
+  /**
+   * NU : aucune classe `checkbox*` n'est émise (`checkbox`, `checkbox--{size}`, `is-disabled`, `checkbox__input`, `checkbox__input--{size}`, `is-invalid`) — ne restent que
+   * les classes de l'app, telles quelles, et l'attribut `class` disparaît si
+   * elles sont vides. Le COMPORTEMENT reste (`invalid` → `aria-invalid`, la
+   * `ref`, les props natives). Même contrat que `unstyled` de Button et Field.
+   */
+  unstyled?: boolean;
 }
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
@@ -31,7 +41,9 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     invalid = false,
     className = '',
     inputClassName = '',
+    labelClassName = '',
     'aria-invalid': ariaInvalid,
+    unstyled = false,
     disabled,
     ...props
   },
@@ -46,14 +58,11 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
       // Le gabarit est porté par l'input lui-même, pas par le `<label>` :
       // sans `label` (le cas normal sous `<Field>`) il n'y a pas d'enveloppe,
       // et `size` serait sinon silencieusement sans effet.
-      className={[
-        'checkbox__input',
-        `checkbox__input--${size}`,
-        invalid ? 'is-invalid' : '',
-        inputClassName,
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      {...classAttr(
+        unstyled
+          ? [inputClassName]
+          : ['checkbox__input', `checkbox__input--${size}`, invalid ? 'is-invalid' : '', inputClassName],
+      )}
       aria-invalid={ariaInvalid ?? (invalid || undefined)}
     />
   );
@@ -65,12 +74,12 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
 
   return (
     <label
-      className={['checkbox', `checkbox--${size}`, disabled ? 'is-disabled' : '', className]
-        .filter(Boolean)
-        .join(' ')}
+      {...classAttr(
+        unstyled ? [className] : ['checkbox', `checkbox--${size}`, disabled ? 'is-disabled' : '', className],
+      )}
     >
       {control}
-      <span className="checkbox__label">{label}</span>
+      <span {...classAttr(unstyled ? [labelClassName] : ['checkbox__label', labelClassName])}>{label}</span>
     </label>
   );
 });

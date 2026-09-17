@@ -1,4 +1,12 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react';
+
+/** Attribut `class` d'un contrôle : la chaîne assemblée, ou RIEN quand elle
+ *  est vide (en `unstyled` sans `className`, un `class=""` salirait le DOM).
+ *  Partagé par Input, Select, Textarea et Checkbox. */
+export function classAttr(parts: Array<string | false | undefined>): { className?: string } {
+  const value = parts.filter(Boolean).join(' ');
+  return value ? { className: value } : {};
+}
 // Styles are imported separately via @umbeli-com/ui/styles
 
 /** Taille commune à tous les contrôles de formulaire. */
@@ -34,6 +42,19 @@ export interface InputProps
   wrapClassName?: string;
   /** Classe de la fente (sans effet sans `leading`). */
   leadingClassName?: string;
+  /**
+   * NU : aucune classe `input*` n'est émise (`input`, `input--{size}`, `is-invalid`, `input--with-leading`) — ne restent que
+   * `className`, transmise telle quelle, et l'attribut `class` disparaît si
+   * elle est vide. Le COMPORTEMENT reste : `invalid` → `aria-invalid`, la
+   * `ref`, toutes les props natives. Même contrat que `unstyled` de Button et
+   * de Field.
+   *
+   * Mesuré au Manager (10 paires étiquette + champ de ProfileSection et
+   * OrganizationManager) : la feuille du paquet est chargée, donc `input
+   * input--md` repeignait chaque champ — 38 → 45,19px de haut, police 14 →
+   * 16px, 36 écarts relevés. Sans échappatoire, l'adoption était impossible.
+   */
+  unstyled?: boolean;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
@@ -45,6 +66,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     leading,
     wrapClassName = '',
     leadingClassName = '',
+    unstyled = false,
     ...props
   },
   ref
@@ -54,15 +76,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <input
       {...props}
       ref={ref}
-      className={[
-        'input',
-        `input--${size}`,
-        invalid ? 'is-invalid' : '',
-        hasLeading ? 'input--with-leading' : '',
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      {...classAttr(
+        unstyled
+          ? [className]
+          : ['input', `input--${size}`, invalid ? 'is-invalid' : '', hasLeading ? 'input--with-leading' : '', className],
+      )}
       aria-invalid={ariaInvalid ?? (invalid || undefined)}
     />
   );

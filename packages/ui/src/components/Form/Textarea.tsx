@@ -1,5 +1,5 @@
 import { forwardRef, type TextareaHTMLAttributes } from 'react';
-import type { ControlSize } from './Input';
+import { classAttr, type ControlSize } from './Input';
 // Styles are imported separately via @umbeli-com/ui/styles
 
 export interface TextareaProps
@@ -14,19 +14,24 @@ export interface TextareaProps
   size?: ControlSize;
   /** Marque le champ en erreur (bordure danger + `aria-invalid`). */
   invalid?: boolean;
+  /**
+   * NU : aucune classe `textarea*` n'est émise (`textarea`, `textarea--{size}`, `is-invalid`) — ne restent que
+   * les classes de l'app, telles quelles, et l'attribut `class` disparaît si
+   * elles sont vides. Le COMPORTEMENT reste (`invalid` → `aria-invalid`, la
+   * `ref`, les props natives). Même contrat que `unstyled` de Button et Field.
+   */
+  unstyled?: boolean;
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { size = 'md', invalid = false, className = '', 'aria-invalid': ariaInvalid, ...props },
+  { size = 'md', invalid = false, className = '', 'aria-invalid': ariaInvalid, unstyled = false, ...props },
   ref
 ) {
   return (
     <textarea
       {...props}
       ref={ref}
-      className={['textarea', `textarea--${size}`, invalid ? 'is-invalid' : '', className]
-        .filter(Boolean)
-        .join(' ')}
+      {...classAttr(unstyled ? [className] : ['textarea', `textarea--${size}`, invalid ? 'is-invalid' : '', className])}
       aria-invalid={ariaInvalid ?? (invalid || undefined)}
     />
   );

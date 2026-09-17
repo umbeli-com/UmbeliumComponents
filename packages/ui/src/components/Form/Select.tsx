@@ -1,5 +1,5 @@
 import { forwardRef, type SelectHTMLAttributes } from 'react';
-import type { ControlSize } from './Input';
+import { classAttr, type ControlSize } from './Input';
 // Styles are imported separately via @umbeli-com/ui/styles
 
 export interface SelectProps
@@ -13,19 +13,30 @@ export interface SelectProps
   size?: ControlSize;
   /** Marque le champ en erreur (bordure danger + `aria-invalid`). */
   invalid?: boolean;
+  /**
+   * NU : aucune classe `select*` n'est émise (`select`, `select--{size}`, `is-invalid`) — ne restent que
+   * `className`, transmise telle quelle, et l'attribut `class` disparaît si
+   * elle est vide. Le COMPORTEMENT reste : `invalid` → `aria-invalid`, la
+   * `ref`, toutes les props natives. Même contrat que `unstyled` de Button et
+   * de Field.
+   *
+   * Mesuré au Manager (10 paires étiquette + champ de ProfileSection et
+   * OrganizationManager) : la feuille du paquet est chargée, donc `input
+   * input--md` repeignait chaque champ — 38 → 45,19px de haut, police 14 →
+   * 16px, 36 écarts relevés. Sans échappatoire, l'adoption était impossible.
+   */
+  unstyled?: boolean;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { size = 'md', invalid = false, className = '', 'aria-invalid': ariaInvalid, children, ...props },
+  { size = 'md', invalid = false, className = '', 'aria-invalid': ariaInvalid, unstyled = false, children, ...props },
   ref
 ) {
   return (
     <select
       {...props}
       ref={ref}
-      className={['select', `select--${size}`, invalid ? 'is-invalid' : '', className]
-        .filter(Boolean)
-        .join(' ')}
+      {...classAttr(unstyled ? [className] : ['select', `select--${size}`, invalid ? 'is-invalid' : '', className])}
       aria-invalid={ariaInvalid ?? (invalid || undefined)}
     >
       {children}
