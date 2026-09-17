@@ -216,19 +216,22 @@ html.dark .card--elevation-md,
   // `--theme-color-neutral-text`, qui reste une couleur du thème.
   &--sm {
     font-size: 0.875rem;
-    line-height: 1.25rem;
+    line-height: var(--card-header-title-line-height, 1.25rem);
     font-weight: 600;
   }
 
   &--md {
     font-size: 0.9375rem;
-    line-height: 1.375rem;
+    // Token (repli = valeur du cran) : Dialum hérite `line-height: 1.5` de sa
+    // page (22,5px) là où `md` pose 22px — un décalage sous-pixel qui avait
+    // fait écarter l'adoption de ses en-têtes de section.
+    line-height: var(--card-header-title-line-height, 1.375rem);
     font-weight: 600;
   }
 
   &--lg {
     font-size: 1.5rem;
-    line-height: 2rem;
+    line-height: var(--card-header-title-line-height, 2rem);
     font-weight: 700;
     letter-spacing: -0.01em;
   }
