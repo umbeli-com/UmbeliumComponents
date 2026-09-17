@@ -8,6 +8,7 @@ export type {
   KpiCardIconVariant,
   KpiCardIconPosition,
   KpiCardValueSize,
+  KpiCardLabelSize,
   KpiCardPadding,
   KpiCardElevation,
   KpiCardLabels,

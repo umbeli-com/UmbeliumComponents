@@ -39,7 +39,11 @@ export interface KpiCardTrend {
 export type KpiCardLayout = 'inline' | 'stacked';
 export type KpiCardIconVariant = 'plain' | 'bubble';
 export type KpiCardIconPosition = 'start' | 'end';
-export type KpiCardValueSize = 'md' | 'lg';
+/** `inherit` : AUCUNE classe du paquet sur le chiffre — typographie et couleur
+ *  viennent de `valueClassName` seule (tuiles de Dialum). */
+export type KpiCardValueSize = 'md' | 'lg' | 'inherit';
+/** `inherit` : aucune classe du paquet sur le libellé (`labelClassName` seule). */
+export type KpiCardLabelSize = 'default' | 'inherit';
 export type KpiCardPadding = 'sm' | 'md' | 'lg';
 export type KpiCardElevation = 'none' | 'sm' | 'md';
 
@@ -90,6 +94,22 @@ export interface KpiCardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: KpiCardPadding;
   elevation?: KpiCardElevation;
   labels?: KpiCardLabels;
+  /** Style du libellé (défaut `default`). */
+  labelSize?: KpiCardLabelSize;
+  /** Classe ajoutée au libellé (`.kpi-card__label`). */
+  labelClassName?: string;
+  /** Classe ajoutée au chiffre (`.kpi-card__value`). */
+  valueClassName?: string;
+  /**
+   * Rendre la racine `div.kpi-card` (défaut `true`). `false` : les parties
+   * (en-tête, corps, pied) sont rendues en fragment, dans le conteneur de
+   * l'app — Dialum pose ses tuiles dans `<Card className="dialum-card-lift">`,
+   * et la racine du paquet repeignait fond, padding et élévation par-dessus.
+   * Sans racine, `className`, `testId`, les attributs HTML et les
+   * modificateurs de racine (`layout`, `valueSize="lg"`, `padding`,
+   * `elevation`) sont sans objet — la mise en page vient du conteneur.
+   */
+  renderRoot?: boolean;
   /** `data-testid` de la racine. */
   testId?: string;
   /** `data-testid` des morceaux (label, chiffre, tendance, sous-titre). */
@@ -118,6 +138,10 @@ export function KpiCard({
   testId,
   testIds,
   className = '',
+  labelSize = 'default',
+  labelClassName,
+  valueClassName,
+  renderRoot = true,
   ...rest
 }: KpiCardProps) {
   const t = { ...defaultKpiCardLabels, ...labels };
@@ -142,7 +166,7 @@ export function KpiCard({
   // `kpi-card ` + className, espace final compris.
   const modifiers =
     (layout === 'inline' ? '' : ` kpi-card--${layout}`) +
-    (valueSize === 'md' ? '' : ` kpi-card--value-${valueSize}`) +
+    (valueSize === 'md' || valueSize === 'inherit' ? '' : ` kpi-card--value-${valueSize}`) +
     (padding ? ` kpi-card--padding-${padding}` : '') +
     (elevation === 'none' ? '' : ` kpi-card--elevation-${elevation}`) +
     (loading ? ' kpi-card--loading' : '');
@@ -155,8 +179,18 @@ export function KpiCard({
     </span>
   ) : null;
 
+  /** Classe d'une partie : celle du paquet (sauf `inherit`) puis celle de
+   *  l'app ; au défaut, la chaîne d'hier. Vide ⇒ pas d'attribut `class`. */
+  const partClass = (own: string | null, app?: string) => {
+    const value = own ? (app ? `${own} ${app}` : own) : (app ?? '');
+    return value ? { className: value } : null;
+  };
+
   const labelEl = (
-    <span className="kpi-card__label" data-testid={testIds?.label}>
+    <span
+      {...partClass(labelSize === 'inherit' ? null : 'kpi-card__label', labelClassName)}
+      data-testid={testIds?.label}
+    >
       {label}
     </span>
   );
@@ -169,7 +203,10 @@ export function KpiCard({
       data-testid={testIds?.value}
     />
   ) : (
-    <span className="kpi-card__value" data-testid={testIds?.value}>
+    <span
+      {...partClass(valueSize === 'inherit' ? null : 'kpi-card__value', valueClassName)}
+      data-testid={testIds?.value}
+    >
       {value}
     </span>
   );
@@ -210,13 +247,25 @@ export function KpiCard({
     </>
   );
 
-  if (layout === 'stacked') {
-    return (
+  // Sans racine, les parties remontent dans le conteneur de l'app. Fonction
+  // d'enveloppe et non composant : un composant déclaré ici changerait
+  // d'identité à chaque rendu et remonterait tout le sous-arbre.
+  const wrap = (parts: ReactNode) =>
+    renderRoot ? (
       <div
         data-testid={testId ?? testIds?.root}
         {...rest}
         className={`kpi-card${modifiers} ${className}`}
       >
+        {parts}
+      </div>
+    ) : (
+      <>{parts}</>
+    );
+
+  if (layout === 'stacked') {
+    return wrap(
+      <>
         {(iconEl || trendEl) && (
           <div className="kpi-card__toprow">
             {iconEl}
@@ -229,16 +278,12 @@ export function KpiCard({
           {badge}
         </div>
         {tail}
-      </div>
+      </>,
     );
   }
 
-  return (
-    <div
-      data-testid={testId ?? testIds?.root}
-      {...rest}
-      className={`kpi-card${modifiers} ${className}`}
-    >
+  return wrap(
+    <>
       <div className={`kpi-card__header${iconPosition === 'end' ? ' kpi-card__header--icon-end' : ''}`}>
         {iconPosition === 'end' ? (
           <>
@@ -258,7 +303,7 @@ export function KpiCard({
         {badge}
       </div>
       {tail}
-    </div>
+    </>,
   );
 }
 
