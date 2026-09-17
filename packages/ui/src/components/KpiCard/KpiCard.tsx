@@ -44,6 +44,12 @@ export type KpiCardIconPosition = 'start' | 'end';
 export type KpiCardValueSize = 'md' | 'lg' | 'inherit';
 /** `inherit` : aucune classe du paquet sur le libellé (`labelClassName` seule). */
 export type KpiCardLabelSize = 'default' | 'inherit';
+
+/** Balise du libellé ou du chiffre. `span` par défaut — ce que la tuile a
+ *  toujours rendu. Mesuré chez Dialum : ses specs interrogent `p.text-3xl`
+ *  (feature-dashboard.spec.ts:23-25), donc le chiffre doit pouvoir être un
+ *  `<p>`. */
+export type KpiCardTextTag = 'span' | 'p' | 'div' | 'strong';
 export type KpiCardPadding = 'sm' | 'md' | 'lg';
 export type KpiCardElevation = 'none' | 'sm' | 'md';
 
@@ -100,6 +106,10 @@ export interface KpiCardProps extends HTMLAttributes<HTMLDivElement> {
   labelClassName?: string;
   /** Classe ajoutée au chiffre (`.kpi-card__value`). */
   valueClassName?: string;
+  /** Balise du libellé (défaut `span`). */
+  labelAs?: KpiCardTextTag;
+  /** Balise du chiffre (défaut `span`). */
+  valueAs?: KpiCardTextTag;
   /**
    * Rendre la racine `div.kpi-card` (défaut `true`). `false` : les parties
    * (en-tête, corps, pied) sont rendues en fragment, dans le conteneur de
@@ -141,6 +151,8 @@ export function KpiCard({
   labelSize = 'default',
   labelClassName,
   valueClassName,
+  labelAs = 'span',
+  valueAs = 'span',
   renderRoot = true,
   ...rest
 }: KpiCardProps) {
@@ -186,13 +198,16 @@ export function KpiCard({
     return value ? { className: value } : null;
   };
 
+  const LabelTag = labelAs;
+  const ValueTag = valueAs;
+
   const labelEl = (
-    <span
+    <LabelTag
       {...partClass(labelSize === 'inherit' ? null : 'kpi-card__label', labelClassName)}
       data-testid={testIds?.label}
     >
       {label}
-    </span>
+    </LabelTag>
   );
 
   const valueEl = loading ? (
@@ -203,12 +218,12 @@ export function KpiCard({
       data-testid={testIds?.value}
     />
   ) : (
-    <span
+    <ValueTag
       {...partClass(valueSize === 'inherit' ? null : 'kpi-card__value', valueClassName)}
       data-testid={testIds?.value}
     >
       {value}
-    </span>
+    </ValueTag>
   );
 
   const trendEl =

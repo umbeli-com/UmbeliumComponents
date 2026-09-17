@@ -121,14 +121,6 @@
 .kpi-card--stacked {
   gap: 0.25rem;
 
-  .kpi-card__toprow {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-
   .kpi-card__body {
     margin-top: 0.25rem;
   }
@@ -234,4 +226,19 @@ html.dark .kpi-card--elevation-md,
 .kpi-card--value-lg .kpi-card__skeleton--value {
   height: 2.25rem;
   width: 5.5rem;
+}
+
+// ── Rangée icône + tendance (mise en page empilée) ──────────────────────────
+// Déclarations DÉPLACÉES depuis `.kpi-card--stacked .kpi-card__toprow` vers la
+// classe de base : avec `renderRoot={false}` (Dialum pose ses tuiles dans sa
+// propre <Card>), le modificateur de racine n'est plus émis et la rangée
+// perdait flex, la répartition et sa marge. Mêmes valeurs, donc rendu
+// identique pour la mise en page empilée ; `--kpi-card-toprow-spacing` rend la
+// marge réglable (Dialum rend 1rem).
+.kpi-card__toprow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: var(--kpi-card-toprow-spacing, 0.75rem);
 }
