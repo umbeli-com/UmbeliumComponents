@@ -273,3 +273,28 @@ $c-danger-soft:   var(--theme-color-danger-soft, #fde8e8);
     grid-column: span 1;
   }
 }
+
+// ── `Input leading` : icône DANS le champ ──────────────────────────────────
+// Éléments NEUFS, émis seulement quand la fente est remplie (Anonymum posait
+// l'icône en absolu et un padding en ligne). `--input-leading-inset` et
+// `--input-leading-padding` rendent les deux mesures réglables.
+.input-wrap {
+  position: relative;
+  display: block;
+}
+
+.input__leading {
+  position: absolute;
+  left: var(--input-leading-inset, 0.625rem);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  color: var(--theme-color-neutral-icon-muted, #6b7280);
+  // L'icône ne doit jamais voler le clic destiné au champ.
+  pointer-events: none;
+}
+
+.input--with-leading {
+  padding-left: var(--input-leading-padding, 2.125rem);
+}
