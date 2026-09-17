@@ -21,6 +21,17 @@ export interface RequireSubscriptionProps extends RouteGuardBaseProps {
    */
   gate: ReactNode;
   /**
+   * `true` quand le statut d'abonnement n'a PAS PU être lu (API injoignable,
+   * 5xx). Seul, il ne change rien : il faut aussi `error`. Mesuré : les deux
+   * SubscriptionGate maison d'une app ont un troisième état « statut
+   * injoignable → Réessayer » que `fallback` (chargement) et `gate` (refus)
+   * ne pouvaient pas porter.
+   */
+  hasError?: boolean;
+  /** Écran rendu quand `hasError` — typiquement un « Réessayer ». Absent :
+   *  `hasError` est ignoré et l'ordre historique s'applique. */
+  error?: ReactNode;
+  /**
    * Coupe complètement le gating (app sans facturation, env sans API de
    * billing : le `env.billingApiBaseUrl` d'Anonymum).
    * @default true
@@ -30,6 +41,11 @@ export interface RequireSubscriptionProps extends RouteGuardBaseProps {
    * Laisse passer quand le navigateur se déclare hors ligne : le statut
    * d'abonnement n'est alors pas vérifiable, et bloquer une app installée en
    * PWA sur une panne réseau serait pire que le risque.
+   *
+   * ⚠️ Conséquence à assumer : un visiteur hors ligne passe devant le paywall.
+   * Une app qui préfère afficher le paywall (ou l'écran `error`) hors ligne
+   * passe `allowWhenOffline={false}` — le défaut ne changera pas, des apps
+   * installées en PWA en dépendent.
    * @default true
    */
   allowWhenOffline?: boolean;
@@ -62,8 +78,9 @@ function isOffline(): boolean {
  * 1. session en cours de vérification → `fallback` (jamais de redirection) ;
  * 2. pas de session → redirection vers `loginPath` ;
  * 3. statut d'abonnement inconnu → `fallback` ;
- * 4. pas d'accès → `gate` (l'écran de vente, PAS une redirection) ;
- * 5. sinon → `children`.
+ * 4. statut illisible (`hasError` ET `error` fourni) → `error` ;
+ * 5. pas d'accès → `gate` (l'écran de vente, PAS une redirection) ;
+ * 6. sinon → `children`.
  *
  * @example
  * ```tsx
@@ -84,6 +101,8 @@ export function RequireSubscription({
   hasAccess,
   loading: subscriptionLoading = false,
   gate,
+  hasError = false,
+  error,
   enabled = true,
   allowWhenOffline = true,
   requireAuth = true,
@@ -127,6 +146,10 @@ export function RequireSubscription({
   if (!enabled) return <>{children}</>;
 
   if (subscriptionLoading) return <>{renderFallback(t.loading)}</>;
+
+  // Avant `hasAccess` : un statut illisible n'est ni un accès ni un refus.
+  // `error === undefined` garde l'ordre d'hier pour les apps qui ne la passent pas.
+  if (hasError && error !== undefined) return <>{error}</>;
 
   if (!hasAccess && !(allowWhenOffline && isOffline())) return <>{gate}</>;
 
