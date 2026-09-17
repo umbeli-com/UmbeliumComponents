@@ -156,8 +156,12 @@ export interface ModalProps {
    * `umb-modal-in` (translateY 8px + scale .985) — la fenêtre « ouvrir en
    * grand » d'Anonymum n'avait aucune animation et posait `animation: none`
    * dans sa propre classe. `prefers-reduced-motion` coupe déjà tout.
+   *
+   * Granularité, mesurée sur ce même cas : `'backdrop'` n'anime que le
+   * voile (la fenêtre est immobile, ce que faisait `.expand-dialog { animation:
+   * none }`), `'dialog'` n'anime que la fenêtre. `false` coupe les deux.
    */
-  animation?: boolean;
+  animation?: boolean | 'dialog' | 'backdrop';
   /**
    * Balise du titre (défaut `h2`). La hiérarchie appartient à la page :
    * Socialum rendait `h3` (Planification, médiathèque) et `h4` (paiement
@@ -530,6 +534,10 @@ export function Modal({
   }
   const hasDialogStyle = Object.keys(dialogStyle).length > 0;
 
+  // `true` anime les deux, `false` aucun, la chaîne ne nomme que l'animé.
+  const animateBackdrop = animation === true || animation === 'backdrop';
+  const animateDialog = animation === true || animation === 'dialog';
+
   const Title = titleAs;
   const titleNode = (
     <Title
@@ -568,7 +576,7 @@ export function Modal({
   return createPortal(
     <div
       className={`umb-modal__backdrop${blurOn ? ' umb-modal__backdrop--blur' : ''}${
-        animation ? '' : ' umb-modal__backdrop--static'
+        animateBackdrop ? '' : ' umb-modal__backdrop--static'
       }${backdropClassName ? ` ${backdropClassName}` : ''}`}
       role="presentation"
       onMouseDown={handleBackdropMouseDown}
@@ -578,7 +586,7 @@ export function Modal({
     >
       <div
         ref={dialogRef}
-        className={`umb-modal umb-modal--${size}${animation ? '' : ' umb-modal--static'}${
+        className={`umb-modal umb-modal--${size}${animateDialog ? '' : ' umb-modal--static'}${
           className ? ` ${className}` : ''
         }`}
         role={role}
