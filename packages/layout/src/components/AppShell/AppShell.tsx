@@ -85,6 +85,32 @@ export interface AppShellProps {
   className?: string;
   /** Classes de l'app sur le `<main>` (ex. Webum : `main-content`). */
   contentClassName?: string;
+
+  // ── Colonne de contenu : le nœud ENTRE la racine et le `<main>` ───────────
+  /** Classes de l'app sur `div.app-shell__main` — l'ITEM de grille (ou de
+   *  flex) qui porte topbar et `<main>`. Ni `className` (racine) ni
+   *  `contentClassName` (`<main>`) ne l'atteignaient. Refus mesuré, Profilum,
+   *  les deux fronts : ils n'importent que `sidebar.css`, donc le
+   *  `min-width: 0` de `.umb-app-shell--grid > .umb-app-shell__main` ne s'y
+   *  applique pas et un contenu large pousse la colonne `1fr` ; et
+   *  `frontend/src/styles/base/_layout.scss:23-28,104` accroche à CE nœud
+   *  `min-width: 0`, `display: flex`, `min-height: 100vh` et, par
+   *  `.app-main > *`, son animation d'entrée. `mainClassName="app-main"` les
+   *  rebranche tels quels : l'enfant reste le `<main>` (précédé de la topbar
+   *  si elle est fournie), comme dans `frontend/src/layouts/AppLayout.jsx`.
+   *
+   *  Retirer le nœud (`renderMainWrapper={false}`) n'aurait pas suffi : topbar
+   *  et `<main>` deviendraient deux items de grille, et il faudrait des lignes
+   *  explicites que ni Profilum ni la feuille ne posent.
+   *
+   *  Avec la feuille COMPLÈTE, `.umb-app-shell__main` reste stylée : en mode
+   *  grille, `.umb-app-shell--grid > .umb-app-shell__main` (0,2,0) remet
+   *  `min-height` à 0 et bat une règle d'app à une classe — `mainStyle` passe
+   *  devant. */
+  mainClassName?: string;
+  /** Transmis à `div.app-shell__main` (ex. `{ minWidth: 0 }`). Absent : aucun
+   *  attribut `style` n'est écrit, comme avant. */
+  mainStyle?: CSSProperties;
 }
 
 /** Nombre → px ; chaîne → valeur CSS telle quelle. */
@@ -125,6 +151,8 @@ export function AppShell({
   contentUnstyled = false,
   className,
   contentClassName,
+  mainClassName,
+  mainStyle,
 }: AppShellProps) {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -193,7 +221,12 @@ export function AppShell({
         />
       )}
 
-      <div className="app-shell__main umb-app-shell__main">
+      {/* Sans `mainClassName` ni `mainStyle` : même chaîne de classes qu'hier,
+          et `style={undefined}` n'écrit aucun attribut. */}
+      <div
+        className={'app-shell__main umb-app-shell__main' + (mainClassName ? ` ${mainClassName}` : '')}
+        style={mainStyle}
+      >
         {topbar != null && (
           <header className="app-shell__topbar umb-app-shell__topbar">
             {typeof topbar === 'function'
