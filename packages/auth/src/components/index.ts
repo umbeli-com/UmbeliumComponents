@@ -6,5 +6,7 @@ export type { AuthPageLayoutProps } from './AuthPageLayout';
 export type { AuthHeaderProps } from './AuthHeader';
 export type { GoogleOAuthButtonProps } from './GoogleOAuthButton';
 export type { AuthCallbackProps } from './AuthCallback';
-export { AuthForm } from './AuthForm';
-export type { AuthFormProps, AuthFormMode, AuthFormLabels, AuthSignUpPayload } from './AuthForm';
+// `export *` : `authFormLabelsEn` et les types de personnalisation
+// (`AuthFormClassNames`, `AuthSignUpFields`, `AuthFormModeToggle`…) étaient
+// documentés mais injoignables depuis `@umbeli-com/auth`.
+export * from './AuthForm';
