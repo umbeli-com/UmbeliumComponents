@@ -69,6 +69,14 @@ interface BillingManagerProps {
   stripePublishableKey: string;
 }
 
+/** Le client de facturation signale une session absente par un message qui
+ *  contient « Token » ou « 401 ». Même test qu'avant (`err?.message?.includes`),
+ *  sans `any`. */
+function isAuthFailure(err: unknown): boolean {
+  const message = (err as { message?: unknown } | null | undefined)?.message;
+  return typeof message === 'string' && (message.includes('Token') || message.includes('401'));
+}
+
 export function BillingManager({ subscription, onSubscriptionChange, api, stripePublishableKey }: BillingManagerProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'payment-methods' | 'invoices' | 'upgrade'>('overview');
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -106,9 +114,9 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
       const res = await api.getPaymentMethods();
       setPaymentMethods(res.paymentMethods || []);
       setAuthError(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch payment methods:', err);
-      if (err?.message?.includes('Token') || err?.message?.includes('401')) {
+      if (isAuthFailure(err)) {
         setAuthError(true);
       }
     }
@@ -184,9 +192,9 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
       setClientSecret(res.clientSecret);
       setPaymentMode('setup');
       setShowPaymentForm(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create setup intent:', err);
-      if (err?.message?.includes('Token') || err?.message?.includes('401')) {
+      if (isAuthFailure(err)) {
         alert('Veuillez vous connecter pour ajouter une carte.');
       } else {
         alert('Erreur lors de l\'ajout de la carte. Veuillez réessayer.');
@@ -207,9 +215,9 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
       if (finished) {
         setActiveTab('overview');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to subscribe:', err);
-      if (err?.message?.includes('Token') || err?.message?.includes('401')) {
+      if (isAuthFailure(err)) {
         alert('Veuillez vous connecter pour souscrire à un plan.');
       } else {
         alert('Erreur lors de la souscription. Veuillez réessayer.');
@@ -307,9 +315,9 @@ export function BillingManager({ subscription, onSubscriptionChange, api, stripe
       setPaymentMode('setup');
       setShowPaymentForm(true);
       setSelectedPlan(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create setup intent:', err);
-      if (err?.message?.includes('Token') || err?.message?.includes('401')) {
+      if (isAuthFailure(err)) {
         alert('Veuillez vous connecter pour ajouter une méthode de paiement.');
       } else {
         alert('Erreur lors de l\'ajout de la carte. Veuillez réessayer.');

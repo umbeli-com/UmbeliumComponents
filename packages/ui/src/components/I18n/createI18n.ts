@@ -243,7 +243,6 @@ export function createI18n(resources: I18nResources, options: I18nOptions = {}):
     const reason = wrongType
       ? "ne pointe pas sur une chaîne (nœud intermédiaire ?) — utilisez raw() pour un tableau ou un objet"
       : 'est absente du dictionnaire';
-    // eslint-disable-next-line no-console
     console.warn(`[@umbeli-com/ui] i18n : la clé « ${key} » (langue « ${language} ») ${reason}.`);
   };
 

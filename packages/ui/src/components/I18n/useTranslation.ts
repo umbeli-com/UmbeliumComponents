@@ -61,7 +61,6 @@ export function useTranslation<Language extends string = string>(): UseTranslati
   if (context === undefined) {
     if (!warnedMissingProvider && isDevEnvironment()) {
       warnedMissingProvider = true;
-      // eslint-disable-next-line no-console
       console.warn(
         "[@umbeli-com/ui] useTranslation() a été appelé en dehors d'un <I18nProvider> : " +
           'les clés de traduction sont rendues telles quelles. Enveloppez votre application ' +

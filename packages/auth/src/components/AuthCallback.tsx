@@ -4,7 +4,7 @@ export interface AuthCallbackProps {
   /** Where to redirect after successful auth. Defaults to '/' */
   redirectTo?: string;
   /** Optional Supabase client to manually exchange the code. If omitted, relies on detectSessionInUrl. */
-  supabaseClient?: { auth: { exchangeCodeForSession: (code: string) => Promise<any> } };
+  supabaseClient?: { auth: { exchangeCodeForSession: (code: string) => Promise<{ error: { message: string } | null }> } };
   /** Called when auth succeeds (e.g. to navigate programmatically) */
   onSuccess?: () => void;
   /** Called when auth fails */

@@ -63,7 +63,6 @@ export function OnboardingChat({
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_extractedData, setExtractedData] = useState<OnboardingData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

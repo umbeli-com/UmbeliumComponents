@@ -159,6 +159,9 @@ export function I18nProvider({
       setLanguage: (next) => i18n.setLanguage(next),
       languages: i18n.languages,
     }),
+    // `i18n` est mutable : `revision` (store externe) est ce qui signale le
+    // changement, d'où une dépendance non lue dans le corps — voulue.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [i18n, revision],
   );
 

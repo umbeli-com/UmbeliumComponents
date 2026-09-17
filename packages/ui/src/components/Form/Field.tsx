@@ -109,7 +109,6 @@ export function Field({
 
   if (isDev() && label != null && labelFor === undefined && !warned.current) {
     warned.current = true;
-    // eslint-disable-next-line no-console
     console.warn(
       '[@umbeli-com/ui] <Field label> : le câblage a11y est impossible (un seul ' +
         'élément enfant est requis ; ni Fragment ni texte nu). L\'étiquette n\'est ' +

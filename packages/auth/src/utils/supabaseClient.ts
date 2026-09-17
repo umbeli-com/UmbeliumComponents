@@ -98,7 +98,6 @@ export function createSupabaseAuthClient(
   const isConfigured = Boolean(url && anonKey);
 
   if (!isConfigured) {
-    // eslint-disable-next-line no-console
     console.warn(
       '[umbeli-auth] Configuration Supabase absente : renseignez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY. ' +
         "L'authentification restera indisponible.",
