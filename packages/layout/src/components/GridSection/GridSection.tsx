@@ -142,9 +142,16 @@ export function GridSection({
 
   const style: StyleWithVars = {};
   if (byBreakpoint !== undefined) {
+    // Les CINQ variables sont TOUJOURS écrites, cascade déjà résolue (un
+    // palier absent hérite du précédent). Les variables CSS s'héritent : n'en
+    // écrire qu'une partie laissait une GridSection IMBRIQUÉE reprendre les
+    // paliers de sa grille parente — mesuré au Manager, la grille des cartes
+    // (`xl` seul) passait à 2 colonnes dès 1024px avec le `lg` de l'extérieure.
+    let inherited: string = 'repeat(1, 1fr)';
     for (const bp of BREAKPOINTS) {
       const value = byBreakpoint[bp];
-      if (value !== undefined) style[`--umb-grid-cols-${bp}`] = toTemplate(value);
+      if (value !== undefined) inherited = toTemplate(value);
+      style[`--umb-grid-cols-${bp}`] = inherited;
     }
   } else if (templateColumns !== undefined) {
     style.gridTemplateColumns = templateColumns;
